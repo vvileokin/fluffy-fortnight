@@ -3,10 +3,8 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import { LogIn } from "lucide-react";
 import { primaryNav } from "@/lib/nav";
 import { promoBanner, promoHref } from "@/lib/data";
-import { useUser } from "@/lib/supabase/use-user";
 import { Brand } from "./Brand";
 import { Partners } from "./Partners";
 import { cn } from "@/lib/utils";
@@ -19,7 +17,6 @@ function isActive(pathname: string, href: string) {
 export function Sidebar() {
   const pathname = usePathname();
   const t = useTranslations("nav");
-  const user = useUser();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-border bg-surface lg:flex">
@@ -76,18 +73,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="space-y-3 px-3 pb-4">
-        {user === null && (
-          <Link
-            href="/login"
-            className="flex h-11 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent-hover"
-          >
-            <LogIn className="size-4" strokeWidth={2.5} />
-            {t("signIn")}
-          </Link>
-        )}
-
-        {/* Partners — under the sign-in button, dim and unobtrusive */}
+      <div className="px-3 pb-4">
+        {/* Partners — dim and unobtrusive (sign-in lives in the topbar) */}
         <div className="border-t border-border px-1 pt-3">
           <p className="mb-2 text-[0.625rem] font-semibold uppercase tracking-wide text-ink-faint">
             {t("partners")}
