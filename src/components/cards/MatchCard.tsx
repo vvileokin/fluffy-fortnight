@@ -52,7 +52,7 @@ function TeamRow({
 export function MatchCard({ match }: { match: Match }) {
   const t = useTranslations("matches");
   const tour = getTournament(match.tournamentSlug);
-  const isEvent = tour?.isEvent ?? false;
+  const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
   const showScore = isLive || isFinished;

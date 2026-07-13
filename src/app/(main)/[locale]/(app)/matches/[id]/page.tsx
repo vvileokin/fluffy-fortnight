@@ -7,20 +7,16 @@ import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import {
-  getMatch,
   getTeam,
   getTournament,
   questionsForMatch,
-  matches,
+  type VetoStep,
 } from "@/lib/data";
+import { getMatchById } from "@/lib/db/matches";
 import { cn } from "@/lib/utils";
 
-export function generateStaticParams() {
-  return matches.map((m) => ({ id: m.id }));
-}
-
-// --- Mock context (design-first) ---
-const veto = [
+// --- Fallback veto (design-first) when a match has none set in the DB ---
+const defaultVeto: VetoStep[] = [
   { team: "a", action: "ban", map: "Anubis" },
   { team: "b", action: "ban", map: "Dust II" },
   { team: "a", action: "pick", map: "Mirage" },
@@ -28,7 +24,7 @@ const veto = [
   { team: "a", action: "ban", map: "Nuke" },
   { team: "b", action: "ban", map: "Train" },
   { team: "-", action: "decider", map: "Inferno" },
-] as const;
+];
 
 export default async function MatchPage({
   params,
@@ -36,13 +32,14 @@ export default async function MatchPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const match = getMatch(id);
+  const match = await getMatchById(id);
   if (!match) notFound();
 
   const a = getTeam(match.a);
   const b = getTeam(match.b);
   const tour = getTournament(match.tournamentSlug);
-  const isEvent = tour?.isEvent ?? false;
+  const isEvent = match.isEvent ?? tour?.isEvent ?? false;
+  const veto = match.veto && match.veto.length > 0 ? match.veto : defaultVeto;
   const questions = questionsForMatch(id);
   const isLive = match.status === "live";
   const showScore = isLive || match.status === "finished";

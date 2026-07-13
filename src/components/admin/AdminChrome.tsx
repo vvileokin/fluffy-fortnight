@@ -17,16 +17,17 @@ import {
   ShieldAlert,
   ExternalLink,
   Crosshair,
+  Swords,
   type LucideIcon,
 } from "lucide-react";
 import { Brand } from "@/components/layout/Brand";
 import { cn } from "@/lib/utils";
 
 const KEY = "cs2ua:admin";
-const PASSWORD = "cs2+ua";
 
 const nav: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
   { href: "/admin", label: "Огляд", icon: LayoutDashboard },
+  { href: "/admin/matches", label: "Матчі", icon: Swords },
   { href: "/admin/import", label: "Імпорт даних", icon: DatabaseZap },
   { href: "/admin/questions", label: "Питання", icon: Target },
   { href: "/admin/bounty", label: "BLAST Bounty", icon: Crosshair },
@@ -52,6 +53,7 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
 
   const logout = React.useCallback(() => {
     sessionStorage.removeItem(KEY);
+    void fetch("/api/admin/login", { method: "DELETE" });
     setAuthed(false);
   }, []);
 
@@ -166,10 +168,19 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
 function Gate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = React.useState("");
   const [error, setError] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (pw === PASSWORD) onUnlock();
+    setBusy(true);
+    setError(false);
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    }).catch(() => null);
+    setBusy(false);
+    if (res?.ok) onUnlock();
     else setError(true);
   }
 

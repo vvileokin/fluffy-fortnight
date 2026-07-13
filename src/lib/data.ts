@@ -91,7 +91,7 @@ export type Tournament = {
   isEvent?: boolean; // special featured event (Bounty predictor + neon match skin)
 };
 
-const allTournaments: Tournament[] = [
+export const allTournaments: Tournament[] = [
   {
     slug: "pgl-bucharest-2026",
     name: "PGL Bucharest 2026",
@@ -310,6 +310,19 @@ export type Match = {
   openQuestions: number;
   maxReward: number;
   stage: string;
+  isEvent?: boolean; // overrides tournament.isEvent for the neon skin
+  // admin-editable detail (optional; falls back to demo when absent)
+  maps?: MatchMap[];
+  veto?: VetoStep[];
+  h2h?: H2H;
+};
+
+export type MatchMap = { name: string; a: number; b: number };
+export type VetoStep = { team: string; action: "ban" | "pick" | "decider"; map: string };
+export type H2H = {
+  a: number;
+  b: number;
+  series?: { event: string; score: string; winner: "a" | "b" }[];
 };
 
 const allMatches: Match[] = [
@@ -698,7 +711,9 @@ export function getTeam(slug: string): Team {
 }
 
 export function getTournament(slug: string): Tournament | undefined {
-  return tournaments.find((t) => t.slug === slug);
+  // Search the full set so matches from any tournament resolve a name,
+  // even though only the event is shown in the public catalog.
+  return allTournaments.find((t) => t.slug === slug);
 }
 
 export function getMatch(id: string): Match | undefined {
@@ -707,6 +722,10 @@ export function getMatch(id: string): Match | undefined {
 
 export function questionsForMatch(id: string): Question[] {
   return questions.filter((q) => q.matchId === id);
+}
+
+export function getQuestion(id: string): Question | undefined {
+  return questions.find((q) => q.id === id);
 }
 
 export function formatPrize(usd: number): string {

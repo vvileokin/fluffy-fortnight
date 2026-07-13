@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { matches, tournaments } from "@/lib/data";
+import { tournaments } from "@/lib/data";
+import { getMatches } from "@/lib/db/matches";
 import { MatchesView } from "./MatchesView";
 
 export const metadata: Metadata = { title: "Матчі" };
 
-export default function MatchesPage() {
+export default async function MatchesPage() {
+  const matches = await getMatches();
   return <MatchesView matches={matches} tournaments={tournaments} />;
 }

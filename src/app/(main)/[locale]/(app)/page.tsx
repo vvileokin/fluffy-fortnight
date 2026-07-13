@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Trophy, Swords, Target, Gift, Crown } from "lucide-react";
 import { Hero } from "@/components/home/Hero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -9,14 +9,15 @@ import { QuestionCard } from "@/components/match/QuestionCard";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import {
   tournaments,
-  matches,
   giveaways,
   questions,
   seasonLeaderboard,
 } from "@/lib/data";
+import { getMatches } from "@/lib/db/matches";
 
-export default function HomePage() {
-  const t = useTranslations("home");
+export default async function HomePage() {
+  const t = await getTranslations("home");
+  const matches = await getMatches();
   const currentTournaments = tournaments
     .filter((t) => t.status !== "finished")
     .slice(0, 3);

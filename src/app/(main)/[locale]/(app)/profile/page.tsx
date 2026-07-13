@@ -5,7 +5,9 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { ProfileEditButton } from "@/components/profile/ProfileEditButton";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { PredictionHistory, type HistoryItem } from "@/components/profile/PredictionHistory";
 import { createClient } from "@/lib/supabase/server";
+import { getQuestion } from "@/lib/data";
 import { formatInt } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Профіль" };
@@ -39,6 +41,28 @@ export default async function ProfilePage() {
     .select("*", { count: "exact", head: true })
     .gt("points", points);
   const rank = (above ?? 0) + 1;
+
+  // Prediction history (resolved against the question catalog).
+  const { data: preds } = await supabase
+    .from("predictions")
+    .select("question_id, option_id")
+    .eq("user_id", user.id)
+    .order("updated_at", { ascending: false });
+
+  const history: HistoryItem[] = (preds ?? [])
+    .map((p): HistoryItem | null => {
+      const q = getQuestion(p.question_id);
+      if (!q) return null;
+      const opt = q.options.find((o) => o.id === p.option_id);
+      const result = q.result ?? "pending";
+      return {
+        id: p.question_id,
+        title: opt ? `${q.title} — ${opt.label}` : q.title,
+        result,
+        pts: result === "correct" && opt ? opt.reward : 0,
+      };
+    })
+    .filter((x): x is HistoryItem => x !== null);
 
   const isTelegram = user.user_metadata?.provider === "telegram";
   const authMethod = isTelegram
@@ -93,9 +117,7 @@ export default async function ProfilePage() {
         <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
           <Target className="size-4 text-ink-subtle" /> Історія прогнозів
         </h2>
-        <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
-          Тут зʼявляться твої прогнози та нараховані поінти.
-        </div>
+        <PredictionHistory items={history} />
       </section>
     </div>
   );
