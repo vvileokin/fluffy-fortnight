@@ -1,0 +1,171 @@
+"use client";
+
+import * as React from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { Bell, Target, Swords, Gift, TrendingUp, Check, Crosshair, LogIn } from "lucide-react";
+import { Brand } from "./Brand";
+import { Avatar } from "@/components/ui/Avatar";
+import { useUser, displayName } from "@/lib/supabase/use-user";
+import { formatInt } from "@/lib/utils";
+import { notifications as seed, type NotifKind } from "@/lib/data";
+import { cn } from "@/lib/utils";
+
+// Demo values until the points/bounty tables land.
+const demo = { rank: 42, points: 6120, bounty: 480 };
+
+const kindIcon: Record<NotifKind, typeof Bell> = {
+  reward: Target,
+  match: Swords,
+  giveaway: Gift,
+  rank: TrendingUp,
+};
+
+export function Topbar() {
+  const t = useTranslations("nav");
+  const user = useUser();
+  const [open, setOpen] = React.useState(false);
+  const [items, setItems] = React.useState(seed);
+  const unread = items.filter((n) => n.unread).length;
+
+  function markAll() {
+    setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
+  }
+
+  const handle = user ? displayName(user) : "";
+
+  return (
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-[color-mix(in_oklch,var(--surface)_78%,transparent)] px-4 backdrop-blur-xl sm:px-6">
+      <div className="flex items-center gap-2 lg:hidden">
+        <Brand compact />
+      </div>
+      <div className="hidden lg:block" />
+
+      {/* Signed out → sign-in button; loading → nothing (avoids flash) */}
+      {user === null && (
+        <Link
+          href="/login"
+          className="flex h-9 items-center gap-2 rounded-full bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
+        >
+          <LogIn className="size-4" strokeWidth={2.5} />
+          {t("signIn")}
+        </Link>
+      )}
+
+      {user && (
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Bounty points earned in the event */}
+        <span
+          className="flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-1.5 text-xs"
+          title="Bounty-поінти"
+        >
+          <Crosshair className="size-3.5 text-accent" />
+          <span className="tnum font-mono font-semibold text-ink">
+            {formatInt(demo.bounty)}
+          </span>
+        </span>
+
+        <Link
+          href="/profile"
+          aria-label={`${handle}: #${demo.rank}, ${demo.points} ${t("points")}`}
+          className="flex items-center gap-2.5 rounded-full border border-border bg-surface py-1 pl-3 pr-1.5 transition-colors hover:border-border-strong"
+        >
+          <span className="flex items-center gap-1.5 text-xs">
+            <span className="hidden font-semibold text-ink-subtle sm:inline">
+              #{demo.rank}
+            </span>
+            <span className="tnum font-mono font-semibold text-accent">
+              {formatInt(demo.points)}
+            </span>
+            <span className="hidden text-ink-subtle sm:inline">
+              {t("pointsShort")}
+            </span>
+          </span>
+          <Avatar name={handle} size="sm" />
+        </Link>
+
+        <div className="relative">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-label={t("notifications")}
+            aria-expanded={open}
+            className={cn(
+              "relative grid size-9 place-items-center rounded-full border transition-colors",
+              open
+                ? "border-border-strong bg-surface-2 text-ink"
+                : "border-border bg-surface text-ink-muted hover:border-border-strong hover:text-ink",
+            )}
+          >
+            <Bell className="size-4" />
+            {unread > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 grid min-w-[1.125rem] place-items-center rounded-full border-2 border-bg bg-live px-1 text-[0.625rem] font-bold leading-tight text-white">
+                {unread}
+              </span>
+            )}
+          </button>
+
+          {open && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setOpen(false)}
+                aria-hidden
+              />
+              <div
+                role="dialog"
+                aria-label={t("notifications")}
+                className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]"
+              >
+                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                  <span className="text-sm font-bold text-ink">{t("notifications")}</span>
+                  {unread > 0 && (
+                    <button
+                      onClick={markAll}
+                      className="flex items-center gap-1 text-xs font-semibold text-ink-muted transition-colors hover:text-accent"
+                    >
+                      <Check className="size-3.5" />
+                      {t("markAllRead")}
+                    </button>
+                  )}
+                </div>
+                <ul className="max-h-[min(24rem,60vh)] divide-y divide-border overflow-y-auto">
+                  {items.map((n) => {
+                    const Icon = kindIcon[n.kind];
+                    return (
+                      <li
+                        key={n.id}
+                        className={cn(
+                          "flex gap-3 px-4 py-3",
+                          n.unread && "bg-surface-2/50",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
+                            n.unread
+                              ? "bg-[color-mix(in_oklch,var(--accent)_16%,transparent)] text-accent"
+                              : "bg-surface-2 text-ink-subtle",
+                          )}
+                        >
+                          <Icon className="size-4" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm leading-snug text-ink">{n.title}</p>
+                          <p className="mt-0.5 text-xs text-ink-subtle">{n.time}</p>
+                        </div>
+                        {n.unread && (
+                          <span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      )}
+    </header>
+  );
+}

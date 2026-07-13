@@ -1,26 +1,253 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   CS2 UA — design tokens
+   Dark, data-dense esports interface. Brand: #000913 / #000B18 / #FAE305.
+   All colors OKLCH. Yellow is a signal, never a large fill.
+   ========================================================================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  /* --- Surfaces (navy near-black, hue ~246) --- */
+  --bg: oklch(0.109 0.026 246);          /* #000913 app canvas */
+  --surface: oklch(0.124 0.03 246);      /* #000B18 cards, sidebar */
+  --surface-2: oklch(0.163 0.032 245);   /* elevated / hover */
+  --surface-3: oklch(0.205 0.033 244);   /* inputs, chips, raised */
+  --border: oklch(0.243 0.032 244);      /* hairlines */
+  --border-strong: oklch(0.33 0.038 243);/* emphasized dividers */
+
+  /* --- Ink --- */
+  --ink: oklch(0.968 0.008 240);         /* primary text */
+  --ink-muted: oklch(0.75 0.017 244);    /* secondary text (AA on surface) */
+  --ink-subtle: oklch(0.63 0.021 244);   /* tertiary / labels */
+  --ink-faint: oklch(0.47 0.022 244);    /* disabled, decorative only */
+
+  /* --- Brand accent (yellow) --- */
+  --accent: oklch(0.902 0.183 103.5);    /* #FAE305 */
+  --accent-hover: oklch(0.85 0.176 100);
+  --accent-ink: oklch(0.14 0.03 246);    /* text on yellow */
+
+  /* --- Secondary / status --- */
+  --info: oklch(0.68 0.14 245);          /* UA azure — links, secondary accent */
+  --live: oklch(0.64 0.235 24);          /* live red */
+  --danger: oklch(0.64 0.225 22);        /* errors, destructive */
+  --success: oklch(0.76 0.16 156);       /* correct, confirmed */
+  --warning: oklch(0.8 0.155 62);        /* pending, caution (not brand yellow) */
+  --tier1: oklch(0.82 0.13 88);          /* gold */
+
+  /* --- Focus --- */
+  --ring: oklch(0.902 0.183 103.5);
+
+  /* --- Radii --- */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  /* --- Motion --- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur: 220ms;
+  --dur-slow: 300ms;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-info: var(--info);
+  --color-live: var(--live);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-tier1: var(--tier1);
+
+  --color-ring: var(--ring);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* =========================================================================
+   Base
+   ========================================================================= */
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scrollbar-gutter: stable;
+}
+
+/* Themed scrollbars (brand, not default). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-faint);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in oklch, var(--accent) 30%, transparent);
+  color: var(--ink);
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.elevate {
+  box-shadow:
+    0 1px 0 0 color-mix(in oklch, var(--ink) 4%, transparent) inset,
+    0 10px 30px -14px oklch(0 0 0 / 0.75);
+}
+
+.glow-accent {
+  box-shadow: 0 6px 30px -10px color-mix(in oklch, var(--accent) 55%, transparent);
+}
+
+/* Interactive card: tactile lift + depth on hover. Border/bg utilities from
+   Tailwind still apply; this owns the transform + shadow + transition list.
+   (shared card hover system) */
+.card-interactive {
+  transition:
+    transform var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+@media (hover: hover) {
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px -20px oklch(0 0 0 / 0.85);
+  }
+}
+
+/* Faint yellow radial used sparingly behind hero / key CTA */
+.aura-accent {
+  background:
+    radial-gradient(120% 120% at 50% 0%, color-mix(in oklch, var(--accent) 9%, transparent), transparent 60%);
+}
+
+/* Neon blue/red arena skin for featured event surfaces (BLAST Bounty). */
+/* event skin v2 */
+.event-aura {
+  background-color: #05071d;
+  background-image:
+    radial-gradient(70% 95% at 6% 120%, rgba(255, 12, 60, 0.85), transparent 55%),
+    radial-gradient(70% 95% at 94% 120%, rgba(255, 12, 60, 0.85), transparent 55%),
+    radial-gradient(85% 105% at 50% 138%, transparent 44%, rgba(46, 86, 255, 0.9) 55%, transparent 67%),
+    radial-gradient(130% 130% at 50% 132%, rgba(20, 32, 128, 0.85), transparent 72%);
+}
+.event-aura-soft {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(60% 100% at 0% 120%, rgba(255, 12, 60, 0.35), transparent 60%),
+    radial-gradient(60% 100% at 100% 120%, rgba(46, 86, 255, 0.4), transparent 60%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.82); }
+}
+.live-dot {
+  animation: livePulse 1.5s var(--ease-out) infinite;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--ink) 7%, transparent),
+    transparent
+  );
+  animation: shimmer 1.4s var(--ease-out) infinite;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp var(--dur-slow) var(--ease-out) both;
 }
