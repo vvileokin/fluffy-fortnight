@@ -59,7 +59,7 @@ export const teams: Record<string, Team> = {
   wildcard: { slug: "wildcard", name: "Wildcard", tag: "WC", logo: "/teams/wildcard.svg", brand: "#C8901E", ink: "black", region: "NA", worldRank: 34 },
   threedmax: { slug: "threedmax", name: "3DMAX", tag: "3DM", logo: "/teams/threedmax.svg", brand: "#D81E27", ink: "white", region: "EU", worldRank: 35 },
   alliance: { slug: "alliance", name: "Alliance", tag: "ALL", logo: "/teams/alliance.svg", brand: "#0B5FA8", ink: "white", region: "EU", worldRank: 36 },
-  gentlemates: { slug: "gentlemates", name: "Gentle Mates", tag: "M8", logo: "", brand: "#E63980", ink: "white", region: "EU", worldRank: 37 },
+  gentlemates: { slug: "gentlemates", name: "Gentle Mates", tag: "M8", logo: "/teams/gentlemates.svg", brand: "#E63980", ink: "white", region: "EU", worldRank: 37 },
   hotu: { slug: "hotu", name: "HOTU", tag: "HOTU", logo: "/teams/hotu.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 38 },
   nemesis: { slug: "nemesis", name: "Nemesis", tag: "NEM", logo: "/teams/nemesis.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 39 },
   fokus: { slug: "fokus", name: "Fokus", tag: "FKS", logo: "/teams/fokus.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 40 },

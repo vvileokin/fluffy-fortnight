@@ -81,6 +81,10 @@ export function TournamentView({
             }}
           />
         )}
+        {/* Readability scrim over the neon so the title/dates stay legible */}
+        {t.isEvent && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/10 sm:from-black/60 sm:via-black/30 sm:to-transparent" />
+        )}
         <div className="relative p-5 sm:p-7">
           <div className="flex flex-wrap items-center gap-1.5">
             {t.isEvent && (

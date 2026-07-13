@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { Clock, Check, Lock, CircleHelp, Trophy } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { getMatch, getTeam, type Question } from "@/lib/data";
+import { useUser } from "@/lib/supabase/use-user";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export function QuestionCard({
@@ -14,19 +16,47 @@ export function QuestionCard({
   question: Question;
   withMatch?: boolean;
 }) {
-  const [picked, setPicked] = React.useState<string | undefined>(
-    question.answered,
-  );
+  const user = useUser();
+  const router = useRouter();
+  const [picked, setPicked] = React.useState<string | undefined>();
   const [justSaved, setJustSaved] = React.useState(false);
 
   const locked = question.status === "locked" || question.status === "resolved";
   const upcoming = question.status === "upcoming";
   const match = withMatch ? getMatch(question.matchId) : undefined;
 
-  function choose(id: string) {
+  // Load this user's saved answer.
+  React.useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    createClient()
+      .from("predictions")
+      .select("option_id")
+      .eq("question_id", question.id)
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled && data) setPicked(data.option_id);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, question.id]);
+
+  async function choose(id: string) {
     if (locked || upcoming) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     setPicked(id);
     setJustSaved(true);
+    await createClient()
+      .from("predictions")
+      .upsert(
+        { user_id: user.id, question_id: question.id, option_id: id, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,question_id" },
+      );
     window.setTimeout(() => setJustSaved(false), 1600);
   }
 

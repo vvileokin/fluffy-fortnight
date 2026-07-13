@@ -6,13 +6,11 @@ import { Link } from "@/i18n/navigation";
 import { Bell, Target, Swords, Gift, TrendingUp, Check, Crosshair, LogIn } from "lucide-react";
 import { Brand } from "./Brand";
 import { Avatar } from "@/components/ui/Avatar";
-import { useUser, displayName } from "@/lib/supabase/use-user";
+import { displayName } from "@/lib/supabase/use-user";
+import { useProfile } from "@/lib/supabase/use-profile";
 import { formatInt } from "@/lib/utils";
 import { notifications as seed, type NotifKind } from "@/lib/data";
 import { cn } from "@/lib/utils";
-
-// Demo values until the points/bounty tables land.
-const demo = { rank: 42, points: 6120, bounty: 480 };
 
 const kindIcon: Record<NotifKind, typeof Bell> = {
   reward: Target,
@@ -23,7 +21,7 @@ const kindIcon: Record<NotifKind, typeof Bell> = {
 
 export function Topbar() {
   const t = useTranslations("nav");
-  const user = useUser();
+  const { user, profile } = useProfile();
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState(seed);
   const unread = items.filter((n) => n.unread).length;
@@ -32,7 +30,9 @@ export function Topbar() {
     setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
   }
 
-  const handle = user ? displayName(user) : "";
+  const handle = profile?.handle || (user ? displayName(user) : "");
+  const points = profile?.points ?? 0;
+  const bounty = profile?.bounty_points ?? 0;
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-[color-mix(in_oklch,var(--surface)_78%,transparent)] px-4 backdrop-blur-xl sm:px-6">
@@ -61,21 +61,18 @@ export function Topbar() {
         >
           <Crosshair className="size-3.5 text-accent" />
           <span className="tnum font-mono font-semibold text-ink">
-            {formatInt(demo.bounty)}
+            {formatInt(bounty)}
           </span>
         </span>
 
         <Link
           href="/profile"
-          aria-label={`${handle}: #${demo.rank}, ${demo.points} ${t("points")}`}
+          aria-label={`${handle}: ${points} ${t("points")}`}
           className="flex items-center gap-2.5 rounded-full border border-border bg-surface py-1 pl-3 pr-1.5 transition-colors hover:border-border-strong"
         >
           <span className="flex items-center gap-1.5 text-xs">
-            <span className="hidden font-semibold text-ink-subtle sm:inline">
-              #{demo.rank}
-            </span>
             <span className="tnum font-mono font-semibold text-accent">
-              {formatInt(demo.points)}
+              {formatInt(points)}
             </span>
             <span className="hidden text-ink-subtle sm:inline">
               {t("pointsShort")}

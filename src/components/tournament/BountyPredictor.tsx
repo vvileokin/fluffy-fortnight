@@ -10,11 +10,16 @@ import {
   bountyStages,
   getTeam,
 } from "@/lib/data";
+import { useUser } from "@/lib/supabase/use-user";
+import { useRouter } from "@/i18n/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Picks = Record<string, Record<string, string>>; // stageId -> lowSlug -> highSlug
 
 export function BountyPredictor() {
+  const user = useUser();
+  const router = useRouter();
   const [active, setActive] = React.useState(bountyStages[0].id);
   const [picks, setPicks] = React.useState<Picks>({});
   const [saved, setSaved] = React.useState(false);
@@ -25,12 +30,44 @@ export function BountyPredictor() {
   const stagePicks = picks[stage.id] ?? {};
   const made = Object.keys(stagePicks).length;
 
+  // Load this user's saved bounty picks.
+  React.useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    createClient()
+      .from("bounty_picks")
+      .select("stage_id, low_slug, high_slug")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const next: Picks = {};
+        for (const r of data) {
+          (next[r.stage_id] ??= {})[r.low_slug] = r.high_slug;
+        }
+        setPicks(next);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   function pick(low: string, high: string) {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
     setPicks((prev) => ({
       ...prev,
       [stage.id]: { ...(prev[stage.id] ?? {}), [low]: high },
     }));
     setSaved(false);
+    createClient()
+      .from("bounty_picks")
+      .upsert(
+        { user_id: user.id, stage_id: stage.id, low_slug: low, high_slug: high },
+        { onConflict: "user_id,stage_id,low_slug" },
+      )
+      .then(() => {});
   }
 
   return (

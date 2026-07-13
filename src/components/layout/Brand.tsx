@@ -1,5 +1,7 @@
 import Image from "next/image";
-import { Link } from "@/i18n/navigation";
+// Plain next/link (not the i18n one): Brand is also used in the admin tree,
+// which has no NextIntlClientProvider. Single-locale site, so "/" is correct.
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /** CS2 UA brand logo (yellow CS2 lockup with the Ukrainian flag ribbon). */
@@ -24,7 +26,7 @@ export function Brand({
         priority
         className={cn(
           "w-auto object-contain -ml-1.5",
-          compact ? "h-8" : "h-10",
+          compact ? "h-9" : "h-10",
         )}
       />
     </Link>
