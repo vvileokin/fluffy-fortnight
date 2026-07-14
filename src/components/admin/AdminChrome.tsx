@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  DatabaseZap,
   Target,
   Calculator,
   Gift,
@@ -16,21 +15,21 @@ import {
   LogOut,
   ShieldAlert,
   ExternalLink,
-  Crosshair,
   Swords,
-  type LucideIcon,
 } from "lucide-react";
 import { Brand } from "@/components/layout/Brand";
+import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
+
+type IconType = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
 const KEY = "cs2ua:admin";
 
-const nav: { href: string; label: string; icon: LucideIcon; adminOnly?: boolean }[] = [
+const nav: { href: string; label: string; icon: IconType; adminOnly?: boolean }[] = [
   { href: "/admin", label: "Огляд", icon: LayoutDashboard },
   { href: "/admin/matches", label: "Матчі", icon: Swords },
-  { href: "/admin/import", label: "Імпорт даних", icon: DatabaseZap },
   { href: "/admin/questions", label: "Питання", icon: Target },
-  { href: "/admin/bounty", label: "BLAST Bounty", icon: Crosshair },
+  { href: "/admin/bounty", label: "BLAST Bounty", icon: BlastMark },
   { href: "/admin/resolve", label: "Розрахунок", icon: Calculator },
   { href: "/admin/giveaways", label: "Розіграші", icon: Gift },
   { href: "/admin/content", label: "Контент", icon: LayoutTemplate },

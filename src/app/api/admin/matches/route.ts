@@ -33,6 +33,14 @@ export async function POST(request: Request) {
     h2h: m.h2h ?? null,
     open_questions: Number(m.open_questions ?? 0),
     max_reward: Number(m.max_reward ?? 0),
+    team_a_name: m.team_a_name || null,
+    team_a_logo: m.team_a_logo || null,
+    team_a_color: m.team_a_color || null,
+    team_b_name: m.team_b_name || null,
+    team_b_logo: m.team_b_logo || null,
+    team_b_color: m.team_b_color || null,
+    tournament_name: m.tournament_name || null,
+    tournament_icon: m.tournament_icon || null,
     updated_at: new Date().toISOString(),
   };
 

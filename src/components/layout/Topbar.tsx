@@ -3,8 +3,9 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Bell, Target, Swords, Gift, TrendingUp, Check, Crosshair, LogIn } from "lucide-react";
+import { Bell, Target, Swords, Gift, TrendingUp, Check, LogIn } from "lucide-react";
 import { Brand } from "./Brand";
+import { BlastMark } from "@/components/ui/BlastMark";
 import { Avatar } from "@/components/ui/Avatar";
 import { displayName } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
@@ -59,7 +60,7 @@ export function Topbar() {
           className="flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-1.5 text-xs"
           title="Bounty-поінти"
         >
-          <Crosshair className="size-3.5 text-accent" />
+          <BlastMark className="size-3.5 text-accent" />
           <span className="tnum font-mono font-semibold text-ink">
             {formatInt(bounty)}
           </span>

@@ -7,17 +7,15 @@ import { MatchCard } from "@/components/cards/MatchCard";
 import { GiveawayCard } from "@/components/cards/GiveawayCard";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import {
-  tournaments,
-  giveaways,
-  questions,
-  seasonLeaderboard,
-} from "@/lib/data";
+import { tournaments, giveaways, questions } from "@/lib/data";
 import { getMatches } from "@/lib/db/matches";
+import { getLeaderboard } from "@/lib/db/leaderboard";
+import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
   const t = await getTranslations("home");
   const matches = await getMatches();
+  const seasonLeaderboard = await getLeaderboard(8);
   const currentTournaments = tournaments
     .filter((t) => t.status !== "finished")
     .slice(0, 3);
@@ -41,38 +39,45 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Hot predictions */}
-      <section className="space-y-4">
-        <SectionHeader icon={Target} title={t("hotPredictions")} href="/interactives" />
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {hotQuestions.map((q) => (
-            <QuestionCard key={q.id} question={q} withMatch />
-          ))}
-        </div>
-      </section>
-
-      {/* Live & upcoming matches */}
-      <section className="space-y-4">
-        <SectionHeader icon={Swords} title={t("liveUpcoming")} href="/matches" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {feedMatches.map((m) => (
-            <MatchCard key={m.id} match={m} />
-          ))}
-        </div>
-      </section>
-
-      {/* Giveaways + season leaderboard */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-6">
-        <section className="space-y-4 lg:col-span-2">
-          <SectionHeader icon={Gift} title={t("giveaways")} href="/giveaways" />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {giveaways.map((g) => (
-              <GiveawayCard key={g.slug} g={g} />
+      {/* Hot predictions (only when there are open questions) */}
+      {hotQuestions.length > 0 && (
+        <section className="space-y-4">
+          <SectionHeader icon={Target} title={t("hotPredictions")} href="/interactives" />
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {hotQuestions.map((q) => (
+              <QuestionCard key={q.id} question={q} withMatch />
             ))}
           </div>
         </section>
+      )}
 
-        <section className="space-y-4 lg:col-span-3">
+      {/* Live & upcoming matches (only when there are any) */}
+      {feedMatches.length > 0 && (
+        <section className="space-y-4">
+          <SectionHeader icon={Swords} title={t("liveUpcoming")} href="/matches" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {feedMatches.map((m) => (
+              <MatchCard key={m.id} match={m} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Giveaways + season leaderboard. Giveaways may be empty on some days,
+          so the leaderboard takes the full width when there are none. */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-6">
+        {giveaways.length > 0 && (
+          <section className="space-y-4 lg:col-span-2">
+            <SectionHeader icon={Gift} title={t("giveaways")} href="/giveaways" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              {giveaways.map((g) => (
+                <GiveawayCard key={g.slug} g={g} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className={cn("space-y-4", giveaways.length > 0 ? "lg:col-span-3" : "lg:col-span-5")}>
           <SectionHeader icon={Crown} title={t("seasonLeaderboard")} href="/leaderboard" />
           <LeaderboardTable rows={seasonLeaderboard} />
         </section>

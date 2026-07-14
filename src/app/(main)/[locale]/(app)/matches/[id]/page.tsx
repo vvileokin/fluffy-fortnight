@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import {
   getTeam,
   getTournament,
+  matchTeam,
   questionsForMatch,
   type VetoStep,
 } from "@/lib/data";
@@ -35,8 +36,8 @@ export default async function MatchPage({
   const match = await getMatchById(id);
   if (!match) notFound();
 
-  const a = getTeam(match.a);
-  const b = getTeam(match.b);
+  const a = matchTeam(match, "a");
+  const b = matchTeam(match, "b");
   const tour = getTournament(match.tournamentSlug);
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const veto = match.veto && match.veto.length > 0 ? match.veto : defaultVeto;
@@ -66,12 +67,16 @@ export default async function MatchPage({
         )}
         <div className="relative px-4 py-5 sm:px-8 sm:py-7">
           <div className="flex items-center justify-between gap-2 text-xs text-ink-muted">
-            <Link
-              href={`/tournaments/${tour?.slug}`}
-              className="truncate font-semibold hover:text-ink"
-            >
-              {tour?.name}
-            </Link>
+            {tour ? (
+              <Link
+                href={`/tournaments/${tour.slug}`}
+                className="truncate font-semibold hover:text-ink"
+              >
+                {tour.name}
+              </Link>
+            ) : (
+              <span className="truncate font-semibold">{match.tournamentName}</span>
+            )}
             <span className="shrink-0">{match.stage} · {match.format}</span>
           </div>
 
@@ -87,7 +92,7 @@ export default async function MatchPage({
               )}
               {isLive && match.liveMapLabel && (
                 <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[0.6875rem] font-medium text-ink-muted">
-                  {match.liveMapLabel} · {match.liveRoundA}:{match.liveRoundB}
+                  {match.liveMapLabel}
                 </span>
               )}
             </div>
@@ -144,7 +149,7 @@ export default async function MatchPage({
               )}
               {isLive && match.liveMapLabel && (
                 <span className="whitespace-nowrap rounded-full bg-surface-2 px-2.5 py-1 text-[0.6875rem] font-medium text-ink-muted">
-                  {match.liveMapLabel} · {match.liveRoundA}:{match.liveRoundB}
+                  {match.liveMapLabel}
                 </span>
               )}
             </div>
@@ -185,6 +190,30 @@ export default async function MatchPage({
           </div>
         )}
       </section>
+
+      {/* Per-map scores (admin fills these in when the match ends) */}
+      {match.maps && match.maps.length > 0 && (
+        <section className="space-y-3">
+          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
+            <Swords className="size-4 text-ink-subtle" /> Рахунок по картах
+          </h3>
+          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+            {match.maps.map((m, i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="font-semibold text-ink">
+                  <span className="mr-2 text-ink-faint">{i + 1}</span>
+                  {m.name}
+                </span>
+                <span className="tnum font-mono">
+                  <span className={cn("font-bold", m.a > m.b ? "text-accent" : "text-ink")}>{m.a}</span>
+                  <span className="mx-2 text-ink-faint">:</span>
+                  <span className={cn("font-bold", m.b > m.a ? "text-accent" : "text-ink")}>{m.b}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CONTEXT: subordinate */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

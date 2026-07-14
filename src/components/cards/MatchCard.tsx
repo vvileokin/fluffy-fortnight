@@ -1,29 +1,30 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Target, ChevronRight, Crosshair } from "lucide-react";
+import { Target, ChevronRight } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
+import { BlastMark } from "@/components/ui/BlastMark";
 import { LiveBadge } from "@/components/ui/Badge";
 import {
-  getTeam,
   getTournament,
+  matchTeam,
   type Match,
+  type Team,
 } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 function TeamRow({
-  slug,
+  team,
   score,
   leading,
   dim,
   showScore,
 }: {
-  slug: string;
+  team: Team;
   score: number;
   leading: boolean;
   dim: boolean;
   showScore: boolean;
 }) {
-  const team = getTeam(slug);
   return (
     <div className="flex items-center gap-2.5">
       <TeamLogo team={team} size="sm" />
@@ -71,8 +72,8 @@ export function MatchCard({ match }: { match: Match }) {
     >
       <div className="flex items-center justify-between gap-2 px-4 pt-3">
         <span className="flex min-w-0 items-center gap-2 text-xs text-ink-subtle">
-          {isEvent && <Crosshair className="size-3.5 shrink-0 text-accent" />}
-          <span className="truncate font-medium">{tour?.shortName}</span>
+          {isEvent && <BlastMark className="size-3.5 shrink-0 text-accent" />}
+          <span className="truncate font-medium">{tour?.shortName ?? match.tournamentName}</span>
           <span className="text-ink-faint">·</span>
           <span className="shrink-0">{match.stage}</span>
         </span>
@@ -91,18 +92,16 @@ export function MatchCard({ match }: { match: Match }) {
       </div>
 
       <div className="space-y-2 px-4 py-3">
-        <TeamRow slug={match.a} score={match.scoreA} leading={aLead} dim={isFinished && bLead} showScore={showScore} />
-        <TeamRow slug={match.b} score={match.scoreB} leading={bLead} dim={isFinished && aLead} showScore={showScore} />
+        <TeamRow team={matchTeam(match, "a")} score={match.scoreA} leading={aLead} dim={isFinished && bLead} showScore={showScore} />
+        <TeamRow team={matchTeam(match, "b")} score={match.scoreB} leading={bLead} dim={isFinished && aLead} showScore={showScore} />
       </div>
 
       {/* Context strip — always present so every state has equal height */}
       <div className="mx-4 mb-3 flex items-center justify-between gap-2 rounded-md bg-surface-2 px-2.5 py-1.5 text-xs">
         {isLive ? (
           <>
-            <span className="truncate text-ink-muted">{match.liveMapLabel}</span>
-            <span className="tnum shrink-0 font-mono font-semibold text-ink">
-              {match.liveRoundA}:{match.liveRoundB}
-            </span>
+            <span className="truncate text-ink-subtle">{match.format}</span>
+            <span className="shrink-0 font-semibold text-live">У прямому ефірі</span>
           </>
         ) : isFinished ? (
           <>

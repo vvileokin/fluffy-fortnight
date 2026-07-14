@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Lock, Unlock, Crosshair, Check } from "lucide-react";
+import { Lock, Unlock, Check } from "lucide-react";
+import { BlastMark } from "@/components/ui/BlastMark";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/Badge";
 import { TeamLogo } from "@/components/ui/TeamLogo";
@@ -47,7 +48,7 @@ export default function BountyAdmin() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
                 <div className="flex items-center gap-2.5">
                   <span className="grid size-8 place-items-center rounded-md bg-surface-2 text-accent">
-                    <Crosshair className="size-4" />
+                    <BlastMark className="size-4" />
                   </span>
                   <div>
                     <p className="text-sm font-bold text-ink">{s.title}</p>

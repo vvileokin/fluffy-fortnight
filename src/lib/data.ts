@@ -201,7 +201,7 @@ export const allTournaments: Tournament[] = [
     dateLabel: "21 лип – 2 сер",
     location: "Мальта (LAN-фінал)",
     online: false,
-    prizeUSD: 500000,
+    prizeUSD: 1150000,
     teamSlugs: [
       // top seeds
       "vitality", "spirit", "falcons", "mouz", "mongolz", "aurora", "gamerlegion", "astralis",
@@ -315,6 +315,11 @@ export type Match = {
   maps?: MatchMap[];
   veto?: VetoStep[];
   h2h?: H2H;
+  // custom (non-catalog) team / tournament entered in the admin
+  teamAData?: Team;
+  teamBData?: Team;
+  tournamentName?: string;
+  tournamentIcon?: string;
 };
 
 export type MatchMap = { name: string; a: number; b: number };
@@ -718,6 +723,23 @@ export function getTournament(slug: string): Tournament | undefined {
 
 export function getMatch(id: string): Match | undefined {
   return matches.find((m) => m.id === id);
+}
+
+/** Resolve a match side to a Team — custom data if the admin entered it, else the catalog. */
+export function matchTeam(m: Match, side: "a" | "b"): Team {
+  const data = side === "a" ? m.teamAData : m.teamBData;
+  return data ?? getTeam(side === "a" ? m.a : m.b);
+}
+
+/** Pick black/white ink for a background color by luminance. */
+export function inkForColor(hex: string): "white" | "black" {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const r = parseInt(full.slice(0, 2), 16) || 0;
+  const g = parseInt(full.slice(2, 4), 16) || 0;
+  const b = parseInt(full.slice(4, 6), 16) || 0;
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.6 ? "black" : "white";
 }
 
 export function questionsForMatch(id: string): Question[] {

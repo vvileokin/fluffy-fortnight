@@ -26,7 +26,8 @@ import {
   type Match,
   type LeaderRow,
 } from "@/lib/data";
-import { Crosshair, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
 
 type Tab = "overview" | "bounty" | "teams" | "schedule" | "predictor" | "leaderboard";
@@ -40,10 +41,14 @@ export function TournamentView({
   matches: Match[];
   leaderboard: LeaderRow[];
 }) {
-  const tabs: { id: Tab; label: string; icon: typeof Users }[] = [
+  const tabs: {
+    id: Tab;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[] = [
     { id: "overview", label: "Огляд", icon: Trophy },
     ...(t.isEvent
-      ? [{ id: "bounty" as Tab, label: "Bounty", icon: Crosshair }]
+      ? [{ id: "bounty" as Tab, label: "Bounty", icon: BlastMark }]
       : []),
     { id: "teams", label: "Команди", icon: Users },
     { id: "schedule", label: "Розклад", icon: CalendarDays },
@@ -89,7 +94,7 @@ export function TournamentView({
           <div className="flex flex-wrap items-center gap-1.5">
             {t.isEvent && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-                <Crosshair className="size-3" /> Event
+                <BlastMark className="size-3" /> Event
               </span>
             )}
             {t.status === "live" ? (
@@ -176,7 +181,7 @@ export function TournamentView({
         <div className="overflow-hidden rounded-xl border border-white/10 event-aura-soft p-5">
           <div className="mb-4">
             <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-              <Crosshair className="size-5 text-accent" />
+              <BlastMark className="size-5 text-accent" />
               Bounty Predictor
             </h2>
           </div>

@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import {
   matches as staticMatches,
   getMatch as staticGetMatch,
+  inkForColor,
   type Match,
+  type Team,
 } from "@/lib/data";
 
 type Row = {
@@ -27,7 +29,35 @@ type Row = {
   h2h: Match["h2h"];
   open_questions: number;
   max_reward: number;
+  team_a_name: string | null;
+  team_a_logo: string | null;
+  team_a_color: string | null;
+  team_b_name: string | null;
+  team_b_logo: string | null;
+  team_b_color: string | null;
+  tournament_name: string | null;
+  tournament_icon: string | null;
 };
+
+function customTeam(
+  slug: string,
+  name: string | null,
+  logo: string | null,
+  color: string | null,
+): Team | undefined {
+  if (!name) return undefined;
+  const brand = color || "#1D1D20";
+  return {
+    slug: slug || "custom",
+    name,
+    tag: name.slice(0, 4).toUpperCase(),
+    logo: logo || "",
+    brand,
+    ink: inkForColor(brand),
+    region: "EU",
+    worldRank: 0,
+  };
+}
 
 function toMatch(r: Row): Match {
   return {
@@ -51,6 +81,10 @@ function toMatch(r: Row): Match {
     openQuestions: r.open_questions,
     maxReward: r.max_reward,
     stage: r.stage ?? "",
+    teamAData: customTeam(r.team_a, r.team_a_name, r.team_a_logo, r.team_a_color),
+    teamBData: customTeam(r.team_b, r.team_b_name, r.team_b_logo, r.team_b_color),
+    tournamentName: r.tournament_name ?? undefined,
+    tournamentIcon: r.tournament_icon ?? undefined,
   };
 }
 

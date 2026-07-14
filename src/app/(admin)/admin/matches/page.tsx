@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { TeamLogo } from "@/components/ui/TeamLogo";
+import { ImageField } from "@/components/admin/ImageField";
 import { teams, allTournaments, getTeam } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,18 @@ type MatchForm = {
   h2h_b: number;
   open_questions: number;
   max_reward: number;
+  // custom team / tournament
+  customA: boolean;
+  team_a_name: string;
+  team_a_logo: string;
+  team_a_color: string;
+  customB: boolean;
+  team_b_name: string;
+  team_b_logo: string;
+  team_b_color: string;
+  customTournament: boolean;
+  tournament_name: string;
+  tournament_icon: string;
   isNew?: boolean;
 };
 
@@ -61,6 +74,17 @@ function blank(): MatchForm {
     h2h_b: 0,
     open_questions: 0,
     max_reward: 0,
+    customA: false,
+    team_a_name: "",
+    team_a_logo: "",
+    team_a_color: "#1D1D20",
+    customB: false,
+    team_b_name: "",
+    team_b_logo: "",
+    team_b_color: "#1D1D20",
+    customTournament: false,
+    tournament_name: "",
+    tournament_icon: "",
     isNew: true,
   };
 }
@@ -123,6 +147,17 @@ export default function MatchesAdmin() {
       h2h_b: data.h2h?.b ?? 0,
       open_questions: data.open_questions,
       max_reward: data.max_reward,
+      customA: !!data.team_a_name,
+      team_a_name: data.team_a_name ?? "",
+      team_a_logo: data.team_a_logo ?? "",
+      team_a_color: data.team_a_color ?? "#1D1D20",
+      customB: !!data.team_b_name,
+      team_b_name: data.team_b_name ?? "",
+      team_b_logo: data.team_b_logo ?? "",
+      team_b_color: data.team_b_color ?? "#1D1D20",
+      customTournament: !!data.tournament_name,
+      tournament_name: data.tournament_name ?? "",
+      tournament_icon: data.tournament_icon ?? "",
     });
   }
 
@@ -130,9 +165,19 @@ export default function MatchesAdmin() {
     if (!editing) return;
     setSaving(true);
     setError(null);
+    const e = editing;
     const payload = {
-      ...editing,
-      h2h: { a: editing.h2h_a, b: editing.h2h_b },
+      ...e,
+      h2h: { a: e.h2h_a, b: e.h2h_b },
+      tournament_slug: e.customTournament ? "custom" : e.tournament_slug,
+      team_a_name: e.customA ? e.team_a_name : "",
+      team_a_logo: e.customA ? e.team_a_logo : "",
+      team_a_color: e.customA ? e.team_a_color : "",
+      team_b_name: e.customB ? e.team_b_name : "",
+      team_b_logo: e.customB ? e.team_b_logo : "",
+      team_b_color: e.customB ? e.team_b_color : "",
+      tournament_name: e.customTournament ? e.tournament_name : "",
+      tournament_icon: e.customTournament ? e.tournament_icon : "",
     };
     const res = await fetch("/api/admin/matches", {
       method: "POST",
@@ -276,31 +321,57 @@ export default function MatchesAdmin() {
                 {error}
               </p>
             )}
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Команда A">
-                <select className={inputCls} value={editing.team_a} onChange={(e) => up({ team_a: e.target.value })}>
-                  {teamList.map((t) => (
-                    <option key={t.slug} value={t.slug}>{t.name}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Команда B">
-                <select className={inputCls} value={editing.team_b} onChange={(e) => up({ team_b: e.target.value })}>
-                  {teamList.map((t) => (
-                    <option key={t.slug} value={t.slug}>{t.name}</option>
-                  ))}
-                </select>
-              </Field>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <TeamPicker
+                label="Команда A"
+                custom={editing.customA}
+                onCustom={(v) => up({ customA: v })}
+                slug={editing.team_a}
+                onSlug={(v) => up({ team_a: v })}
+                name={editing.team_a_name}
+                onName={(v) => up({ team_a_name: v })}
+                logo={editing.team_a_logo}
+                onLogo={(v) => up({ team_a_logo: v })}
+                color={editing.team_a_color}
+                onColor={(v) => up({ team_a_color: v })}
+              />
+              <TeamPicker
+                label="Команда B"
+                custom={editing.customB}
+                onCustom={(v) => up({ customB: v })}
+                slug={editing.team_b}
+                onSlug={(v) => up({ team_b: v })}
+                name={editing.team_b_name}
+                onName={(v) => up({ team_b_name: v })}
+                logo={editing.team_b_logo}
+                onLogo={(v) => up({ team_b_logo: v })}
+                color={editing.team_b_color}
+                onColor={(v) => up({ team_b_color: v })}
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Турнір">
-                <select className={inputCls} value={editing.tournament_slug} onChange={(e) => up({ tournament_slug: e.target.value })}>
-                  {allTournaments.map((t) => (
-                    <option key={t.slug} value={t.slug}>{t.shortName}</option>
-                  ))}
-                </select>
-              </Field>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-ink-muted">Турнір</span>
+                  <label className="flex items-center gap-1.5 text-[0.6875rem] text-ink-subtle">
+                    <input type="checkbox" checked={editing.customTournament} onChange={(e) => up({ customTournament: e.target.checked })} className="size-3.5 accent-[var(--accent)]" />
+                    свій
+                  </label>
+                </div>
+                {editing.customTournament ? (
+                  <div className="space-y-2">
+                    <input className={inputCls} placeholder="Назва турніру" value={editing.tournament_name} onChange={(e) => up({ tournament_name: e.target.value })} />
+                    <ImageField label="Іконка турніру" hint="64×64 px, PNG прозорий" folder="tournaments" value={editing.tournament_icon || undefined} onChange={(url) => up({ tournament_icon: url })} thumbW={40} thumbH={40} />
+                  </div>
+                ) : (
+                  <select className={inputCls} value={editing.tournament_slug} onChange={(e) => up({ tournament_slug: e.target.value })}>
+                    {allTournaments.map((t) => (
+                      <option key={t.slug} value={t.slug}>{t.shortName}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
               <Field label="Дизайн">
                 <select className={inputCls} value={editing.is_event ? "event" : "regular"} onChange={(e) => up({ is_event: e.target.value === "event" })}>
                   <option value="event">BLAST (неон)</option>
@@ -408,6 +479,86 @@ export default function MatchesAdmin() {
         )}
       </Modal>
     </>
+  );
+}
+
+function TeamPicker({
+  label,
+  custom,
+  onCustom,
+  slug,
+  onSlug,
+  name,
+  onName,
+  logo,
+  onLogo,
+  color,
+  onColor,
+}: {
+  label: string;
+  custom: boolean;
+  onCustom: (v: boolean) => void;
+  slug: string;
+  onSlug: (v: string) => void;
+  name: string;
+  onName: (v: string) => void;
+  logo: string;
+  onLogo: (v: string) => void;
+  color: string;
+  onColor: (v: string) => void;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="text-xs font-semibold text-ink-muted">{label}</span>
+        <label className="flex items-center gap-1.5 text-[0.6875rem] text-ink-subtle">
+          <input
+            type="checkbox"
+            checked={custom}
+            onChange={(e) => onCustom(e.target.checked)}
+            className="size-3.5 accent-[var(--accent)]"
+          />
+          своя
+        </label>
+      </div>
+      {custom ? (
+        <div className="space-y-2">
+          <input
+            className={inputCls}
+            placeholder="Назва команди"
+            value={name}
+            onChange={(e) => onName(e.target.value)}
+          />
+          <ImageField
+            label="Лого (256×256 px, PNG прозорий)"
+            hint="Показується білим/чорним на кольоровому квадраті"
+            folder="teams"
+            value={logo || undefined}
+            onChange={onLogo}
+            thumbW={40}
+            thumbH={40}
+          />
+          <label className="flex items-center gap-2 text-xs text-ink-muted">
+            Колір квадрата
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => onColor(e.target.value)}
+              className="h-8 w-12 cursor-pointer rounded border border-border bg-transparent"
+            />
+            <span className="tnum font-mono text-ink-subtle">{color}</span>
+          </label>
+        </div>
+      ) : (
+        <select className={inputCls} value={slug} onChange={(e) => onSlug(e.target.value)}>
+          {teamList.map((t) => (
+            <option key={t.slug} value={t.slug}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
   );
 }
 

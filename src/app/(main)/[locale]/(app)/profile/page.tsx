@@ -42,19 +42,29 @@ export default async function ProfilePage() {
     .gt("points", points);
   const rank = (above ?? 0) + 1;
 
-  // Prediction history (resolved against the question catalog).
+  // Prediction history, resolved against real question_results.
   const { data: preds } = await supabase
     .from("predictions")
     .select("question_id, option_id")
     .eq("user_id", user.id)
     .order("updated_at", { ascending: false });
 
+  const qIds = (preds ?? []).map((p) => p.question_id);
+  const { data: results } = qIds.length
+    ? await supabase
+        .from("question_results")
+        .select("question_id, correct_option_id")
+        .in("question_id", qIds)
+    : { data: [] };
+  const winners = new Map((results ?? []).map((r) => [r.question_id, r.correct_option_id]));
+
   const history: HistoryItem[] = (preds ?? [])
     .map((p): HistoryItem | null => {
       const q = getQuestion(p.question_id);
       if (!q) return null;
       const opt = q.options.find((o) => o.id === p.option_id);
-      const result = q.result ?? "pending";
+      const winner = winners.get(p.question_id);
+      const result = winner ? (winner === p.option_id ? "correct" : "wrong") : "pending";
       return {
         id: p.question_id,
         title: opt ? `${q.title} — ${opt.label}` : q.title,
