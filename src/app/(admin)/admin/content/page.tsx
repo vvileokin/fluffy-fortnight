@@ -4,8 +4,20 @@ import * as React from "react";
 import { Check, Loader2 } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { ImageField } from "@/components/admin/ImageField";
-import { tournaments, promoBanner } from "@/lib/data";
+import { tournaments, promoBanner, getTeam } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
+
+type MatchLite = {
+  id: string;
+  team_a: string;
+  team_b: string;
+  team_a_name: string | null;
+  team_b_name: string | null;
+};
+
+function teamTag(slug: string, name: string | null): string {
+  return name ? name.slice(0, 4).toUpperCase() : getTeam(slug).tag;
+}
 
 const inputCls =
   "h-10 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none";
@@ -21,6 +33,7 @@ export default function ContentAdmin() {
   );
   const [promoTarget, setPromoTarget] = React.useState<string>(promoBanner.target);
   const [covers, setCovers] = React.useState<Record<string, string>>({});
+  const [matches, setMatches] = React.useState<MatchLite[]>([]);
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -41,6 +54,13 @@ export default function ContentAdmin() {
         );
         setPromoTarget(data.promo_target || promoBanner.target);
         setCovers((data.covers as Record<string, string>) ?? {});
+      });
+    createClient()
+      .from("matches")
+      .select("id, team_a, team_b, team_a_name, team_b_name")
+      .order("start_at", { ascending: true, nullsFirst: false })
+      .then(({ data }) => {
+        if (!cancelled && data) setMatches(data as MatchLite[]);
       });
     return () => {
       cancelled = true;
@@ -168,12 +188,25 @@ export default function ContentAdmin() {
                       </option>
                     ))}
                   </select>
+                ) : matches.length > 0 ? (
+                  <select
+                    className={inputCls}
+                    value={promoTarget}
+                    onChange={(e) => setPromoTarget(e.target.value)}
+                  >
+                    <option value="">— обери матч —</option>
+                    {matches.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {teamTag(m.team_a, m.team_a_name)} vs {teamTag(m.team_b, m.team_b_name)}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     className={inputCls}
                     value={promoTarget}
                     onChange={(e) => setPromoTarget(e.target.value)}
-                    placeholder="ID матчу"
+                    placeholder="Спершу створи матч"
                   />
                 )}
               </label>

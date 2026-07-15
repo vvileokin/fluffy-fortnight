@@ -83,11 +83,8 @@ export default function BountyAdmin() {
     upd(id, { [key]: cur.includes(slug) ? cur.filter((x) => x !== slug) : [...cur, slug] } as Partial<StageState>);
   }
 
-  async function save(id: string) {
-    const s = state[id];
-    if (!s) return;
-    setSaving(id);
-    const res = await fetch("/api/admin/bounty", {
+  function postStage(id: string, s: StageState) {
+    return fetch("/api/admin/bounty", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -100,6 +97,13 @@ export default function BountyAdmin() {
         deadline: s.deadline ? new Date(s.deadline).toISOString() : null,
       }),
     });
+  }
+
+  async function save(id: string) {
+    const s = state[id];
+    if (!s) return;
+    setSaving(id);
+    const res = await postStage(id, s);
     setSaving(null);
     if (res.ok) {
       setSavedId(id);
@@ -108,6 +112,15 @@ export default function BountyAdmin() {
       const j = await res.json().catch(() => ({}));
       alert(j.error || "Помилка збереження");
     }
+  }
+
+  // Lock/unlock takes effect immediately for players — persist it right away.
+  async function toggleLock(id: string) {
+    const cur = state[id] ?? emptyState();
+    const next = { ...cur, locked: !cur.locked };
+    setState((p) => ({ ...p, [id]: next }));
+    const res = await postStage(id, next);
+    if (!res.ok) alert("Не вдалося змінити статус стадії");
   }
 
   async function resolveStage(id: string) {
@@ -165,7 +178,7 @@ export default function BountyAdmin() {
                     className="h-9 rounded-lg border border-border bg-surface-2 px-2.5 text-xs text-ink focus:border-accent focus:outline-none"
                   />
                   <button
-                    onClick={() => upd(meta.id, { locked: !s.locked })}
+                    onClick={() => toggleLock(meta.id)}
                     className={cn(
                       "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors",
                       s.locked

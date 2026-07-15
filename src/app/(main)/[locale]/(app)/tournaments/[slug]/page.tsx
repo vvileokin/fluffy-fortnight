@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { tournaments, getTournament } from "@/lib/data";
 import { getSiteSettings } from "@/lib/db/settings";
 import { getMatches } from "@/lib/db/matches";
-import { getLeaderboard } from "@/lib/db/leaderboard";
+import { getLeaderboard, getBountyLeaderboard } from "@/lib/db/leaderboard";
 import { TournamentView } from "./TournamentView";
 
 export function generateStaticParams() {
@@ -32,7 +32,10 @@ export default async function TournamentPage({
   const { covers } = await getSiteSettings();
   const tournament = covers[slug] ? { ...t, coverImage: covers[slug] } : t;
 
-  const [allMatches, leaderboard] = await Promise.all([getMatches(), getLeaderboard(20)]);
+  const [allMatches, leaderboard] = await Promise.all([
+    getMatches(),
+    t.isEvent ? getBountyLeaderboard(20) : getLeaderboard(20),
+  ]);
   const tourMatches = allMatches.filter((m) => m.tournamentSlug === slug);
 
   return (

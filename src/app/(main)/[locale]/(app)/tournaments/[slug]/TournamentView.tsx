@@ -178,7 +178,7 @@ export function TournamentView({
       )}
 
       {tab === "bounty" && (
-        <div className="overflow-hidden rounded-xl border border-white/10 event-aura-soft p-5">
+        <div className="rounded-xl border border-white/10 event-aura-soft p-5">
           <div className="mb-4">
             <h2 className="flex items-center gap-2 text-base font-bold text-ink">
               <BlastMark className="size-5 text-accent" />
@@ -222,7 +222,11 @@ export function TournamentView({
           <p className="text-sm text-ink-muted">
             Найкращі прогнозисти цього турніру.
           </p>
-          <LeaderboardTable rows={leaderboard} />
+          {leaderboard.length > 0 ? (
+            <LeaderboardTable rows={leaderboard} />
+          ) : (
+            <EmptyPanel text="Ще ніхто не зробив прогноз на цей турнір." />
+          )}
         </div>
       )}
     </div>
