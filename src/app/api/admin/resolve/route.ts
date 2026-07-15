@@ -19,9 +19,10 @@ export async function POST(request: Request) {
 
   const { data: q } = await admin
     .from("questions")
-    .select("options")
+    .select("title, options")
     .eq("id", question_id)
     .maybeSingle();
+  const title = q?.title ? String(q.title) : "Прогноз";
   const options: OptionRow[] = Array.isArray(q?.options) ? q!.options : [];
   const reward = options.find((o) => o.id === correct_option_id)?.reward ?? 0;
 
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
   const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
 
   let awarded = 0;
+  const notifs: { user_id: string; kind: string; title: string }[] = [];
   for (const p of preds) {
     const prof = byId.get(p.user_id);
     if (!prof) continue;
@@ -66,8 +68,14 @@ export async function POST(request: Request) {
       ? { points: prof.points + reward, correct: prof.correct + 1, streak: prof.streak + 1 }
       : { streak: 0 };
     await admin.from("profiles").update(next).eq("id", p.user_id);
+    notifs.push({
+      user_id: p.user_id,
+      kind: "reward",
+      title: won ? `Прогноз «${title}» зіграв — +${reward} поінтів` : `Прогноз «${title}» не зіграв`,
+    });
     if (won) awarded++;
   }
+  if (notifs.length > 0) await admin.from("notifications").insert(notifs);
 
   return NextResponse.json({ ok: true, awarded, reward });
 }

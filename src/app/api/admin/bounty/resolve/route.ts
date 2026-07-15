@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       .from("profiles")
       .select("id, points, bounty_points")
       .in("id", ids);
+    const notifs: { user_id: string; kind: string; title: string }[] = [];
     for (const prof of profiles ?? []) {
       const add = earned.get(prof.id) ?? 0;
       if (add <= 0) continue;
@@ -65,8 +66,14 @@ export async function POST(request: Request) {
         .from("profiles")
         .update({ points: prof.points + add, bounty_points: prof.bounty_points + add })
         .eq("id", prof.id);
+      notifs.push({
+        user_id: prof.id,
+        kind: "reward",
+        title: `Bounty «${meta.title}»: +${add} поінтів за вгадані пари`,
+      });
       awarded++;
     }
+    if (notifs.length > 0) await admin.from("notifications").insert(notifs);
   }
 
   await admin.from("bounty_stages").update({ resolved: true }).eq("stage_id", stage_id);

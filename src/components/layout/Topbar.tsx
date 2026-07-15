@@ -9,8 +9,9 @@ import { BlastMark } from "@/components/ui/BlastMark";
 import { Avatar } from "@/components/ui/Avatar";
 import { displayName } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
+import { createClient } from "@/lib/supabase/client";
 import { formatInt } from "@/lib/utils";
-import { notifications as seed, type NotifKind } from "@/lib/data";
+import { type NotifKind } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 const kindIcon: Record<NotifKind, typeof Bell> = {
@@ -20,15 +21,55 @@ const kindIcon: Record<NotifKind, typeof Bell> = {
   rank: TrendingUp,
 };
 
+type Notif = { id: string; kind: NotifKind; title: string; created_at: string; read: boolean };
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "щойно";
+  if (m < 60) return `${m} хв тому`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} год тому`;
+  const d = Math.floor(h / 24);
+  return `${d} дн тому`;
+}
+
 export function Topbar() {
   const t = useTranslations("nav");
   const { user, profile } = useProfile();
   const [open, setOpen] = React.useState(false);
-  const [items, setItems] = React.useState(seed);
-  const unread = items.filter((n) => n.unread).length;
+  const [items, setItems] = React.useState<Notif[]>([]);
+  const unread = items.filter((n) => !n.read).length;
+
+  React.useEffect(() => {
+    if (!user) {
+      setItems([]);
+      return;
+    }
+    let cancelled = false;
+    createClient()
+      .from("notifications")
+      .select("id, kind, title, created_at, read")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        if (!cancelled && data) setItems(data as Notif[]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   function markAll() {
-    setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
+    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+    if (user) {
+      void createClient()
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+    }
   }
 
   const handle = profile?.handle || (user ? displayName(user) : "");
@@ -127,20 +168,25 @@ export function Topbar() {
                   )}
                 </div>
                 <ul className="max-h-[min(24rem,60vh)] divide-y divide-border overflow-y-auto">
+                  {items.length === 0 && (
+                    <li className="px-4 py-10 text-center text-sm text-ink-subtle">
+                      Сповіщень поки немає
+                    </li>
+                  )}
                   {items.map((n) => {
-                    const Icon = kindIcon[n.kind];
+                    const Icon = kindIcon[n.kind] ?? Bell;
                     return (
                       <li
                         key={n.id}
                         className={cn(
                           "flex gap-3 px-4 py-3",
-                          n.unread && "bg-surface-2/50",
+                          !n.read && "bg-surface-2/50",
                         )}
                       >
                         <span
                           className={cn(
                             "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
-                            n.unread
+                            !n.read
                               ? "bg-[color-mix(in_oklch,var(--accent)_16%,transparent)] text-accent"
                               : "bg-surface-2 text-ink-subtle",
                           )}
@@ -149,9 +195,9 @@ export function Topbar() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm leading-snug text-ink">{n.title}</p>
-                          <p className="mt-0.5 text-xs text-ink-subtle">{n.time}</p>
+                          <p className="mt-0.5 text-xs text-ink-subtle">{timeAgo(n.created_at)}</p>
                         </div>
-                        {n.unread && (
+                        {!n.read && (
                           <span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />
                         )}
                       </li>

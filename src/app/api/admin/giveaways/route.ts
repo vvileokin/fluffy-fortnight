@@ -37,10 +37,25 @@ export async function POST(request: Request) {
   };
 
   const admin = createAdminClient();
+
+  // Detect whether this is a brand-new giveaway so we only notify on creation.
+  const { data: prior } = await admin.from("giveaways").select("slug").eq("slug", slug).maybeSingle();
+
   const { error } = await admin.from("giveaways").upsert(row, { onConflict: "slug" });
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+
+  if (!prior) {
+    const { data: users } = await admin.from("profiles").select("id");
+    const notifs = (users ?? []).map((u) => ({
+      user_id: u.id,
+      kind: "giveaway",
+      title: `Новий розіграш: ${row.prize}`,
+    }));
+    if (notifs.length > 0) await admin.from("notifications").insert(notifs);
+  }
+
   return NextResponse.json({ ok: true, slug });
 }
 
