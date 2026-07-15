@@ -79,7 +79,7 @@ export function Topbar() {
               {t("pointsShort")}
             </span>
           </span>
-          <Avatar name={handle} size="sm" />
+          <Avatar name={handle} src={profile?.avatar_url} size="sm" />
         </Link>
 
         <div className="relative">
