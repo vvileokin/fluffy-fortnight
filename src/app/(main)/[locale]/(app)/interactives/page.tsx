@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { questions } from "@/lib/data";
 import { InteractivesView } from "./InteractivesView";
 
 export const metadata: Metadata = { title: "Інтерактиви" };
 
 export default function InteractivesPage() {
-  return <InteractivesView questions={questions} />;
+  // Predictions are admin-created per match; none exist yet, so this is empty.
+  return <InteractivesView questions={[]} />;
 }

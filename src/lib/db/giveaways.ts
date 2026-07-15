@@ -1,10 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import {
-  giveaways as staticGiveaways,
-  getGiveaway as staticGetGiveaway,
-  type Giveaway,
-} from "@/lib/data";
+import { type Giveaway } from "@/lib/data";
 
 type Row = {
   slug: string;
@@ -47,10 +43,10 @@ export async function getGiveaways(): Promise<Giveaway[]> {
       .from("giveaways")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) return staticGiveaways; // table not created yet
-    return (data ?? []).map((r) => toGiveaway(r as Row)); // may be empty (that's fine)
+    if (error || !data) return [];
+    return data.map((r) => toGiveaway(r as Row)); // may be empty (that's fine)
   } catch {
-    return staticGiveaways;
+    return [];
   }
 }
 
@@ -62,5 +58,5 @@ export async function getGiveawayBySlug(slug: string): Promise<Giveaway | undefi
   } catch {
     /* fall through */
   }
-  return staticGetGiveaway(slug);
+  return undefined;
 }

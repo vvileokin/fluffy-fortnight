@@ -8,7 +8,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { ImageField } from "@/components/admin/ImageField";
-import { teams, allTournaments, getTeam } from "@/lib/data";
+import { teams, allTournaments, getTeam, inkForColor, type Team } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -44,10 +44,12 @@ type MatchForm = {
   team_a_name: string;
   team_a_logo: string;
   team_a_color: string;
+  team_a_rank: number;
   customB: boolean;
   team_b_name: string;
   team_b_logo: string;
   team_b_color: string;
+  team_b_rank: number;
   customTournament: boolean;
   tournament_name: string;
   tournament_icon: string;
@@ -78,10 +80,12 @@ function blank(): MatchForm {
     team_a_name: "",
     team_a_logo: "",
     team_a_color: "#1D1D20",
+    team_a_rank: 0,
     customB: false,
     team_b_name: "",
     team_b_logo: "",
     team_b_color: "#1D1D20",
+    team_b_rank: 0,
     customTournament: false,
     tournament_name: "",
     tournament_icon: "",
@@ -99,7 +103,31 @@ type Row = {
   stage: string | null;
   score_a: number;
   score_b: number;
+  team_a_name: string | null;
+  team_a_logo: string | null;
+  team_a_color: string | null;
+  team_b_name: string | null;
+  team_b_logo: string | null;
+  team_b_color: string | null;
 };
+
+/** The team to show in the list — the custom one when set, otherwise the catalog team. */
+function rowTeam(name: string | null, logo: string | null, color: string | null, slug: string): Team {
+  if (name) {
+    const brand = color || "#1D1D20";
+    return {
+      slug: slug || "custom",
+      name,
+      tag: name.slice(0, 4).toUpperCase(),
+      logo: logo || "",
+      brand,
+      ink: inkForColor(brand),
+      region: "EU",
+      worldRank: 0,
+    };
+  }
+  return getTeam(slug);
+}
 
 export default function MatchesAdmin() {
   const [rows, setRows] = React.useState<Row[] | null>(null);
@@ -111,7 +139,9 @@ export default function MatchesAdmin() {
   const load = React.useCallback(async () => {
     const { data, error } = await createClient()
       .from("matches")
-      .select("id, team_a, team_b, status, is_event, tournament_slug, stage, score_a, score_b")
+      .select(
+        "id, team_a, team_b, status, is_event, tournament_slug, stage, score_a, score_b, team_a_name, team_a_logo, team_a_color, team_b_name, team_b_logo, team_b_color",
+      )
       .order("start_at", { ascending: true, nullsFirst: false });
     if (error) {
       setTableMissing(true);
@@ -151,10 +181,12 @@ export default function MatchesAdmin() {
       team_a_name: data.team_a_name ?? "",
       team_a_logo: data.team_a_logo ?? "",
       team_a_color: data.team_a_color ?? "#1D1D20",
+      team_a_rank: data.team_a_rank ?? 0,
       customB: !!data.team_b_name,
       team_b_name: data.team_b_name ?? "",
       team_b_logo: data.team_b_logo ?? "",
       team_b_color: data.team_b_color ?? "#1D1D20",
+      team_b_rank: data.team_b_rank ?? 0,
       customTournament: !!data.tournament_name,
       tournament_name: data.tournament_name ?? "",
       tournament_icon: data.tournament_icon ?? "",
@@ -173,9 +205,11 @@ export default function MatchesAdmin() {
       team_a_name: e.customA ? e.team_a_name : "",
       team_a_logo: e.customA ? e.team_a_logo : "",
       team_a_color: e.customA ? e.team_a_color : "",
+      team_a_rank: e.customA ? e.team_a_rank : 0,
       team_b_name: e.customB ? e.team_b_name : "",
       team_b_logo: e.customB ? e.team_b_logo : "",
       team_b_color: e.customB ? e.team_b_color : "",
+      team_b_rank: e.customB ? e.team_b_rank : 0,
       tournament_name: e.customTournament ? e.tournament_name : "",
       tournament_icon: e.customTournament ? e.tournament_icon : "",
     };
@@ -245,15 +279,18 @@ export default function MatchesAdmin() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {(rows ?? []).map((r) => (
+              {(rows ?? []).map((r) => {
+                const a = rowTeam(r.team_a_name, r.team_a_logo, r.team_a_color, r.team_a);
+                const b = rowTeam(r.team_b_name, r.team_b_logo, r.team_b_color, r.team_b);
+                return (
                 <tr key={r.id} className="transition-colors hover:bg-surface-2">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <TeamLogo team={getTeam(r.team_a)} size="xs" />
-                      <span className="font-semibold text-ink">{getTeam(r.team_a).tag}</span>
+                      <TeamLogo team={a} size="xs" />
+                      <span className="font-semibold text-ink">{a.tag}</span>
                       <span className="text-ink-faint">vs</span>
-                      <span className="font-semibold text-ink">{getTeam(r.team_b).tag}</span>
-                      <TeamLogo team={getTeam(r.team_b)} size="xs" />
+                      <span className="font-semibold text-ink">{b.tag}</span>
+                      <TeamLogo team={b} size="xs" />
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -286,7 +323,8 @@ export default function MatchesAdmin() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {rows && rows.length === 0 && !tableMissing && (
                 <tr>
                   <td colSpan={5} className="px-4 py-10 text-center text-sm text-ink-subtle">
@@ -334,6 +372,8 @@ export default function MatchesAdmin() {
                 onLogo={(v) => up({ team_a_logo: v })}
                 color={editing.team_a_color}
                 onColor={(v) => up({ team_a_color: v })}
+                rank={editing.team_a_rank}
+                onRank={(v) => up({ team_a_rank: v })}
               />
               <TeamPicker
                 label="Команда B"
@@ -347,6 +387,8 @@ export default function MatchesAdmin() {
                 onLogo={(v) => up({ team_b_logo: v })}
                 color={editing.team_b_color}
                 onColor={(v) => up({ team_b_color: v })}
+                rank={editing.team_b_rank}
+                onRank={(v) => up({ team_b_rank: v })}
               />
             </div>
 
@@ -494,6 +536,8 @@ function TeamPicker({
   onLogo,
   color,
   onColor,
+  rank,
+  onRank,
 }: {
   label: string;
   custom: boolean;
@@ -506,6 +550,8 @@ function TeamPicker({
   onLogo: (v: string) => void;
   color: string;
   onColor: (v: string) => void;
+  rank: number;
+  onRank: (v: number) => void;
 }) {
   return (
     <div>
@@ -547,6 +593,17 @@ function TeamPicker({
               className="h-8 w-12 cursor-pointer rounded border border-border bg-transparent"
             />
             <span className="tnum font-mono text-ink-subtle">{color}</span>
+          </label>
+          <label className="flex items-center gap-2 text-xs text-ink-muted">
+            Рейтинг у світі
+            <input
+              type="number"
+              min={0}
+              value={rank}
+              onChange={(e) => onRank(Number(e.target.value))}
+              placeholder="0 = без рейтингу"
+              className={cn(inputCls, "tnum h-8 w-24 font-mono")}
+            />
           </label>
         </div>
       ) : (

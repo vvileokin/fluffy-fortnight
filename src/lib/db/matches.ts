@@ -1,12 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import {
-  matches as staticMatches,
-  getMatch as staticGetMatch,
-  inkForColor,
-  type Match,
-  type Team,
-} from "@/lib/data";
+import { inkForColor, type Match, type Team } from "@/lib/data";
 
 type Row = {
   id: string;
@@ -32,9 +26,11 @@ type Row = {
   team_a_name: string | null;
   team_a_logo: string | null;
   team_a_color: string | null;
+  team_a_rank: number | null;
   team_b_name: string | null;
   team_b_logo: string | null;
   team_b_color: string | null;
+  team_b_rank: number | null;
   tournament_name: string | null;
   tournament_icon: string | null;
 };
@@ -44,6 +40,7 @@ function customTeam(
   name: string | null,
   logo: string | null,
   color: string | null,
+  rank: number | null,
 ): Team | undefined {
   if (!name) return undefined;
   const brand = color || "#1D1D20";
@@ -55,7 +52,7 @@ function customTeam(
     brand,
     ink: inkForColor(brand),
     region: "EU",
-    worldRank: 0,
+    worldRank: rank ?? 0,
   };
 }
 
@@ -81,14 +78,14 @@ function toMatch(r: Row): Match {
     openQuestions: r.open_questions,
     maxReward: r.max_reward,
     stage: r.stage ?? "",
-    teamAData: customTeam(r.team_a, r.team_a_name, r.team_a_logo, r.team_a_color),
-    teamBData: customTeam(r.team_b, r.team_b_name, r.team_b_logo, r.team_b_color),
+    teamAData: customTeam(r.team_a, r.team_a_name, r.team_a_logo, r.team_a_color, r.team_a_rank),
+    teamBData: customTeam(r.team_b, r.team_b_name, r.team_b_logo, r.team_b_color, r.team_b_rank),
     tournamentName: r.tournament_name ?? undefined,
     tournamentIcon: r.tournament_icon ?? undefined,
   };
 }
 
-/** All matches from the DB; falls back to the built-in seed if the table is absent/empty. */
+/** All matches from the DB. Empty when there are none — the site shows an empty state. */
 export async function getMatches(): Promise<Match[]> {
   try {
     const sb = await createClient();
@@ -96,10 +93,10 @@ export async function getMatches(): Promise<Match[]> {
       .from("matches")
       .select("*")
       .order("start_at", { ascending: true, nullsFirst: false });
-    if (error || !data || data.length === 0) return staticMatches;
+    if (error || !data) return [];
     return data.map((r) => toMatch(r as Row));
   } catch {
-    return staticMatches;
+    return [];
   }
 }
 
@@ -111,5 +108,5 @@ export async function getMatchById(id: string): Promise<Match | undefined> {
   } catch {
     /* fall through */
   }
-  return staticGetMatch(id);
+  return undefined;
 }

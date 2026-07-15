@@ -110,7 +110,9 @@ export default async function MatchPage({
               </LogoFrame>
               <div className="min-w-0">
                 <p className="truncate text-lg font-bold text-ink lg:text-xl">{a.name}</p>
-                <p className="text-xs text-ink-subtle">#{a.worldRank} у світі</p>
+                {a.worldRank > 0 && (
+                  <p className="text-xs text-ink-subtle">#{a.worldRank} у світі</p>
+                )}
               </div>
             </div>
 
@@ -157,7 +159,9 @@ export default async function MatchPage({
             <div className="flex flex-1 items-center justify-end gap-4">
               <div className="min-w-0 text-right">
                 <p className="truncate text-lg font-bold text-ink lg:text-xl">{b.name}</p>
-                <p className="text-xs text-ink-subtle">#{b.worldRank} у світі</p>
+                {b.worldRank > 0 && (
+                  <p className="text-xs text-ink-subtle">#{b.worldRank} у світі</p>
+                )}
               </div>
               <LogoFrame framed={isEvent}>
                 <TeamLogo team={b} size="xl" />
@@ -331,7 +335,9 @@ function MobileTeamRow({
       <TeamLogo team={team} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold text-ink">{team.name}</p>
-        <p className="text-xs text-ink-subtle">#{team.worldRank} у світі</p>
+        {team.worldRank > 0 && (
+          <p className="text-xs text-ink-subtle">#{team.worldRank} у світі</p>
+        )}
       </div>
       {showScore && (
         <span

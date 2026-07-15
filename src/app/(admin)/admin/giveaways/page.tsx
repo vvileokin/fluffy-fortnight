@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Trophy, Check, Clock, Dices, Crown, Plus } from "lucide-react";
+import { Trophy, Check, Clock, Dices, Crown, Plus, Trash2 } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { ImageField } from "@/components/admin/ImageField";
-import { giveaways } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Applicant = { handle: string; confirmed: boolean };
@@ -38,14 +38,43 @@ const emptyForm = {
 };
 
 export default function GiveawaysAdmin() {
-  const [list, setList] = React.useState<GiveItem[]>(
-    giveaways.map((g) => ({ slug: g.slug, prize: g.prize })),
-  );
-  const [active, setActive] = React.useState(giveaways[0].slug);
+  const [list, setList] = React.useState<GiveItem[]>([]);
+  const [active, setActive] = React.useState<string | null>(null);
   const [winner, setWinner] = React.useState<string | null>(null);
   const [confirmReroll, setConfirmReroll] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
   const [form, setForm] = React.useState(emptyForm);
+
+  const load = React.useCallback(async () => {
+    const { data } = await createClient()
+      .from("giveaways")
+      .select("slug, prize")
+      .order("created_at", { ascending: false });
+    const items = (data as GiveItem[]) ?? [];
+    setList(items);
+    setActive((cur) => cur ?? items[0]?.slug ?? null);
+  }, []);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function remove(slug: string) {
+    if (!confirm("Видалити розіграш? Це також прибере його з сайту.")) return;
+    const res = await fetch("/api/admin/giveaways", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      alert(j.error || "Не вдалося видалити");
+      return;
+    }
+    setList((prev) => prev.filter((g) => g.slug !== slug));
+    setActive((cur) => (cur === slug ? null : cur));
+    setWinner(null);
+  }
 
   const confirmed = applicants.filter((a) => a.confirmed);
 
@@ -109,26 +138,46 @@ export default function GiveawaysAdmin() {
       />
 
       {/* Giveaway selector */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        {list.map((g) => (
-          <button
-            key={g.slug}
-            onClick={() => {
-              setActive(g.slug);
-              setWinner(null);
-              setConfirmReroll(false);
-            }}
-            className={cn(
-              "rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
-              active === g.slug
-                ? "border-accent/50 bg-accent/10 text-ink"
-                : "border-border bg-surface text-ink-muted hover:bg-surface-2",
-            )}
-          >
-            {g.prize}
-          </button>
-        ))}
-      </div>
+      {list.length === 0 ? (
+        <div className="mb-4 rounded-lg border border-dashed border-border bg-surface px-4 py-8 text-center text-sm text-ink-subtle">
+          Розіграшів ще немає. Створи перший — він одразу з’явиться на сайті.
+        </div>
+      ) : (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {list.map((g) => (
+            <div
+              key={g.slug}
+              className={cn(
+                "flex items-center rounded-lg border transition-colors",
+                active === g.slug
+                  ? "border-accent/50 bg-accent/10"
+                  : "border-border bg-surface hover:bg-surface-2",
+              )}
+            >
+              <button
+                onClick={() => {
+                  setActive(g.slug);
+                  setWinner(null);
+                  setConfirmReroll(false);
+                }}
+                className={cn(
+                  "py-2 pl-3 pr-2 text-sm font-semibold",
+                  active === g.slug ? "text-ink" : "text-ink-muted",
+                )}
+              >
+                {g.prize}
+              </button>
+              <button
+                onClick={() => remove(g.slug)}
+                aria-label="Видалити розіграш"
+                className="grid size-8 place-items-center rounded-r-lg text-ink-subtle transition-colors hover:bg-danger/15 hover:text-danger"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_18rem]">
         <Panel

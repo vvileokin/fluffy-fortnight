@@ -23,8 +23,6 @@ import { cn } from "@/lib/utils";
 
 type IconType = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
-const KEY = "cs2ua:admin";
-
 const nav: { href: string; label: string; icon: IconType; adminOnly?: boolean }[] = [
   { href: "/admin", label: "Огляд", icon: LayoutDashboard },
   { href: "/admin/matches", label: "Матчі", icon: Swords },
@@ -42,16 +40,19 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   React.useEffect(() => {
-    setAuthed(sessionStorage.getItem(KEY) === "1");
+    // Unlock the panel only when the admin cookie is actually valid server-side,
+    // so UI state and API auth never drift apart.
+    fetch("/api/admin/login")
+      .then((r) => r.json())
+      .then((d) => setAuthed(!!d.authed))
+      .catch(() => setAuthed(false));
   }, []);
 
   const unlock = React.useCallback(() => {
-    sessionStorage.setItem(KEY, "1");
     setAuthed(true);
   }, []);
 
   const logout = React.useCallback(() => {
-    sessionStorage.removeItem(KEY);
     void fetch("/api/admin/login", { method: "DELETE" });
     setAuthed(false);
   }, []);

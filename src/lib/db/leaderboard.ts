@@ -1,8 +1,8 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { seasonLeaderboard, type LeaderRow } from "@/lib/data";
+import { type LeaderRow } from "@/lib/data";
 
-/** Season leaderboard from real profiles; falls back to the seed if empty/absent. */
+/** Season leaderboard from real profiles. Empty when there are none. */
 export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
   try {
     const sb = await createClient();
@@ -15,7 +15,7 @@ export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
       .order("points", { ascending: false })
       .order("correct", { ascending: false })
       .limit(limit);
-    if (error || !data || data.length === 0) return seasonLeaderboard;
+    if (error || !data) return [];
     return data.map((p, i) => ({
       rank: i + 1,
       handle: p.handle,
@@ -26,6 +26,6 @@ export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
       isYou: user?.id === p.id,
     }));
   } catch {
-    return seasonLeaderboard;
+    return [];
   }
 }

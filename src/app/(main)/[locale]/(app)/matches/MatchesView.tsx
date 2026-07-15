@@ -53,6 +53,21 @@ export function MatchesView({
     }))
     .filter((g) => g.items.length > 0);
 
+  if (matches.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageIntro icon={Swords} title="Матчі" />
+        <div className="grid place-items-center rounded-lg border border-dashed border-border bg-surface px-6 py-16 text-center">
+          <Swords className="size-8 text-ink-faint" />
+          <p className="mt-3 text-sm font-semibold text-ink">Наразі матчів немає</p>
+          <p className="mt-1 text-xs text-ink-subtle">
+            Щойно з’являться найближчі матчі — вони будуть тут.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageIntro icon={Swords} title="Матчі" />
