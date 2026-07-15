@@ -1,36 +1,74 @@
 "use client";
 
 import * as React from "react";
-import { Check, Swords, Info, ChevronRight, Lock } from "lucide-react";
+import { Check, Swords, Info, ChevronRight, Lock, Trophy } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge } from "@/components/ui/Badge";
-import {
-  bountyHighSeeds,
-  bountyLowSeeds,
-  bountyStages,
-  getTeam,
-} from "@/lib/data";
+import { bountyStages, getTeam } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
 import { useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Picks = Record<string, Record<string, string>>; // stageId -> lowSlug -> highSlug
+type StageState = {
+  teams: string[];
+  lowSeeds: string[];
+  winners: string[];
+  locked: boolean;
+  deadlineISO: string | null;
+};
+
+function fmtDeadline(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
 
 export function BountyPredictor() {
   const user = useUser();
   const router = useRouter();
   const [active, setActive] = React.useState(bountyStages[0].id);
   const [picks, setPicks] = React.useState<Picks>({});
+  const [stages, setStages] = React.useState<Record<string, StageState>>({});
   const [saved, setSaved] = React.useState(false);
 
-  const stage = bountyStages.find((s) => s.id === active)!;
-  const lows = bountyLowSeeds.slice(0, stage.pairCount);
-  const highs = bountyHighSeeds.slice(0, stage.pairCount);
-  const stagePicks = picks[stage.id] ?? {};
+  const meta = bountyStages.find((s) => s.id === active)!;
+  const state = stages[active];
+  const lows = state?.lowSeeds ?? [];
+  const highs = (state?.teams ?? []).filter((t) => !lows.includes(t));
+  const deadlinePassed = !!state?.deadlineISO && new Date(state.deadlineISO).getTime() < Date.now();
+  const locked = !!state?.locked || deadlinePassed;
+  const configured = (state?.teams.length ?? 0) > 0;
+  const stagePicks = picks[active] ?? {};
   const made = Object.keys(stagePicks).length;
 
-  // Load this user's saved bounty picks.
+  // Load stage config (public) + this user's saved picks.
+  React.useEffect(() => {
+    let cancelled = false;
+    createClient()
+      .from("bounty_stages")
+      .select("stage_id, teams, low_seeds, winners, locked, deadline")
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const next: Record<string, StageState> = {};
+        for (const r of data) {
+          next[r.stage_id] = {
+            teams: Array.isArray(r.teams) ? r.teams : [],
+            lowSeeds: Array.isArray(r.low_seeds) ? r.low_seeds : [],
+            winners: Array.isArray(r.winners) ? r.winners : [],
+            locked: !!r.locked,
+            deadlineISO: r.deadline ?? null,
+          };
+        }
+        setStages(next);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   React.useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -41,9 +79,7 @@ export function BountyPredictor() {
       .then(({ data }) => {
         if (cancelled || !data) return;
         const next: Picks = {};
-        for (const r of data) {
-          (next[r.stage_id] ??= {})[r.low_slug] = r.high_slug;
-        }
+        for (const r of data) (next[r.stage_id] ??= {})[r.low_slug] = r.high_slug;
         setPicks(next);
       });
     return () => {
@@ -52,19 +88,17 @@ export function BountyPredictor() {
   }, [user]);
 
   function pick(low: string, high: string) {
+    if (locked) return;
     if (!user) {
       router.push("/login");
       return;
     }
-    setPicks((prev) => ({
-      ...prev,
-      [stage.id]: { ...(prev[stage.id] ?? {}), [low]: high },
-    }));
+    setPicks((prev) => ({ ...prev, [active]: { ...(prev[active] ?? {}), [low]: high } }));
     setSaved(false);
     createClient()
       .from("bounty_picks")
       .upsert(
-        { user_id: user.id, stage_id: stage.id, low_slug: low, high_slug: high },
+        { user_id: user.id, stage_id: active, low_slug: low, high_slug: high },
         { onConflict: "user_id,stage_id,low_slug" },
       )
       .then(() => {});
@@ -85,9 +119,7 @@ export function BountyPredictor() {
               }}
               className={cn(
                 "shrink-0 rounded-lg border px-3.5 py-2 text-sm font-semibold transition-colors",
-                on
-                  ? "border-accent/50 bg-accent/10 text-ink"
-                  : "border-border bg-surface text-ink-muted hover:bg-surface-2",
+                on ? "border-accent/50 bg-accent/10 text-ink" : "border-border bg-surface text-ink-muted hover:bg-surface-2",
               )}
             >
               {s.title}
@@ -99,75 +131,75 @@ export function BountyPredictor() {
       {/* Stage header */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface-2/50 px-4 py-3">
         <p className="flex items-center gap-2 text-sm text-ink-muted">
-          {stage.locked ? (
-            <Lock className="size-4 shrink-0 text-warning" />
-          ) : (
-            <Info className="size-4 shrink-0 text-info" />
-          )}
-          {stage.note}
+          {locked ? <Lock className="size-4 shrink-0 text-warning" /> : <Info className="size-4 shrink-0 text-info" />}
+          {locked
+            ? deadlinePassed
+              ? "Прийом прогнозів завершено."
+              : "Стадія ще не відкрита."
+            : meta.note}
         </p>
-        <Badge tone="accent">до +{stage.reward} за пару</Badge>
+        <div className="flex items-center gap-2">
+          {state?.deadlineISO && (
+            <span className="text-xs text-ink-subtle">до {fmtDeadline(state.deadlineISO)}</span>
+          )}
+          <Badge tone="accent">до +{meta.reward} за пару</Badge>
+        </div>
       </div>
 
-      {stage.locked ? (
-        <LockedStage pairs={stage.pairCount} />
-      ) : stage.kind === "picks" ? (
+      {!configured ? (
+        <StagePlaceholder />
+      ) : meta.kind === "bracket" ? (
+        <BracketStage teams={state.teams} winners={state.winners} reward={meta.reward} />
+      ) : (
         <>
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
             {lows.map((low) => {
               const lowTeam = getTeam(low);
               const chosen = stagePicks[low];
+              const advanced = state.winners.includes(low);
               return (
-                <div
-                  key={low}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5"
-                >
+                <div key={low} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5">
                   <TeamLogo team={lowTeam} size="md" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-ink">{lowTeam.name}</p>
-                    <p className="text-[0.6875rem] text-ink-subtle">нижчий сід · пікає</p>
+                    <p className="text-[0.6875rem] text-ink-subtle">
+                      нижчий сід · пікає
+                      {state.winners.length > 0 && (
+                        <span className={cn("ml-1.5 font-semibold", advanced ? "text-success" : "text-danger")}>
+                          {advanced ? "· пройшов" : "· вибув"}
+                        </span>
+                      )}
+                    </p>
                   </div>
-
                   <ChevronRight className="size-4 shrink-0 text-ink-faint" />
-
-                  <HighPicker
-                    highs={highs}
-                    value={chosen}
-                    onPick={(h) => pick(low, h)}
-                  />
+                  <HighPicker highs={highs} value={chosen} disabled={locked} onPick={(h) => pick(low, h)} />
                 </div>
               );
             })}
           </div>
 
-          <div className="flex items-center justify-between border-t border-border pt-4">
-            <span className="text-xs text-ink-subtle">
-              Обрано <span className="tnum font-semibold text-ink">{made}</span> / {stage.pairCount}
-            </span>
-            <button
-              disabled={made < stage.pairCount}
-              onClick={() => setSaved(true)}
-              className={cn(
-                "inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors",
-                saved
-                  ? "bg-success/15 text-success"
-                  : made >= stage.pairCount
-                    ? "bg-accent text-accent-ink hover:bg-accent-hover"
-                    : "bg-surface-3 text-ink-faint",
-              )}
-            >
-              {saved ? (
-                <>
-                  <Check className="size-4" strokeWidth={3} /> Прогноз збережено
-                </>
-              ) : (
-                "Зберегти bounty-прогноз"
-              )}
-            </button>
-          </div>
+          {!locked && (
+            <div className="flex items-center justify-between border-t border-border pt-4">
+              <span className="text-xs text-ink-subtle">
+                Обрано <span className="tnum font-semibold text-ink">{made}</span> / {lows.length}
+              </span>
+              <button
+                disabled={made < lows.length || lows.length === 0}
+                onClick={() => setSaved(true)}
+                className={cn(
+                  "inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors",
+                  saved
+                    ? "bg-success/15 text-success"
+                    : made >= lows.length && lows.length > 0
+                      ? "bg-accent text-accent-ink hover:bg-accent-hover"
+                      : "bg-surface-3 text-ink-faint",
+                )}
+              >
+                {saved ? <><Check className="size-4" strokeWidth={3} /> Прогноз збережено</> : "Зберегти bounty-прогноз"}
+              </button>
+            </div>
+          )}
         </>
-      ) : (
-        <BracketStage reward={stage.reward} />
       )}
     </div>
   );
@@ -176,10 +208,12 @@ export function BountyPredictor() {
 function HighPicker({
   highs,
   value,
+  disabled,
   onPick,
 }: {
   highs: string[];
   value?: string;
+  disabled?: boolean;
   onPick: (slug: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -188,30 +222,25 @@ function HighPicker({
   return (
     <div className="relative shrink-0">
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => !disabled && setOpen((v) => !v)}
+        disabled={disabled}
         className={cn(
-          "flex h-11 w-[8.5rem] items-center gap-2 rounded-lg border px-2 text-left transition-colors sm:w-40",
-          value
-            ? "border-accent/50 bg-accent/10"
-            : "border-border-strong bg-surface-2 hover:bg-surface-3",
+          "flex h-11 w-[8.5rem] items-center gap-2 rounded-lg border px-2 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-70 sm:w-40",
+          value ? "border-accent/50 bg-accent/10" : "border-border-strong bg-surface-2 hover:bg-surface-3",
         )}
       >
         {team ? (
           <>
             <TeamLogo team={team} size="sm" />
-            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
-              {team.tag}
-            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{team.tag}</span>
           </>
         ) : (
-          <span className="flex-1 px-1 text-sm font-semibold text-ink-muted">
-            Обрати
-          </span>
+          <span className="flex-1 px-1 text-sm font-semibold text-ink-muted">Обрати</span>
         )}
         <Swords className="size-4 shrink-0 text-ink-subtle" />
       </button>
 
-      {open && (
+      {open && !disabled && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-[calc(100%+0.25rem)] z-40 max-h-64 w-52 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]">
@@ -231,9 +260,7 @@ function HighPicker({
                   )}
                 >
                   <TeamLogo team={t} size="sm" />
-                  <span className="flex-1 truncate text-sm font-semibold text-ink">
-                    {t.name}
-                  </span>
+                  <span className="flex-1 truncate text-sm font-semibold text-ink">{t.name}</span>
                   {sel && <Check className="size-4 text-accent" strokeWidth={3} />}
                 </button>
               );
@@ -245,59 +272,59 @@ function HighPicker({
   );
 }
 
-function LockedStage({ pairs }: { pairs: number }) {
+function StagePlaceholder() {
   return (
-    <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-      {Array.from({ length: pairs }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 rounded-lg border border-dashed border-border bg-surface p-2.5 opacity-70"
-        >
-          <span className="grid size-10 shrink-0 place-items-center rounded-md bg-surface-2 text-ink-faint">
-            <Lock className="size-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-ink-subtle">TBD</p>
-            <p className="text-[0.6875rem] text-ink-faint">очікує попередню стадію</p>
-          </div>
-          <ChevronRight className="size-4 shrink-0 text-ink-faint" />
-          <span className="flex h-11 w-[8.5rem] items-center justify-center rounded-lg border border-dashed border-border bg-surface-2 text-sm font-semibold text-ink-faint sm:w-40">
-            TBD
-          </span>
-        </div>
-      ))}
+    <div className="grid place-items-center rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center">
+      <Lock className="size-7 text-ink-faint" />
+      <p className="mt-3 text-sm font-semibold text-ink">Стадію ще не налаштовано</p>
+      <p className="mt-1 text-xs text-ink-subtle">Команди з’являться, щойно адмін відкриє стадію.</p>
     </div>
   );
 }
 
-function BracketStage({ reward }: { reward: number }) {
+function BracketStage({ teams, winners, reward }: { teams: string[]; winners: string[]; reward: number }) {
+  const semis = teams.slice(0, 4).map(getTeam);
+  const finalists = winners.slice(0, 2).map(getTeam);
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {["Півфінал 1", "Півфінал 2"].map((label) => (
+        {[
+          { label: "Півфінал 1", pair: [semis[0], semis[1]] },
+          { label: "Півфінал 2", pair: [semis[2], semis[3]] },
+        ].map(({ label, pair }) => (
           <div key={label} className="rounded-lg border border-border bg-surface p-4">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">
-              {label}
-            </p>
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">{label}</p>
             <div className="mt-3 space-y-2">
-              {["Переможець ЧФ", "Переможець ЧФ"].map((s, i) => (
+              {pair.map((t, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2.5 rounded-md border border-dashed border-border bg-surface-2 px-3 py-2.5 text-sm text-ink-subtle"
+                  className="flex items-center gap-2.5 rounded-md border border-border bg-surface-2 px-3 py-2.5 text-sm text-ink"
                 >
-                  <span className="size-6 rounded-md border border-border bg-surface" />
-                  {s} · навхрест
+                  {t ? <TeamLogo team={t} size="sm" /> : <span className="size-6 rounded-md border border-border bg-surface" />}
+                  <span className="font-semibold">{t ? t.name : "Очікує команду"}</span>
                 </div>
               ))}
             </div>
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/50 px-4 py-3 text-sm text-ink-muted">
-        <Info className="size-4 shrink-0 text-info" />
-        Пари півфіналів формуються системою навхрест після чвертьфіналів. Прогноз
-        переможців відкриється тут — до +{reward} за вгадану стадію.
-      </div>
+      {finalists.length > 0 ? (
+        <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3">
+          <Trophy className="size-5 shrink-0 text-accent" />
+          <div className="min-w-0">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">Гранд-фінал</p>
+            <p className="truncate text-sm font-bold text-ink">
+              {finalists.map((t) => t.name).join(" vs ")}
+              {finalists.length < 2 && " · очікує 2-го фіналіста"}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/50 px-4 py-3 text-sm text-ink-muted">
+          <Info className="size-4 shrink-0 text-info" />
+          Фінал сформується автоматично після переможців півфіналів — до +{reward} за вгадану стадію.
+        </div>
+      )}
     </div>
   );
 }
