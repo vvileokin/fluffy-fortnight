@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getQuestion } from "@/lib/data";
+
+type OptionRow = { id: string; reward: number };
 
 // Resolve a question: record the winning option and award points to users who
 // picked it. Guarded so a question can't be awarded twice.
@@ -10,13 +11,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   const { question_id, correct_option_id } = await request.json().catch(() => ({}));
-  const q = getQuestion(String(question_id ?? ""));
-  if (!q || !correct_option_id) {
+  if (!question_id || !correct_option_id) {
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
   }
-  const reward = q.options.find((o) => o.id === correct_option_id)?.reward ?? 0;
 
   const admin = createAdminClient();
+
+  const { data: q } = await admin
+    .from("questions")
+    .select("options")
+    .eq("id", question_id)
+    .maybeSingle();
+  const options: OptionRow[] = Array.isArray(q?.options) ? q!.options : [];
+  const reward = options.find((o) => o.id === correct_option_id)?.reward ?? 0;
 
   // Guard: if already resolved, don't award again.
   const { data: existing } = await admin
@@ -33,6 +40,7 @@ export async function POST(request: Request) {
     correct_option_id,
     resolved_at: new Date().toISOString(),
   });
+  await admin.from("questions").update({ status: "resolved" }).eq("id", question_id);
 
   const { data: preds } = await admin
     .from("predictions")

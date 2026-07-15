@@ -111,6 +111,32 @@ function toMatch(r: Row): Match {
   });
 }
 
+type SB = Awaited<ReturnType<typeof createClient>>;
+
+/** Overlay open-question count + max reward from the questions table onto matches. */
+async function withQuestionStats(sb: SB, list: Match[]): Promise<Match[]> {
+  try {
+    const { data } = await sb
+      .from("questions")
+      .select("match_id, status, options")
+      .in("status", ["open", "upcoming"]);
+    if (!data) return list;
+    const stats = new Map<string, { count: number; max: number }>();
+    for (const q of data as { match_id: string; options: { reward?: number }[] | null }[]) {
+      const opts = Array.isArray(q.options) ? q.options : [];
+      const max = opts.reduce((m, o) => Math.max(m, Number(o.reward) || 0), 0);
+      const cur = stats.get(q.match_id) ?? { count: 0, max: 0 };
+      stats.set(q.match_id, { count: cur.count + 1, max: Math.max(cur.max, max) });
+    }
+    return list.map((m) => {
+      const s = stats.get(m.id);
+      return s ? { ...m, openQuestions: s.count, maxReward: s.max } : { ...m, openQuestions: 0, maxReward: 0 };
+    });
+  } catch {
+    return list;
+  }
+}
+
 /** All matches from the DB. Empty when there are none — the site shows an empty state. */
 export async function getMatches(): Promise<Match[]> {
   try {
@@ -120,7 +146,7 @@ export async function getMatches(): Promise<Match[]> {
       .select("*")
       .order("start_at", { ascending: true, nullsFirst: false });
     if (error || !data) return [];
-    return data.map((r) => toMatch(r as Row));
+    return withQuestionStats(sb, data.map((r) => toMatch(r as Row)));
   } catch {
     return [];
   }
@@ -130,7 +156,7 @@ export async function getMatchById(id: string): Promise<Match | undefined> {
   try {
     const sb = await createClient();
     const { data } = await sb.from("matches").select("*").eq("id", id).maybeSingle();
-    if (data) return toMatch(data as Row);
+    if (data) return (await withQuestionStats(sb, [toMatch(data as Row)]))[0];
   } catch {
     /* fall through */
   }

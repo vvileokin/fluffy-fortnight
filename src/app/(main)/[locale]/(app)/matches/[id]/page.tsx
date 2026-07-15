@@ -10,10 +10,10 @@ import {
   getTeam,
   getTournament,
   matchTeam,
-  questionsForMatch,
   type VetoStep,
 } from "@/lib/data";
 import { getMatchById } from "@/lib/db/matches";
+import { getQuestionsForMatch } from "@/lib/db/questions";
 import { cn } from "@/lib/utils";
 
 // --- Fallback veto (design-first) when a match has none set in the DB ---
@@ -41,7 +41,7 @@ export default async function MatchPage({
   const tour = getTournament(match.tournamentSlug);
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const veto = match.veto && match.veto.length > 0 ? match.veto : defaultVeto;
-  const questions = questionsForMatch(id);
+  const questions = await getQuestionsForMatch(id);
   const isLive = match.status === "live";
   const showScore = isLive || match.status === "finished";
 

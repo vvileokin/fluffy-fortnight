@@ -7,10 +7,11 @@ import { MatchCard } from "@/components/cards/MatchCard";
 import { GiveawayCard } from "@/components/cards/GiveawayCard";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import { tournaments, type Question } from "@/lib/data";
+import { tournaments } from "@/lib/data";
 import { getMatches } from "@/lib/db/matches";
 import { getLeaderboard } from "@/lib/db/leaderboard";
 import { getGiveaways } from "@/lib/db/giveaways";
+import { getOpenQuestions } from "@/lib/db/questions";
 import { getSiteSettings, applyCovers } from "@/lib/db/settings";
 import { cn } from "@/lib/utils";
 
@@ -28,8 +29,7 @@ export default async function HomePage() {
     .filter((m) => m.status !== "finished")
     .sort((a, b) => (a.status === "live" ? -1 : 1) - (b.status === "live" ? -1 : 1))
     .slice(0, 6);
-  // Predictions are admin-created per match; none exist yet.
-  const hotQuestions: Question[] = [];
+  const hotQuestions = await getOpenQuestions(2);
 
   return (
     <div className="space-y-10 sm:space-y-12">

@@ -4,26 +4,44 @@ import * as React from "react";
 import { Check, CircleCheck, Loader2 } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/Badge";
-import { questions, getMatch, getTeam } from "@/lib/data";
+import { getTeam } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
+type Opt = { id: string; label: string; reward: number };
+type QRow = { id: string; match_id: string; title: string; deadline_label: string | null; options: Opt[] };
+type MatchLite = { id: string; team_a: string; team_b: string; team_a_name: string | null; team_b_name: string | null };
+
+function teamTag(slug: string, name: string | null): string {
+  return name ? name.slice(0, 4).toUpperCase() : getTeam(slug).tag;
+}
+
 export default function ResolveAdmin() {
+  const [questions, setQuestions] = React.useState<QRow[]>([]);
+  const [matches, setMatches] = React.useState<MatchLite[]>([]);
   const [resolved, setResolved] = React.useState<Record<string, string>>({});
   const [busy, setBusy] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
-    const { data } = await createClient()
-      .from("question_results")
-      .select("question_id, correct_option_id");
-    if (data) {
-      setResolved(Object.fromEntries(data.map((r) => [r.question_id, r.correct_option_id])));
-    }
+    const sb = createClient();
+    const [{ data: qs }, { data: ms }, { data: res }] = await Promise.all([
+      sb.from("questions").select("id, match_id, title, deadline_label, options").order("created_at", { ascending: false }),
+      sb.from("matches").select("id, team_a, team_b, team_a_name, team_b_name"),
+      sb.from("question_results").select("question_id, correct_option_id"),
+    ]);
+    setQuestions((qs as QRow[]) ?? []);
+    setMatches((ms as MatchLite[]) ?? []);
+    if (res) setResolved(Object.fromEntries(res.map((r) => [r.question_id, r.correct_option_id])));
   }, []);
 
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  const matchLabel = (id: string) => {
+    const m = matches.find((x) => x.id === id);
+    return m ? `${teamTag(m.team_a, m.team_a_name)} vs ${teamTag(m.team_b, m.team_b_name)}` : "";
+  };
 
   async function resolve(questionId: string, optionId: string) {
     setBusy(questionId);
@@ -53,7 +71,6 @@ export default function ResolveAdmin() {
 
       <div className="space-y-3">
         {questions.map((q) => {
-          const m = getMatch(q.matchId);
           const winner = resolved[q.id];
           const isBusy = busy === q.id;
           return (
@@ -62,11 +79,10 @@ export default function ResolveAdmin() {
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-bold text-ink">{q.title}</p>
-                    {m && (
-                      <p className="text-xs text-ink-subtle">
-                        {getTeam(m.a).tag} vs {getTeam(m.b).tag} · {q.deadlineLabel}
-                      </p>
-                    )}
+                    <p className="text-xs text-ink-subtle">
+                      {matchLabel(q.match_id)}
+                      {q.deadline_label ? ` · ${q.deadline_label}` : ""}
+                    </p>
                   </div>
                   {winner ? (
                     <Badge tone="success">
@@ -106,6 +122,11 @@ export default function ResolveAdmin() {
             </Panel>
           );
         })}
+        {questions.length === 0 && (
+          <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center text-sm text-ink-subtle">
+            Питань для розрахунку немає. Створи їх у розділі «Питання».
+          </div>
+        )}
       </div>
     </>
   );
