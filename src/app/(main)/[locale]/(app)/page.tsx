@@ -7,14 +7,16 @@ import { MatchCard } from "@/components/cards/MatchCard";
 import { GiveawayCard } from "@/components/cards/GiveawayCard";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import { tournaments, giveaways, questions } from "@/lib/data";
+import { tournaments, questions } from "@/lib/data";
 import { getMatches } from "@/lib/db/matches";
 import { getLeaderboard } from "@/lib/db/leaderboard";
+import { getGiveaways } from "@/lib/db/giveaways";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
   const t = await getTranslations("home");
   const matches = await getMatches();
+  const giveaways = await getGiveaways();
   const seasonLeaderboard = await getLeaderboard(8);
   const currentTournaments = tournaments
     .filter((t) => t.status !== "finished")

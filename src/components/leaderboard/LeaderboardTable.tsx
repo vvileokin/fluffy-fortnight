@@ -56,7 +56,7 @@ function Row({ row, showCorrect }: { row: LeaderRow; showCorrect: boolean }) {
       <span className="w-5 shrink-0">
         <Delta delta={row.delta} />
       </span>
-      <Avatar name={row.handle} size="sm" ring={row.isYou} />
+      <Avatar name={row.handle} src={row.avatarUrl} size="sm" ring={row.isYou} />
       <span
         className={cn(
           "min-w-0 flex-1 truncate text-sm font-semibold",

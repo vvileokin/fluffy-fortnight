@@ -34,6 +34,7 @@ const emptyForm = {
   minPoints: "",
   endLabel: "",
   conditions: "",
+  image: "",
 };
 
 export default function GiveawaysAdmin() {
@@ -58,11 +59,34 @@ export default function GiveawaysAdmin() {
     setConfirmReroll(false);
   }
 
-  function createGiveaway() {
+  const [saving, setSaving] = React.useState(false);
+
+  async function createGiveaway() {
     if (!form.prize.trim()) return;
-    const slug = `new-${Date.now()}`;
-    setList((prev) => [{ slug, prize: form.prize.trim() }, ...prev]);
-    setActive(slug);
+    setSaving(true);
+    const res = await fetch("/api/admin/giveaways", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        prize: form.prize.trim(),
+        sponsor: form.sponsor,
+        value_usd: Number(form.value) || 0,
+        min_points: Number(form.minPoints) || 0,
+        end_label: form.endLabel,
+        image: form.image || null,
+        description: `${form.prize.trim()} від ${form.sponsor || "CS2 UA"}.`,
+        conditions: form.conditions.split("\n").map((s) => s.trim()).filter(Boolean),
+        status: "open",
+      }),
+    });
+    const j = await res.json().catch(() => ({}));
+    setSaving(false);
+    if (!res.ok) {
+      alert(j.error || "Помилка збереження");
+      return;
+    }
+    setList((prev) => [{ slug: j.slug, prize: form.prize.trim() }, ...prev]);
+    setActive(j.slug);
     setWinner(null);
     setForm(emptyForm);
     setCreating(false);
@@ -206,8 +230,8 @@ export default function GiveawaysAdmin() {
             <Button variant="ghost" size="md" onClick={() => setCreating(false)}>
               Скасувати
             </Button>
-            <Button size="md" onClick={createGiveaway}>
-              Опублікувати
+            <Button size="md" onClick={createGiveaway} disabled={saving}>
+              {saving ? "Збереження…" : "Опублікувати"}
             </Button>
           </>
         }
@@ -216,7 +240,9 @@ export default function GiveawaysAdmin() {
           <ImageField
             label="Фото призу"
             hint="Рекомендовано 640×400 px · PNG/WebP з прозорістю"
-            value={undefined}
+            folder="giveaways"
+            value={form.image || undefined}
+            onChange={(url) => setForm({ ...form, image: url })}
             thumbW={80}
             thumbH={50}
           />

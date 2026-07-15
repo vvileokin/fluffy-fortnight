@@ -4,11 +4,8 @@ import type { Metadata } from "next";
 import { ChevronLeft, Gift, Check, ListChecks } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { GiveawayEntry } from "@/components/giveaway/GiveawayEntry";
-import { giveaways, getGiveaway, formatPrize } from "@/lib/data";
-
-export function generateStaticParams() {
-  return giveaways.map((g) => ({ slug: g.slug }));
-}
+import { formatPrize } from "@/lib/data";
+import { getGiveawayBySlug } from "@/lib/db/giveaways";
 
 export async function generateMetadata({
   params,
@@ -16,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const g = getGiveaway(slug);
+  const g = await getGiveawayBySlug(slug);
   return { title: g?.prize ?? "Розіграш" };
 }
 
@@ -26,7 +23,7 @@ export default async function GiveawayPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const g = getGiveaway(slug);
+  const g = await getGiveawayBySlug(slug);
   if (!g) notFound();
 
   return (

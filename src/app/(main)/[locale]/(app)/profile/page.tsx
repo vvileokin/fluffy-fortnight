@@ -92,7 +92,7 @@ export default async function ProfilePage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 sm:flex-row sm:items-center sm:p-6">
-        <Avatar name={handle} size="lg" ring />
+        <Avatar name={handle} src={profile?.avatar_url} size="lg" ring />
         <div className="flex-1">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">{handle}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -106,7 +106,7 @@ export default async function ProfilePage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <ProfileEditButton handle={handle} />
+          <ProfileEditButton handle={handle} avatarUrl={profile?.avatar_url} />
           <SignOutButton />
         </div>
       </div>

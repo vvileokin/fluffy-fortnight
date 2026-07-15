@@ -11,7 +11,7 @@ export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
     } = await sb.auth.getUser();
     const { data, error } = await sb
       .from("profiles")
-      .select("id, handle, points, correct, streak")
+      .select("id, handle, avatar_url, points, correct, streak")
       .order("points", { ascending: false })
       .order("correct", { ascending: false })
       .limit(limit);
@@ -22,6 +22,7 @@ export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
       points: p.points,
       correct: p.correct,
       streak: p.streak,
+      avatarUrl: p.avatar_url ?? undefined,
       isYou: user?.id === p.id,
     }));
   } catch {

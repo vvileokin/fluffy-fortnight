@@ -583,6 +583,7 @@ export type LeaderRow = {
   streak: number;
   isYou?: boolean;
   delta?: number; // rank change
+  avatarUrl?: string;
 };
 
 export const seasonLeaderboard: LeaderRow[] = [
