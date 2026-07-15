@@ -16,12 +16,19 @@ export async function POST(request: Request) {
     Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 
   const teams = asSlugs(b.teams);
-  const lowSet = new Set(teams);
+  const teamSet = new Set(teams);
+  const rawResults =
+    b.results && typeof b.results === "object" && !Array.isArray(b.results) ? b.results : {};
+  const results: Record<string, string> = {};
+  for (const [low, high] of Object.entries(rawResults)) {
+    if (teamSet.has(low) && typeof high === "string" && teamSet.has(high)) results[low] = high;
+  }
   const row = {
     stage_id: String(b.stage_id),
     teams,
-    low_seeds: asSlugs(b.low_seeds).filter((s) => lowSet.has(s)),
-    winners: asSlugs(b.winners).filter((s) => lowSet.has(s)),
+    low_seeds: asSlugs(b.low_seeds).filter((s) => teamSet.has(s)),
+    winners: asSlugs(b.winners).filter((s) => teamSet.has(s)),
+    results,
     locked: Boolean(b.locked),
     deadline: b.deadline ? new Date(b.deadline).toISOString() : null,
     updated_at: new Date().toISOString(),

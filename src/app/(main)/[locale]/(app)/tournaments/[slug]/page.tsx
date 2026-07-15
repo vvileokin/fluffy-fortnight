@@ -1,13 +1,9 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import {
-  tournaments,
-  matches,
-  getTournament,
-  seasonLeaderboard,
-  type LeaderRow,
-} from "@/lib/data";
+import { tournaments, getTournament } from "@/lib/data";
 import { getSiteSettings } from "@/lib/db/settings";
+import { getMatches } from "@/lib/db/matches";
+import { getLeaderboard } from "@/lib/db/leaderboard";
 import { TournamentView } from "./TournamentView";
 
 export function generateStaticParams() {
@@ -24,15 +20,6 @@ export async function generateMetadata({
   return { title: t?.name ?? "Турнір" };
 }
 
-// A tournament leaderboard is a smaller slice of the season standings.
-const tournamentLeaderboard: LeaderRow[] = seasonLeaderboard
-  .filter((r) => !r.isYou)
-  .slice(0, 6)
-  .map((r, i) => ({ ...r, rank: i + 1, points: Math.round(r.points / 4) }))
-  .concat([
-    { rank: 23, handle: "ти", points: 1240, correct: 18, streak: 2, isYou: true, delta: 3 },
-  ]);
-
 export default async function TournamentPage({
   params,
 }: {
@@ -44,13 +31,15 @@ export default async function TournamentPage({
 
   const { covers } = await getSiteSettings();
   const tournament = covers[slug] ? { ...t, coverImage: covers[slug] } : t;
-  const tourMatches = matches.filter((m) => m.tournamentSlug === slug);
+
+  const [allMatches, leaderboard] = await Promise.all([getMatches(), getLeaderboard(20)]);
+  const tourMatches = allMatches.filter((m) => m.tournamentSlug === slug);
 
   return (
     <TournamentView
       tournament={tournament}
       matches={tourMatches}
-      leaderboard={tournamentLeaderboard}
+      leaderboard={leaderboard}
     />
   );
 }

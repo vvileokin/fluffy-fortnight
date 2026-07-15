@@ -16,12 +16,14 @@ type StageState = {
   teams: string[];
   lowSeeds: string[];
   winners: string[];
+  results: Record<string, string>; // lowSlug -> actual highSlug
+  resolved: boolean;
   locked: boolean;
   deadline: string; // datetime-local value
 };
 
 function emptyState(): StageState {
-  return { teams: [], lowSeeds: [], winners: [], locked: false, deadline: "" };
+  return { teams: [], lowSeeds: [], winners: [], results: {}, resolved: false, locked: false, deadline: "" };
 }
 
 function isoToLocal(iso: string | null): string {
@@ -46,6 +48,8 @@ export default function BountyAdmin() {
         teams: Array.isArray(r.teams) ? r.teams : [],
         lowSeeds: Array.isArray(r.low_seeds) ? r.low_seeds : [],
         winners: Array.isArray(r.winners) ? r.winners : [],
+        results: r.results && typeof r.results === "object" && !Array.isArray(r.results) ? r.results : {},
+        resolved: !!r.resolved,
         locked: !!r.locked,
         deadline: isoToLocal(r.deadline),
       };
@@ -91,6 +95,7 @@ export default function BountyAdmin() {
         teams: s.teams,
         low_seeds: s.lowSeeds,
         winners: s.winners,
+        results: s.results,
         locked: s.locked,
         deadline: s.deadline ? new Date(s.deadline).toISOString() : null,
       }),
@@ -102,6 +107,23 @@ export default function BountyAdmin() {
     } else {
       const j = await res.json().catch(() => ({}));
       alert(j.error || "Помилка збереження");
+    }
+  }
+
+  async function resolveStage(id: string) {
+    if (!confirm("Розрахувати стадію? Гравцям нарахуються поінти за вгадані пари. Повторно не можна.")) return;
+    const res = await fetch("/api/admin/bounty/resolve", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ stage_id: id }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (res.ok && j.ok) {
+      if (j.alreadyResolved) alert("Стадію вже було розраховано.");
+      else alert(`Розраховано. Поінти отримали ${j.awarded} гравців (по +${j.reward} за пару).`);
+      await load();
+    } else {
+      alert(j.error || "Помилка розрахунку");
     }
   }
 
@@ -119,6 +141,7 @@ export default function BountyAdmin() {
           const isBracket = meta.kind === "bracket";
           const isSaving = saving === meta.id;
           const finalists = s.winners.slice(0, 2).map(getTeam);
+          const highSeeds = s.teams.filter((x) => !s.lowSeeds.includes(x));
           return (
             <Panel key={meta.id}>
               {/* Stage header */}
@@ -159,6 +182,16 @@ export default function BountyAdmin() {
                   >
                     {isSaving ? <Loader2 className="size-4 animate-spin" /> : savedId === meta.id ? <><Check className="size-4" strokeWidth={3} /> ОК</> : "Зберегти"}
                   </button>
+                  {!isBracket && (
+                    <button
+                      onClick={() => resolveStage(meta.id)}
+                      disabled={s.resolved || Object.keys(s.results).length === 0}
+                      title="Нарахувати поінти за вгадані пари"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-success/50 bg-success/10 px-3 text-sm font-semibold text-success transition-colors hover:bg-success/20 disabled:opacity-50"
+                    >
+                      {s.resolved ? <><Check className="size-4" strokeWidth={3} /> Розраховано</> : "Розрахувати"}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -212,12 +245,29 @@ export default function BountyAdmin() {
                         return (
                           <div key={slug} className="flex items-center gap-3 px-3 py-2">
                             <TeamLogo team={t} size="xs" />
-                            <span className="flex-1 truncate text-sm font-semibold text-ink">{t.name}</span>
+                            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{t.name}</span>
+                            {!isBracket && low && (
+                              <select
+                                value={s.results[slug] ?? ""}
+                                onChange={(e) =>
+                                  upd(meta.id, { results: { ...s.results, [slug]: e.target.value } })
+                                }
+                                title="Фактичний суперник (пара)"
+                                className="h-8 rounded-md border border-border bg-surface-2 px-1.5 text-xs text-ink focus:border-accent focus:outline-none"
+                              >
+                                <option value="">пара?</option>
+                                {highSeeds.map((h) => (
+                                  <option key={h} value={h}>
+                                    vs {getTeam(h).tag}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
                             {!isBracket && (
                               <button
                                 onClick={() => toggleIn(meta.id, "lowSeeds", slug)}
                                 className={cn(
-                                  "rounded-md border px-2 py-1 text-[0.6875rem] font-semibold transition-colors",
+                                  "shrink-0 rounded-md border px-2 py-1 text-[0.6875rem] font-semibold transition-colors",
                                   low ? "border-accent/50 bg-accent/10 text-accent" : "border-border text-ink-subtle hover:bg-surface-2",
                                 )}
                               >

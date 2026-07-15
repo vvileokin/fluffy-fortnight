@@ -15,6 +15,7 @@ type StageState = {
   teams: string[];
   lowSeeds: string[];
   winners: string[];
+  results: Record<string, string>; // lowSlug -> actual highSlug
   locked: boolean;
   deadlineISO: string | null;
 };
@@ -49,7 +50,7 @@ export function BountyPredictor() {
     let cancelled = false;
     createClient()
       .from("bounty_stages")
-      .select("stage_id, teams, low_seeds, winners, locked, deadline")
+      .select("stage_id, teams, low_seeds, winners, results, locked, deadline")
       .then(({ data }) => {
         if (cancelled || !data) return;
         const next: Record<string, StageState> = {};
@@ -58,6 +59,7 @@ export function BountyPredictor() {
             teams: Array.isArray(r.teams) ? r.teams : [],
             lowSeeds: Array.isArray(r.low_seeds) ? r.low_seeds : [],
             winners: Array.isArray(r.winners) ? r.winners : [],
+            results: r.results && typeof r.results === "object" && !Array.isArray(r.results) ? r.results : {},
             locked: !!r.locked,
             deadlineISO: r.deadline ?? null,
           };
@@ -107,7 +109,7 @@ export function BountyPredictor() {
   return (
     <div className="space-y-5">
       {/* Stage tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {bountyStages.map((s) => {
           const on = s.id === active;
           return (
@@ -153,10 +155,12 @@ export function BountyPredictor() {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-            {lows.map((low) => {
+            {lows.map((low, i) => {
               const lowTeam = getTeam(low);
               const chosen = stagePicks[low];
-              const advanced = state.winners.includes(low);
+              const actual = state.results[low];
+              const correct = !!actual && chosen === actual;
+              const dropUp = lows.length > 2 && i >= lows.length - 2;
               return (
                 <div key={low} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5">
                   <TeamLogo team={lowTeam} size="md" />
@@ -164,15 +168,15 @@ export function BountyPredictor() {
                     <p className="truncate text-sm font-bold text-ink">{lowTeam.name}</p>
                     <p className="text-[0.6875rem] text-ink-subtle">
                       нижчий сід · пікає
-                      {state.winners.length > 0 && (
-                        <span className={cn("ml-1.5 font-semibold", advanced ? "text-success" : "text-danger")}>
-                          {advanced ? "· пройшов" : "· вибув"}
+                      {actual && (
+                        <span className={cn("ml-1.5 font-semibold", correct ? "text-success" : "text-danger")}>
+                          · {correct ? "вгадано" : "не вгадано"} (vs {getTeam(actual).tag})
                         </span>
                       )}
                     </p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-ink-faint" />
-                  <HighPicker highs={highs} value={chosen} disabled={locked} onPick={(h) => pick(low, h)} />
+                  <HighPicker highs={highs} value={chosen} disabled={locked} dropUp={dropUp} onPick={(h) => pick(low, h)} />
                 </div>
               );
             })}
@@ -209,11 +213,13 @@ function HighPicker({
   highs,
   value,
   disabled,
+  dropUp,
   onPick,
 }: {
   highs: string[];
   value?: string;
   disabled?: boolean;
+  dropUp?: boolean;
   onPick: (slug: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -243,7 +249,12 @@ function HighPicker({
       {open && !disabled && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-[calc(100%+0.25rem)] z-40 max-h-64 w-52 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]">
+          <div
+            className={cn(
+              "absolute right-0 z-40 max-h-56 w-52 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]",
+              dropUp ? "bottom-[calc(100%+0.25rem)]" : "top-[calc(100%+0.25rem)]",
+            )}
+          >
             {highs.map((h) => {
               const t = getTeam(h);
               const sel = value === h;
