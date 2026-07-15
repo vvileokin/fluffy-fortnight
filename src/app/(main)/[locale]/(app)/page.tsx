@@ -11,6 +11,7 @@ import { tournaments, type Question } from "@/lib/data";
 import { getMatches } from "@/lib/db/matches";
 import { getLeaderboard } from "@/lib/db/leaderboard";
 import { getGiveaways } from "@/lib/db/giveaways";
+import { getSiteSettings, applyCovers } from "@/lib/db/settings";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
@@ -18,9 +19,11 @@ export default async function HomePage() {
   const matches = await getMatches();
   const giveaways = await getGiveaways();
   const seasonLeaderboard = await getLeaderboard(8);
-  const currentTournaments = tournaments
-    .filter((t) => t.status !== "finished")
-    .slice(0, 3);
+  const { covers } = await getSiteSettings();
+  const currentTournaments = applyCovers(
+    tournaments.filter((t) => t.status !== "finished").slice(0, 3),
+    covers,
+  );
   const feedMatches = [...matches]
     .filter((m) => m.status !== "finished")
     .sort((a, b) => (a.status === "live" ? -1 : 1) - (b.status === "live" ? -1 : 1))

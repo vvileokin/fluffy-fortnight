@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { primaryNav } from "@/lib/nav";
-import { promoBanner, promoHref } from "@/lib/data";
+import { promoBanner, promoHref, type PromoBanner } from "@/lib/data";
 import { Brand } from "./Brand";
 import { Partners } from "./Partners";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-export function Sidebar() {
+export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
 
@@ -24,14 +24,14 @@ export function Sidebar() {
         <Brand />
       </div>
 
-      {promoBanner.enabled && (
+      {promo.enabled && promo.image && (
         <Link
-          href={promoHref(promoBanner)}
+          href={promoHref(promo)}
           className="group relative mx-3 mb-1 block h-[120px] overflow-hidden rounded-lg border border-border"
           aria-label="Promo"
         >
           <Image
-            src={promoBanner.image}
+            src={promo.image}
             alt=""
             width={448}
             height={240}

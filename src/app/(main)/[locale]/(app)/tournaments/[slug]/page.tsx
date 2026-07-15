@@ -7,6 +7,7 @@ import {
   seasonLeaderboard,
   type LeaderRow,
 } from "@/lib/data";
+import { getSiteSettings } from "@/lib/db/settings";
 import { TournamentView } from "./TournamentView";
 
 export function generateStaticParams() {
@@ -41,11 +42,13 @@ export default async function TournamentPage({
   const t = getTournament(slug);
   if (!t) notFound();
 
+  const { covers } = await getSiteSettings();
+  const tournament = covers[slug] ? { ...t, coverImage: covers[slug] } : t;
   const tourMatches = matches.filter((m) => m.tournamentSlug === slug);
 
   return (
     <TournamentView
-      tournament={t}
+      tournament={tournament}
       matches={tourMatches}
       leaderboard={tournamentLeaderboard}
     />

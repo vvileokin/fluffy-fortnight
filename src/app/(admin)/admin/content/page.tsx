@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { ImageField } from "@/components/admin/ImageField";
-import { tournaments, matches, promoBanner, getTeam } from "@/lib/data";
+import { tournaments, promoBanner } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
 
 const inputCls =
   "h-10 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none";
@@ -13,9 +14,59 @@ export default function ContentAdmin() {
   const [heading, setHeading] = React.useState(
     "Найбільша спільнота з CS2 в Україні",
   );
+  const [promoEnabled, setPromoEnabled] = React.useState(promoBanner.enabled);
+  const [promoImage, setPromoImage] = React.useState<string>(promoBanner.image);
+  const [promoLinkType, setPromoLinkType] = React.useState<"tournament" | "match">(
+    promoBanner.linkType,
+  );
+  const [promoTarget, setPromoTarget] = React.useState<string>(promoBanner.target);
+  const [covers, setCovers] = React.useState<Record<string, string>>({});
+  const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  function save() {
+  React.useEffect(() => {
+    let cancelled = false;
+    createClient()
+      .from("site_settings")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setPromoEnabled(data.promo_enabled ?? promoBanner.enabled);
+        setPromoImage(data.promo_image || promoBanner.image);
+        setPromoLinkType(
+          data.promo_link_type === "match" ? "match" : "tournament",
+        );
+        setPromoTarget(data.promo_target || promoBanner.target);
+        setCovers((data.covers as Record<string, string>) ?? {});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    const res = await fetch("/api/admin/content", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        promo_enabled: promoEnabled,
+        promo_image: promoImage,
+        promo_link_type: promoLinkType,
+        promo_target: promoTarget,
+        covers,
+      }),
+    });
+    const j = await res.json().catch(() => ({}));
+    setSaving(false);
+    if (!res.ok || !j.ok) {
+      setError(j.error || "Не вдалося зберегти");
+      return;
+    }
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1400);
   }
@@ -24,13 +75,16 @@ export default function ContentAdmin() {
     <>
       <AdminHead
         title="Контент"
-        subtitle="Hero-повідомлення та показники соцмереж головної сторінки."
+        subtitle="Промо-банер сайдбару та обкладинки турнірів головної сторінки."
         action={
           <button
             onClick={save}
-            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
+            disabled={saving}
+            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-60"
           >
-            {saved ? (
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : saved ? (
               <>
                 <Check className="size-4" strokeWidth={3} /> Збережено
               </>
@@ -41,11 +95,17 @@ export default function ContentAdmin() {
         }
       />
 
+      {error && (
+        <p className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
+          {error}
+        </p>
+      )}
+
       <Panel title="Hero">
         <div className="space-y-3 p-4">
           <label className="block">
             <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
-              Заголовок (UA)
+              Заголовок (UA) · попередній перегляд
             </span>
             <textarea
               value={heading}
@@ -72,14 +132,22 @@ export default function ContentAdmin() {
             <ImageField
               label="Зображення"
               hint="Рекомендовано 448×240 px (2×), висота показу 120 px"
-              value={promoBanner.image}
+              folder="promo"
+              value={promoImage || undefined}
+              onChange={setPromoImage}
             />
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
                   Веде на
                 </span>
-                <select className={inputCls} defaultValue={promoBanner.linkType}>
+                <select
+                  className={inputCls}
+                  value={promoLinkType}
+                  onChange={(e) =>
+                    setPromoLinkType(e.target.value === "match" ? "match" : "tournament")
+                  }
+                >
                   <option value="tournament">Турнір</option>
                   <option value="match">Матч</option>
                 </select>
@@ -88,26 +156,35 @@ export default function ContentAdmin() {
                 <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
                   Ціль
                 </span>
-                <select className={inputCls} defaultValue={promoBanner.target}>
-                  <optgroup label="Турніри">
+                {promoLinkType === "tournament" ? (
+                  <select
+                    className={inputCls}
+                    value={promoTarget}
+                    onChange={(e) => setPromoTarget(e.target.value)}
+                  >
                     {tournaments.map((t) => (
                       <option key={t.slug} value={t.slug}>
                         {t.shortName}
                       </option>
                     ))}
-                  </optgroup>
-                  <optgroup label="Матчі">
-                    {matches.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {getTeam(m.a).tag} vs {getTeam(m.b).tag}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
+                  </select>
+                ) : (
+                  <input
+                    className={inputCls}
+                    value={promoTarget}
+                    onChange={(e) => setPromoTarget(e.target.value)}
+                    placeholder="ID матчу"
+                  />
+                )}
               </label>
             </div>
             <label className="flex items-center gap-2 text-sm text-ink-muted">
-              <input type="checkbox" defaultChecked={promoBanner.enabled} className="size-4 accent-[var(--accent)]" />
+              <input
+                type="checkbox"
+                checked={promoEnabled}
+                onChange={(e) => setPromoEnabled(e.target.checked)}
+                className="size-4 accent-[var(--accent)]"
+              />
               Показувати банер
             </label>
           </div>
@@ -120,7 +197,9 @@ export default function ContentAdmin() {
                 <ImageField
                   label={t.shortName}
                   hint="Рекомендовано 800×300 px · JPG/WebP"
-                  value={t.coverImage}
+                  folder="covers"
+                  value={covers[t.slug] || t.coverImage}
+                  onChange={(url) => setCovers((prev) => ({ ...prev, [t.slug]: url }))}
                 />
               </li>
             ))}
