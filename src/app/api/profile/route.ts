@@ -19,6 +19,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
   }
 
+  // Authenticated as `user` above; all writes are scoped to their own id, so we
+  // use the service-role client to avoid a silent RLS no-op on the profile update.
+  const admin = createAdminClient();
   const update: { handle?: string; avatar_url?: string } = {};
 
   const rawHandle = form.get("handle");
@@ -50,7 +53,6 @@ export async function POST(request: Request) {
     const path = `avatars/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const admin = createAdminClient();
     const { error: upErr } = await admin.storage
       .from("media")
       .upload(path, buffer, { contentType: file.type || "image/png", upsert: false });
@@ -65,9 +67,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Нічого змінювати" }, { status: 400 });
   }
 
-  const { error } = await supabase.from("profiles").update(update).eq("id", user.id);
+  const { data: updated, error } = await admin
+    .from("profiles")
+    .update(update)
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+  if (!updated) {
+    return NextResponse.json({ ok: false, error: "Профіль не знайдено" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true, ...update });

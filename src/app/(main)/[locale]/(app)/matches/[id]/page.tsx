@@ -265,39 +265,47 @@ export default async function MatchPage({
             <History className="size-4 text-ink-subtle" />
             Історія зустрічей
           </h3>
-          <div className="rounded-lg border border-border bg-surface p-4">
-            <div className="flex items-center justify-between">
-              <TeamMini team={a} />
-              <div className="text-center">
-                <p className="font-mono text-2xl font-bold text-ink">
-                  <span className="text-accent">3</span>
-                  <span className="mx-1.5 text-ink-faint">–</span>
-                  <span>2</span>
-                </p>
-                <p className="text-[0.6875rem] text-ink-subtle">останні 5</p>
-              </div>
-              <TeamMini team={b} align="right" />
-            </div>
-            <div className="mt-4 space-y-2 border-t border-border pt-3">
-              {[
-                { t: "PGL Bucharest · груп.", s: `${a.tag} 2:1 ${b.tag}`, w: "a" },
-                { t: "ESL Pro S22 · плей-оф", s: `${a.tag} 0:2 ${b.tag}`, w: "b" },
-                { t: "IEM Katowice · груп.", s: `${a.tag} 2:0 ${b.tag}`, w: "a" },
-              ].map((r, i) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-ink-subtle">{r.t}</span>
-                  <span
-                    className={cn(
-                      "tnum font-mono font-semibold",
-                      r.w === "a" ? "text-ink" : "text-ink-muted",
-                    )}
-                  >
-                    {r.s}
-                  </span>
+          {match.h2h && (match.h2h.a > 0 || match.h2h.b > 0) ? (
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <div className="flex items-center justify-between">
+                <TeamMini team={a} />
+                <div className="text-center">
+                  <p className="font-mono text-2xl font-bold text-ink">
+                    <span className={cn(match.h2h.a >= match.h2h.b && "text-accent")}>
+                      {match.h2h.a}
+                    </span>
+                    <span className="mx-1.5 text-ink-faint">–</span>
+                    <span className={cn(match.h2h.b > match.h2h.a && "text-accent")}>
+                      {match.h2h.b}
+                    </span>
+                  </p>
+                  <p className="text-[0.6875rem] text-ink-subtle">особисті зустрічі</p>
                 </div>
-              ))}
+                <TeamMini team={b} align="right" />
+              </div>
+              {match.h2h.series && match.h2h.series.length > 0 && (
+                <div className="mt-4 space-y-2 border-t border-border pt-3">
+                  {match.h2h.series.map((r, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="text-ink-subtle">{r.event}</span>
+                      <span
+                        className={cn(
+                          "tnum font-mono font-semibold",
+                          r.winner === "a" ? "text-ink" : "text-ink-muted",
+                        )}
+                      >
+                        {r.score}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
+              Команди не грали між собою раніше.
+            </div>
+          )}
         </section>
       </div>
     </div>

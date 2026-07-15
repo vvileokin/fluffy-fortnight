@@ -56,8 +56,34 @@ function customTeam(
   };
 }
 
-function toMatch(r: Row): Match {
+function winsNeeded(format: Match["format"]): number {
+  return format === "BO5" ? 3 : format === "BO1" ? 1 : 2;
+}
+
+/**
+ * Derive the series score and status from the per-map results the admin enters,
+ * so the total score appears automatically once maps are filled in:
+ *  - series score = maps won by each side
+ *  - status: finished once a side clinches the series; upcoming → live once any
+ *    map has a result. An explicit live/finished status set by the admin is kept.
+ */
+function deriveState(m: Match): Match {
+  const decided = (m.maps ?? []).filter((x) => x.a !== x.b);
+  if (decided.length === 0) return m;
+  const a = decided.filter((x) => x.a > x.b).length;
+  const b = decided.filter((x) => x.b > x.a).length;
+  const need = winsNeeded(m.format);
+  const finished = a >= need || b >= need;
   return {
+    ...m,
+    scoreA: a,
+    scoreB: b,
+    status: finished ? "finished" : m.status === "upcoming" ? "live" : m.status,
+  };
+}
+
+function toMatch(r: Row): Match {
+  return deriveState({
     id: r.id,
     tournamentSlug: r.tournament_slug,
     isEvent: r.is_event,
@@ -82,7 +108,7 @@ function toMatch(r: Row): Match {
     teamBData: customTeam(r.team_b, r.team_b_name, r.team_b_logo, r.team_b_color, r.team_b_rank),
     tournamentName: r.tournament_name ?? undefined,
     tournamentIcon: r.tournament_icon ?? undefined,
-  };
+  });
 }
 
 /** All matches from the DB. Empty when there are none — the site shows an empty state. */
