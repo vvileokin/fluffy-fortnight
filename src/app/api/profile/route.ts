@@ -67,17 +67,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Нічого змінювати" }, { status: 400 });
   }
 
-  const { data: updated, error } = await admin
+  // Some accounts (e.g. created before the signup trigger existed) have no
+  // profile row yet, so upsert: create it on first edit, update it otherwise.
+  const { data: existing } = await admin
     .from("profiles")
-    .update(update)
+    .select("handle, avatar_url")
     .eq("id", user.id)
-    .select("id")
     .maybeSingle();
+
+  const fallbackHandle =
+    (user.user_metadata?.name as string) ||
+    (user.user_metadata?.user_name as string) ||
+    user.email?.split("@")[0] ||
+    "гравець";
+
+  const row = {
+    id: user.id,
+    handle: update.handle ?? existing?.handle ?? fallbackHandle,
+    avatar_url: update.avatar_url ?? existing?.avatar_url ?? null,
+  };
+
+  const { error } = await admin.from("profiles").upsert(row, { onConflict: "id" });
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  }
-  if (!updated) {
-    return NextResponse.json({ ok: false, error: "Профіль не знайдено" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true, ...update });

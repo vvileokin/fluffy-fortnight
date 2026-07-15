@@ -33,21 +33,14 @@ export function TournamentCard({ t }: { t: Tournament }) {
               sizes="(max-width:640px) 100vw, 380px"
               className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-surface/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-surface/70 via-transparent to-transparent" />
           </>
         )}
-        <div className="absolute inset-0 opacity-[0.5] [background:radial-gradient(80%_120%_at_85%_-10%,color-mix(in_oklch,var(--ink)_10%,transparent),transparent_60%)]" />
-        <div className="absolute left-4 top-3 flex items-center gap-1.5">
-          {t.status === "live" ? (
-            <LiveBadge />
-          ) : t.status === "upcoming" ? (
-            <Badge tone="info">{tr("soon")}</Badge>
-          ) : (
-            <Badge tone="neutral">{tr("finished")}</Badge>
-          )}
+        <div className="absolute left-3 top-3 flex items-center gap-1.5">
           <Badge tone={t.tier === 1 ? "tier1" : "tier2"}>Tier {t.tier}</Badge>
+          {t.status === "live" && <LiveBadge />}
+          {t.status === "finished" && <Badge tone="neutral">{tr("finished")}</Badge>}
         </div>
-        <Trophy className="absolute -right-3 -top-2 size-20 text-ink opacity-[0.05]" strokeWidth={1.5} />
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
