@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import { ChevronUp, ChevronDown, Minus, Flame } from "lucide-react";
 import { formatInt } from "@/lib/utils";
 import { type LeaderRow } from "@/lib/data";
@@ -106,21 +109,42 @@ export function LeaderboardTable({
   showCorrect = true,
   topN,
   blastPoints = false,
+  expandable = false,
   className,
 }: {
   rows: LeaderRow[];
   showCorrect?: boolean;
-  /** Show only the top N; if "you" ranks beyond it, append your row after a gap. */
+  /** Show only the top N; if "you" rank beyond it, append your row after a gap. */
   topN?: number;
   /** Prefix points with the BLAST mark (bounty/event leaderboard). */
   blastPoints?: boolean;
+  /** Let the "· · ·" gap expand the board to the full list. */
+  expandable?: boolean;
   className?: string;
 }) {
+  const [expanded, setExpanded] = React.useState(false);
   const you = rows.find((r) => r.isYou);
-  const top = topN ? rows.filter((r) => r.rank <= topN) : rows;
-  const youBelow = topN && you && you.rank > topN;
+  const collapsed = !!topN && !expanded;
+  const top = collapsed ? rows.filter((r) => r.rank <= topN!) : rows;
+  const youBelow = collapsed && you && you.rank > topN!;
   // When you're in the top slice you stay highlighted in place; otherwise you're appended.
   const inline = youBelow ? top.filter((r) => !r.isYou) : top;
+  const hasMore = !!topN && rows.some((r) => r.rank > topN);
+
+  const Dots = ({ onClick }: { onClick?: () => void }) =>
+    onClick ? (
+      <button
+        onClick={onClick}
+        aria-label="Показати весь рейтинг"
+        className="flex w-full items-center justify-center py-1.5 text-ink-faint transition-colors hover:bg-surface-2 hover:text-ink-muted"
+      >
+        <span className="text-xs tracking-widest">· · ·</span>
+      </button>
+    ) : (
+      <div className="flex items-center justify-center py-1 text-ink-faint">
+        <span className="text-xs tracking-widest">· · ·</span>
+      </div>
+    );
 
   return (
     <div
@@ -132,13 +156,28 @@ export function LeaderboardTable({
       {inline.map((row) => (
         <Row key={row.handle} row={row} showCorrect={showCorrect} blastPoints={blastPoints} />
       ))}
+
+      {/* You rank below the visible top — dots, then your highlighted row. */}
       {youBelow && you && (
         <>
-          <div className="flex items-center justify-center py-1 text-ink-faint">
-            <span className="text-xs tracking-widest">· · ·</span>
-          </div>
+          <Dots onClick={expandable && hasMore ? () => setExpanded(true) : undefined} />
           <Row row={you} showCorrect={showCorrect} blastPoints={blastPoints} />
         </>
+      )}
+
+      {/* You're inside the top but there's more board to see. */}
+      {collapsed && !youBelow && expandable && hasMore && (
+        <Dots onClick={() => setExpanded(true)} />
+      )}
+
+      {expandable && expanded && (
+        <button
+          onClick={() => setExpanded(false)}
+          className="flex w-full items-center justify-center gap-1.5 py-2 text-xs font-semibold text-ink-subtle transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          Згорнути
+          <ChevronUp className="size-3.5" />
+        </button>
       )}
     </div>
   );

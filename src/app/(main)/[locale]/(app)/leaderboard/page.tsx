@@ -36,7 +36,7 @@ export default async function LeaderboardPage() {
         ))}
       </div>
 
-      <LeaderboardTable rows={rows} />
+      <LeaderboardTable rows={rows} topN={10} expandable />
     </div>
   );
 }
