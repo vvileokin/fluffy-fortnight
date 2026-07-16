@@ -36,7 +36,8 @@ export default async function LeaderboardPage() {
         ))}
       </div>
 
-      <LeaderboardTable rows={rows} topN={10} expandable />
+      {/* Full season board — this is the "see everything" destination, so no collapsing. */}
+      <LeaderboardTable rows={rows} />
     </div>
   );
 }

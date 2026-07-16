@@ -44,6 +44,11 @@ export function BountyPredictor() {
   const configured = (state?.teams.length ?? 0) > 0;
   const stagePicks = picks[active] ?? {};
   const made = Object.keys(stagePicks).length;
+  // Draft order runs down the left column first, then the right (1-8 | 9-16).
+  const lowColumns = [
+    lows.slice(0, Math.ceil(lows.length / 2)),
+    lows.slice(Math.ceil(lows.length / 2)),
+  ].filter((col) => col.length > 0);
 
   // Load stage config (public) + this user's saved picks.
   React.useEffect(() => {
@@ -185,45 +190,49 @@ export function BountyPredictor() {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-            {lows.map((low, i) => {
-              const lowTeam = getTeam(low);
-              const chosen = stagePicks[low];
-              const actual = state.results[low];
-              const correct = !!actual && chosen === actual;
-              const dropUp = lows.length > 2 && i >= lows.length - 2;
-              // One team = one pair: hide high seeds already picked for other lows.
-              const takenByOthers = new Set(
-                Object.entries(stagePicks)
-                  .filter(([l]) => l !== low)
-                  .map(([, h]) => h),
-              );
-              const availableHighs = highs.filter((h) => !takenByOthers.has(h));
-              return (
-                <div key={low} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5">
-                  <TeamLogo team={lowTeam} size="md" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-ink">{lowTeam.name}</p>
-                    <p className="text-[0.6875rem] text-ink-subtle">
-                      нижчий сід · пікає
-                      {actual && (
-                        <span className={cn("ml-1.5 font-semibold", correct ? "text-success" : "text-danger")}>
-                          · {correct ? "вгадано" : "не вгадано"} (vs {getTeam(actual).tag})
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <ChevronRight className="size-4 shrink-0 text-ink-faint" />
-                  <HighPicker
-                    highs={availableHighs}
-                    value={chosen}
-                    disabled={locked}
-                    dropUp={dropUp}
-                    onPick={(h) => pick(low, h)}
-                    onClear={() => clearPick(low)}
-                  />
-                </div>
-              );
-            })}
+            {lowColumns.map((col, ci) => (
+              <div key={ci} className="space-y-2.5">
+                {col.map((low, ri) => {
+                  const lowTeam = getTeam(low);
+                  const chosen = stagePicks[low];
+                  const actual = state.results[low];
+                  const correct = !!actual && chosen === actual;
+                  const dropUp = col.length > 2 && ri >= col.length - 2;
+                  // One team = one pair: hide high seeds already picked for other lows.
+                  const takenByOthers = new Set(
+                    Object.entries(stagePicks)
+                      .filter(([l]) => l !== low)
+                      .map(([, h]) => h),
+                  );
+                  const availableHighs = highs.filter((h) => !takenByOthers.has(h));
+                  return (
+                    <div key={low} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5">
+                      <TeamLogo team={lowTeam} size="md" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-ink">{lowTeam.name}</p>
+                        <p className="text-[0.6875rem] text-ink-subtle">
+                          нижчий сід · пікає
+                          {actual && (
+                            <span className={cn("ml-1.5 font-semibold", correct ? "text-success" : "text-danger")}>
+                              · {correct ? "вгадано" : "не вгадано"} (vs {getTeam(actual).tag})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <ChevronRight className="size-4 shrink-0 text-ink-faint" />
+                      <HighPicker
+                        highs={availableHighs}
+                        value={chosen}
+                        disabled={locked}
+                        dropUp={dropUp}
+                        onPick={(h) => pick(low, h)}
+                        onClear={() => clearPick(low)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
 
           {!locked && (
