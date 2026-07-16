@@ -36,6 +36,7 @@ function isoToLocal(iso: string | null): string {
 
 export default function BountyAdmin() {
   const [state, setState] = React.useState<Record<string, StageState>>({});
+  const [loaded, setLoaded] = React.useState(false);
   const [saving, setSaving] = React.useState<string | null>(null);
   const [savedId, setSavedId] = React.useState<string | null>(null);
 
@@ -55,6 +56,7 @@ export default function BountyAdmin() {
       };
     }
     setState(next);
+    setLoaded(true);
   }, []);
 
   React.useEffect(() => {
@@ -101,7 +103,9 @@ export default function BountyAdmin() {
 
   async function save(id: string) {
     const s = state[id];
-    if (!s) return;
+    // Never write before the stage has loaded — an empty state would wipe
+    // the teams/seeds/results of a stage that already has live picks.
+    if (!s || !loaded) return;
     setSaving(id);
     const res = await postStage(id, s);
     setSaving(null);
@@ -116,7 +120,8 @@ export default function BountyAdmin() {
 
   // Lock/unlock takes effect immediately for players — persist it right away.
   async function toggleLock(id: string) {
-    const cur = state[id] ?? emptyState();
+    const cur = state[id];
+    if (!cur || !loaded) return; // guard: don't persist a not-yet-loaded stage
     const next = { ...cur, locked: !cur.locked };
     setState((p) => ({ ...p, [id]: next }));
     const res = await postStage(id, next);
@@ -179,8 +184,9 @@ export default function BountyAdmin() {
                   />
                   <button
                     onClick={() => toggleLock(meta.id)}
+                    disabled={!loaded}
                     className={cn(
-                      "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors",
+                      "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors disabled:opacity-50",
                       s.locked
                         ? "bg-accent text-accent-ink hover:bg-accent-hover"
                         : "border border-border-strong text-ink hover:bg-surface-2",
@@ -190,7 +196,7 @@ export default function BountyAdmin() {
                   </button>
                   <button
                     onClick={() => save(meta.id)}
-                    disabled={isSaving}
+                    disabled={isSaving || !loaded}
                     className="inline-flex h-9 min-w-24 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-60"
                   >
                     {isSaving ? <Loader2 className="size-4 animate-spin" /> : savedId === meta.id ? <><Check className="size-4" strokeWidth={3} /> ОК</> : "Зберегти"}
