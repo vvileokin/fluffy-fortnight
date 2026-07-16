@@ -223,7 +223,7 @@ export function TournamentView({
             Найкращі прогнозисти цього турніру.
           </p>
           {leaderboard.length > 0 ? (
-            <LeaderboardTable rows={leaderboard} />
+            <LeaderboardTable rows={leaderboard} blastPoints={t.isEvent} />
           ) : (
             <EmptyPanel text="Ще ніхто не зробив прогноз на цей турнір." />
           )}

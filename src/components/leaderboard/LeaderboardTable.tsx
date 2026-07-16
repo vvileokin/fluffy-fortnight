@@ -2,6 +2,7 @@ import { ChevronUp, ChevronDown, Minus, Flame } from "lucide-react";
 import { formatInt } from "@/lib/utils";
 import { type LeaderRow } from "@/lib/data";
 import { Avatar } from "@/components/ui/Avatar";
+import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
 
 function RankMedal({ rank }: { rank: number }) {
@@ -40,7 +41,15 @@ function Delta({ delta }: { delta?: number }) {
   );
 }
 
-function Row({ row, showCorrect }: { row: LeaderRow; showCorrect: boolean }) {
+function Row({
+  row,
+  showCorrect,
+  blastPoints,
+}: {
+  row: LeaderRow;
+  showCorrect: boolean;
+  blastPoints: boolean;
+}) {
   return (
     <div
       className={cn(
@@ -84,7 +93,8 @@ function Row({ row, showCorrect }: { row: LeaderRow; showCorrect: boolean }) {
           <span className="text-ink-subtle"> вірних</span>
         </span>
       )}
-      <span className="tnum w-20 shrink-0 text-right font-mono text-sm font-bold text-accent">
+      <span className="tnum flex w-20 shrink-0 items-center justify-end gap-1 font-mono text-sm font-bold text-accent">
+        {blastPoints && <BlastMark className="size-3.5 text-accent" />}
         {formatInt(row.points)}
       </span>
     </div>
@@ -95,12 +105,15 @@ export function LeaderboardTable({
   rows,
   showCorrect = true,
   topN,
+  blastPoints = false,
   className,
 }: {
   rows: LeaderRow[];
   showCorrect?: boolean;
   /** Show only the top N; if "you" ranks beyond it, append your row after a gap. */
   topN?: number;
+  /** Prefix points with the BLAST mark (bounty/event leaderboard). */
+  blastPoints?: boolean;
   className?: string;
 }) {
   const you = rows.find((r) => r.isYou);
@@ -117,14 +130,14 @@ export function LeaderboardTable({
       )}
     >
       {inline.map((row) => (
-        <Row key={row.handle} row={row} showCorrect={showCorrect} />
+        <Row key={row.handle} row={row} showCorrect={showCorrect} blastPoints={blastPoints} />
       ))}
       {youBelow && you && (
         <>
           <div className="flex items-center justify-center py-1 text-ink-faint">
             <span className="text-xs tracking-widest">· · ·</span>
           </div>
-          <Row row={you} showCorrect={showCorrect} />
+          <Row row={you} showCorrect={showCorrect} blastPoints={blastPoints} />
         </>
       )}
     </div>

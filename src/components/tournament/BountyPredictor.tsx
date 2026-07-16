@@ -159,6 +159,13 @@ export function BountyPredictor() {
               const actual = state.results[low];
               const correct = !!actual && chosen === actual;
               const dropUp = lows.length > 2 && i >= lows.length - 2;
+              // One team = one pair: hide high seeds already picked for other lows.
+              const takenByOthers = new Set(
+                Object.entries(stagePicks)
+                  .filter(([l]) => l !== low)
+                  .map(([, h]) => h),
+              );
+              const availableHighs = highs.filter((h) => !takenByOthers.has(h));
               return (
                 <div key={low} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5">
                   <TeamLogo team={lowTeam} size="md" />
@@ -174,7 +181,7 @@ export function BountyPredictor() {
                     </p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-ink-faint" />
-                  <HighPicker highs={highs} value={chosen} disabled={locked} dropUp={dropUp} onPick={(h) => pick(low, h)} />
+                  <HighPicker highs={availableHighs} value={chosen} disabled={locked} dropUp={dropUp} onPick={(h) => pick(low, h)} />
                 </div>
               );
             })}
