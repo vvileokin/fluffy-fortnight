@@ -27,7 +27,7 @@ export default async function HomePage() {
   const matches = await getMatches();
   const matchById = new Map(matches.map((m) => [m.id, m]));
   const giveaways = await getGiveaways();
-  const seasonLeaderboard = await getLeaderboard(8);
+  const seasonLeaderboard = await getLeaderboard(100);
   const { covers } = await getSiteSettings();
   const currentTournaments = applyCovers(
     tournaments.filter((t) => t.status !== "finished").slice(0, 3),
@@ -94,7 +94,7 @@ export default async function HomePage() {
 
         <section className={cn("space-y-4", giveaways.length > 0 ? "lg:col-span-3" : "lg:col-span-5")}>
           <SectionHeader icon={Crown} title={t("seasonLeaderboard")} href="/leaderboard" />
-          <LeaderboardTable rows={seasonLeaderboard} />
+          <LeaderboardTable rows={seasonLeaderboard} topN={5} />
         </section>
       </div>
     </div>

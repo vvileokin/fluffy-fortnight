@@ -122,13 +122,15 @@ export default async function ProfilePage() {
         ))}
       </div>
 
-      {/* History */}
-      <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-          <Target className="size-4 text-ink-subtle" /> Історія прогнозів
-        </h2>
-        <PredictionHistory items={history} />
-      </section>
+      {/* History — only once the player actually has predictions */}
+      {history.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
+            <Target className="size-4 text-ink-subtle" /> Історія прогнозів
+          </h2>
+          <PredictionHistory items={history} />
+        </section>
+      )}
     </div>
   );
 }

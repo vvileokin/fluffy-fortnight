@@ -167,7 +167,7 @@ export function Topbar() {
                     </button>
                   )}
                 </div>
-                <ul className="max-h-[min(24rem,60vh)] divide-y divide-border overflow-y-auto">
+                <ul className="max-h-56 divide-y divide-border overflow-y-auto">
                   {items.length === 0 && (
                     <li className="px-4 py-10 text-center text-sm text-ink-subtle">
                       Сповіщень поки немає

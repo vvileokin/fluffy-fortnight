@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Swords, Info, ChevronRight, Lock, Trophy } from "lucide-react";
+import { Check, Swords, Info, ChevronRight, Lock } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { bountyStages, getTeam } from "@/lib/data";
@@ -180,8 +180,6 @@ export function BountyPredictor() {
             })}
           </div>
 
-          {meta.id === "sf" && <FinalBanner winners={state.winners} reward={meta.reward} />}
-
           {!locked && (
             <div className="flex items-center justify-between border-t border-border pt-4">
               <span className="text-xs text-ink-subtle">
@@ -289,30 +287,6 @@ function StagePlaceholder() {
       <Lock className="size-7 text-ink-faint" />
       <p className="mt-3 text-sm font-semibold text-ink">Стадію ще не налаштовано</p>
       <p className="mt-1 text-xs text-ink-subtle">Команди з’являться, щойно адмін відкриє стадію.</p>
-    </div>
-  );
-}
-
-function FinalBanner({ winners, reward }: { winners: string[]; reward: number }) {
-  const finalists = winners.slice(0, 2).map(getTeam);
-  if (finalists.length === 0) {
-    return (
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/50 px-4 py-3 text-sm text-ink-muted">
-        <Info className="size-4 shrink-0 text-info" />
-        Фінал сформується з переможців півфіналів (адмін познач «пройшов далі») — до +{reward}.
-      </div>
-    );
-  }
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3">
-      <Trophy className="size-5 shrink-0 text-accent" />
-      <div className="min-w-0">
-        <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">Гранд-фінал</p>
-        <p className="truncate text-sm font-bold text-ink">
-          {finalists.map((t) => t.name).join(" vs ")}
-          {finalists.length < 2 && " · очікує 2-го фіналіста"}
-        </p>
-      </div>
     </div>
   );
 }

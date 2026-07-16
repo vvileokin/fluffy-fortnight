@@ -195,7 +195,7 @@ export const allTournaments: Tournament[] = [
     name: "BLAST Bounty Season 2",
     shortName: "BLAST Bounty S2",
     tier: 1,
-    status: "upcoming",
+    status: "live",
     startISO: "2026-07-21",
     endISO: "2026-08-02",
     dateLabel: "21 лип – 2 сер",
