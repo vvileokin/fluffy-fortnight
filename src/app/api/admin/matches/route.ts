@@ -1,6 +1,34 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9а-яіїєґ]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 32);
+}
+
+/** Readable url part for one side: the custom name if set, else the catalog slug. */
+function sidePart(slug: string, customName?: string | null): string {
+  return slugify(customName || slug) || "team";
+}
+
+/** "vitality-vs-spirit", suffixed when that id is already taken. */
+async function buildMatchId(
+  admin: SupabaseClient,
+  base: string,
+): Promise<string> {
+  const { data } = await admin.from("matches").select("id").like("id", `${base}%`);
+  const taken = new Set((data ?? []).map((r) => r.id as string));
+  if (!taken.has(base)) return base;
+  for (let i = 2; i < 100; i++) {
+    if (!taken.has(`${base}-${i}`)) return `${base}-${i}`;
+  }
+  return `${base}-${Date.now().toString(36).slice(-4)}`;
+}
 
 // Create / update a match (admin only, service-role write).
 export async function POST(request: Request) {
@@ -8,12 +36,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   const m = await request.json().catch(() => null);
-  if (!m?.id || !m.team_a || !m.team_b) {
+  if (!m?.team_a || !m.team_b) {
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
   }
 
+  const admin = createAdminClient();
+
+  // New matches get a readable id from the team names; edits keep their id so
+  // existing links and question references stay valid.
+  const id = m.id
+    ? String(m.id)
+    : await buildMatchId(
+        admin,
+        `${sidePart(m.team_a, m.team_a_name)}-vs-${sidePart(m.team_b, m.team_b_name)}`,
+      );
+
   const row = {
-    id: String(m.id),
+    id,
     tournament_slug: String(m.tournament_slug ?? "blast-bounty-s2"),
     is_event: Boolean(m.is_event),
     team_a: String(m.team_a),
@@ -46,12 +85,11 @@ export async function POST(request: Request) {
     updated_at: new Date().toISOString(),
   };
 
-  const admin = createAdminClient();
   const { error } = await admin.from("matches").upsert(row, { onConflict: "id" });
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, id });
 }
 
 export async function DELETE(request: Request) {

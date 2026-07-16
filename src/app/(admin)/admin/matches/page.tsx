@@ -58,7 +58,8 @@ type MatchForm = {
 
 function blank(): MatchForm {
   return {
-    id: `m-${Date.now().toString(36)}`,
+    // Empty on purpose — the API builds a readable id from the team names.
+    id: "",
     tournament_slug: "blast-bounty-s2",
     is_event: true,
     team_a: "vitality",
