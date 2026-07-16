@@ -337,7 +337,7 @@ export type H2H = {
   series?: { event: string; score: string; winner: "a" | "b" }[];
 };
 
-export type MapStatus = "finished" | "live" | "upcoming";
+export type MapStatus = "finished" | "live" | "upcoming" | "skipped";
 export type PlayedMap = { name: string; a: number; b: number; status: MapStatus };
 
 /** A map is finished once one side reaches 13 (and isn't tied). */
@@ -345,11 +345,17 @@ export function isMapFinished(m: { a: number; b: number }): boolean {
   return (m.a >= 13 || m.b >= 13) && m.a !== m.b;
 }
 
+/** Maps a side must win to take the series. */
+export function mapsToWin(format: MatchFormat): number {
+  return format === "BO5" ? 3 : format === "BO1" ? 1 : 2;
+}
+
 /**
  * The maps a match actually plays, in order, each tagged live/finished/upcoming.
  * Order comes from the veto picks (+ decider); scores are matched in by map name.
- * The first not-yet-finished map is the live one. Falls back to the raw score
- * list when a match has no veto set.
+ * The first not-yet-finished map is the live one. Once a side clinches the series
+ * (e.g. 2:0 in a BO3), the remaining maps are "skipped" — they aren't played, so
+ * they never show as live. Falls back to the raw score list when there's no veto.
  */
 export function playedMaps(match: Match): PlayedMap[] {
   const picks = (match.veto ?? []).filter(
@@ -364,11 +370,26 @@ export function playedMaps(match: Match): PlayedMap[] {
         })
       : (match.maps ?? []).map((m) => ({ name: m.name, a: m.a, b: m.b }));
 
-  const firstUnfinished = base.findIndex((m) => !isMapFinished(m));
-  return base.map((m, i) => ({
-    ...m,
-    status: isMapFinished(m) ? "finished" : i === firstUnfinished ? "live" : "upcoming",
-  }));
+  const need = mapsToWin(match.format);
+  let aWins = 0;
+  let bWins = 0;
+  let clinched = false;
+  let liveTaken = false;
+
+  return base.map((m) => {
+    if (clinched) return { ...m, status: "skipped" as MapStatus };
+    if (isMapFinished(m)) {
+      if (m.a > m.b) aWins++;
+      else bWins++;
+      if (aWins >= need || bWins >= need) clinched = true;
+      return { ...m, status: "finished" as MapStatus };
+    }
+    if (!liveTaken) {
+      liveTaken = true;
+      return { ...m, status: "live" as MapStatus };
+    }
+    return { ...m, status: "upcoming" as MapStatus };
+  });
 }
 
 /** Series score (maps won) derived from the finished maps of a match. */

@@ -312,9 +312,19 @@ function MapScoreStrip({
                 ? "bg-live/15 text-live ring-1 ring-live/30"
                 : m.status === "finished"
                   ? "bg-surface-2 text-ink"
-                  : "bg-surface-2 text-ink-faint",
+                  : m.status === "skipped"
+                    ? "bg-surface-2 text-ink-faint line-through decoration-ink-faint/70"
+                    : "bg-surface-2 text-ink-faint",
             )}
-            title={picker ? (picker === "Decider" ? `${m.name} · decider` : `${m.name} · пік ${picker}`) : m.name}
+            title={
+              m.status === "skipped"
+                ? `${m.name} · не зіграно`
+                : picker
+                  ? picker === "Decider"
+                    ? `${m.name} · decider`
+                    : `${m.name} · пік ${picker}`
+                  : m.name
+            }
           >
             {m.name}
             {m.status === "finished" ? (
