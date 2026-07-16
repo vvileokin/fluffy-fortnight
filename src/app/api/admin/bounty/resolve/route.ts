@@ -43,33 +43,41 @@ export async function POST(request: Request) {
     .select("user_id, low_slug, high_slug")
     .eq("stage_id", stage_id);
 
-  // points earned per user = (# correctly guessed pairs) * reward
-  const earned = new Map<string, number>();
+  // Count correctly guessed pairs per user.
+  const hits = new Map<string, number>();
   for (const p of preds ?? []) {
     if (results[p.low_slug] && results[p.low_slug] === p.high_slug) {
-      earned.set(p.user_id, (earned.get(p.user_id) ?? 0) + reward);
+      hits.set(p.user_id, (hits.get(p.user_id) ?? 0) + 1);
     }
   }
 
   let awarded = 0;
-  if (earned.size > 0) {
-    const ids = [...earned.keys()];
+  if (hits.size > 0) {
+    const ids = [...hits.keys()];
     const { data: profiles } = await admin
       .from("profiles")
-      .select("id, points, bounty_points")
+      .select("id, points, bounty_points, correct, streak")
       .in("id", ids);
     const notifs: { user_id: string; kind: string; title: string }[] = [];
     for (const prof of profiles ?? []) {
-      const add = earned.get(prof.id) ?? 0;
-      if (add <= 0) continue;
+      const n = hits.get(prof.id) ?? 0;
+      if (n <= 0) continue;
+      const add = n * reward;
+      // Correct bounty pairs count toward season points, bounty points,
+      // the "correct" tally and the streak.
       await admin
         .from("profiles")
-        .update({ points: prof.points + add, bounty_points: prof.bounty_points + add })
+        .update({
+          points: prof.points + add,
+          bounty_points: prof.bounty_points + add,
+          correct: prof.correct + n,
+          streak: prof.streak + n,
+        })
         .eq("id", prof.id);
       notifs.push({
         user_id: prof.id,
         kind: "reward",
-        title: `Bounty «${meta.title}»: +${add} поінтів за вгадані пари`,
+        title: `Bounty «${meta.title}»: +${add} поінтів за ${n} вгаданих пар`,
       });
       awarded++;
     }

@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { type LeaderRow } from "@/lib/data";
 
 /** Season leaderboard from real profiles. Empty when there are none. */
@@ -37,7 +38,9 @@ export async function getBountyLeaderboard(limit = 50): Promise<LeaderRow[]> {
     const {
       data: { user },
     } = await sb.auth.getUser();
-    const { data: picks } = await sb.from("bounty_picks").select("user_id");
+    // bounty_picks is RLS-scoped to each user, so enumerate participants with
+    // the service-role client — otherwise we'd only ever see our own row.
+    const { data: picks } = await createAdminClient().from("bounty_picks").select("user_id");
     const ids = [...new Set((picks ?? []).map((p) => p.user_id))];
     if (ids.length === 0) return [];
     const { data } = await sb
