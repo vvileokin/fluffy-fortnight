@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { inkForColor, type Match, type Team } from "@/lib/data";
+import { inkForColor, playedMaps, seriesScore, type Match, type Team } from "@/lib/data";
 
 type Row = {
   id: string;
@@ -68,17 +68,23 @@ function winsNeeded(format: Match["format"]): number {
  *    map has a result. An explicit live/finished status set by the admin is kept.
  */
 function deriveState(m: Match): Match {
-  const decided = (m.maps ?? []).filter((x) => x.a !== x.b);
-  if (decided.length === 0) return m;
-  const a = decided.filter((x) => x.a > x.b).length;
-  const b = decided.filter((x) => x.b > x.a).length;
+  const maps = playedMaps(m);
+  const series = seriesScore(m);
   const need = winsNeeded(m.format);
-  const finished = a >= need || b >= need;
+  const clinched = series.a >= need || series.b >= need;
+  const hasVeto = (m.veto ?? []).some((v) => v.action === "pick" || v.action === "decider");
+  const anyRounds = maps.some((x) => x.a > 0 || x.b > 0);
+  const anyFinished = maps.some((x) => x.status === "finished");
+
+  let status = m.status;
+  if (clinched) status = "finished";
+  else if (m.status !== "finished" && (hasVeto || anyRounds)) status = "live";
+
   return {
     ...m,
-    scoreA: a,
-    scoreB: b,
-    status: finished ? "finished" : m.status === "upcoming" ? "live" : m.status,
+    scoreA: anyFinished ? series.a : m.scoreA,
+    scoreB: anyFinished ? series.b : m.scoreB,
+    status,
   };
 }
 

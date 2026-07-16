@@ -330,6 +330,49 @@ export type H2H = {
   series?: { event: string; score: string; winner: "a" | "b" }[];
 };
 
+export type MapStatus = "finished" | "live" | "upcoming";
+export type PlayedMap = { name: string; a: number; b: number; status: MapStatus };
+
+/** A map is finished once one side reaches 13 (and isn't tied). */
+export function isMapFinished(m: { a: number; b: number }): boolean {
+  return (m.a >= 13 || m.b >= 13) && m.a !== m.b;
+}
+
+/**
+ * The maps a match actually plays, in order, each tagged live/finished/upcoming.
+ * Order comes from the veto picks (+ decider); scores are matched in by map name.
+ * The first not-yet-finished map is the live one. Falls back to the raw score
+ * list when a match has no veto set.
+ */
+export function playedMaps(match: Match): PlayedMap[] {
+  const picks = (match.veto ?? []).filter(
+    (v) => v.action === "pick" || v.action === "decider",
+  );
+  const scoreByName = new Map((match.maps ?? []).map((m) => [m.name, m]));
+  const base =
+    picks.length > 0
+      ? picks.map((v) => {
+          const s = scoreByName.get(v.map);
+          return { name: v.map, a: s?.a ?? 0, b: s?.b ?? 0 };
+        })
+      : (match.maps ?? []).map((m) => ({ name: m.name, a: m.a, b: m.b }));
+
+  const firstUnfinished = base.findIndex((m) => !isMapFinished(m));
+  return base.map((m, i) => ({
+    ...m,
+    status: isMapFinished(m) ? "finished" : i === firstUnfinished ? "live" : "upcoming",
+  }));
+}
+
+/** Series score (maps won) derived from the finished maps of a match. */
+export function seriesScore(match: Match): { a: number; b: number } {
+  const finished = playedMaps(match).filter((m) => m.status === "finished");
+  return {
+    a: finished.filter((m) => m.a > m.b).length,
+    b: finished.filter((m) => m.b > m.a).length,
+  };
+}
+
 const allMatches: Match[] = [
   {
     id: "m-navi-gl",

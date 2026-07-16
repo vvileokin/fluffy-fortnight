@@ -10,6 +10,8 @@ import {
   getTeam,
   getTournament,
   matchTeam,
+  playedMaps,
+  type PlayedMap,
   type VetoStep,
 } from "@/lib/data";
 import { getMatchById } from "@/lib/db/matches";
@@ -41,6 +43,7 @@ export default async function MatchPage({
   const tour = getTournament(match.tournamentSlug);
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const veto = match.veto && match.veto.length > 0 ? match.veto : defaultVeto;
+  const maps = playedMaps(match);
   const questions = await getQuestionsForMatch(id);
   const isLive = match.status === "live";
   const showScore = isLive || match.status === "finished";
@@ -90,16 +93,12 @@ export default async function MatchPage({
                   {match.timeLabel}
                 </span>
               )}
-              {isLive && match.liveMapLabel && (
-                <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[0.6875rem] font-medium text-ink-muted">
-                  {match.liveMapLabel}
-                </span>
-              )}
             </div>
             <div className="space-y-2">
               <MobileTeamRow team={a} score={match.scoreA} leading={match.scoreA > match.scoreB} showScore={showScore} />
               <MobileTeamRow team={b} score={match.scoreB} leading={match.scoreB > match.scoreA} showScore={showScore} />
             </div>
+            {maps.length > 0 && <MapScoreStrip maps={maps} />}
           </div>
 
           {/* sm+: big logos at the edges, names inside, score centered */}
@@ -149,11 +148,7 @@ export default async function MatchPage({
                   VS
                 </span>
               )}
-              {isLive && match.liveMapLabel && (
-                <span className="whitespace-nowrap rounded-full bg-surface-2 px-2.5 py-1 text-[0.6875rem] font-medium text-ink-muted">
-                  {match.liveMapLabel}
-                </span>
-              )}
+              {maps.length > 0 && <MapScoreStrip maps={maps} />}
             </div>
 
             <div className="flex flex-1 items-center justify-end gap-4">
@@ -195,24 +190,39 @@ export default async function MatchPage({
         )}
       </section>
 
-      {/* Per-map scores (admin fills these in when the match ends) */}
-      {match.maps && match.maps.length > 0 && (
+      {/* Maps of the series — status auto-derived (finished / live / upcoming) */}
+      {maps.length > 0 && (
         <section className="space-y-3">
           <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-            <Swords className="size-4 text-ink-subtle" /> Рахунок по картах
+            <Swords className="size-4 text-ink-subtle" /> Карти матчу
+            <span className="tnum font-mono text-ink-subtle">({maps.length})</span>
           </h3>
           <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
-            {match.maps.map((m, i) => (
+            {maps.map((m, i) => (
               <div key={i} className="flex items-center justify-between px-4 py-3 text-sm">
-                <span className="font-semibold text-ink">
-                  <span className="mr-2 text-ink-faint">{i + 1}</span>
+                <span className="flex items-center gap-2 font-semibold text-ink">
+                  <span className="text-ink-faint">{i + 1}</span>
                   {m.name}
+                  {m.status === "live" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-live/15 px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-live">
+                      <span className="size-1.5 animate-pulse rounded-full bg-live" /> Live
+                    </span>
+                  )}
+                  {m.status === "upcoming" && (
+                    <span className="text-[0.625rem] font-medium uppercase tracking-wide text-ink-faint">
+                      далі
+                    </span>
+                  )}
                 </span>
-                <span className="tnum font-mono">
-                  <span className={cn("font-bold", m.a > m.b ? "text-accent" : "text-ink")}>{m.a}</span>
-                  <span className="mx-2 text-ink-faint">:</span>
-                  <span className={cn("font-bold", m.b > m.a ? "text-accent" : "text-ink")}>{m.b}</span>
-                </span>
+                {m.status === "upcoming" ? (
+                  <span className="text-xs text-ink-faint">—</span>
+                ) : (
+                  <span className="tnum font-mono">
+                    <span className={cn("font-bold", m.a > m.b ? "text-accent" : "text-ink")}>{m.a}</span>
+                    <span className="mx-2 text-ink-faint">:</span>
+                    <span className={cn("font-bold", m.b > m.a ? "text-accent" : "text-ink")}>{m.b}</span>
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -308,6 +318,33 @@ export default async function MatchPage({
           )}
         </section>
       </div>
+    </div>
+  );
+}
+
+function MapScoreStrip({ maps }: { maps: PlayedMap[] }) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1.5">
+      {maps.map((m, i) => (
+        <span
+          key={i}
+          className={cn(
+            "tnum inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-[0.625rem] font-semibold",
+            m.status === "live"
+              ? "bg-live/15 text-live ring-1 ring-live/30"
+              : m.status === "finished"
+                ? "bg-surface-2 text-ink-muted"
+                : "bg-surface-2 text-ink-faint",
+          )}
+          title={`${m.name}${m.status === "live" ? " · LIVE" : ""}`}
+        >
+          {m.name.slice(0, 3)}
+          <span>
+            {m.a}:{m.b}
+          </span>
+          {m.status === "live" && <span className="size-1.5 rounded-full bg-live" />}
+        </span>
+      ))}
     </div>
   );
 }

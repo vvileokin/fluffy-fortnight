@@ -454,15 +454,27 @@ export default function MatchesAdmin() {
               </Field>
             </div>
 
-            {editing.status === "live" && (
-              <Field label="Поточна карта (live)">
-                <input className={inputCls} value={editing.live_map_label} onChange={(e) => up({ live_map_label: e.target.value })} placeholder="Mirage · 2 карта · 11:8" />
-              </Field>
-            )}
-
-            {/* Per-map scores */}
+            {/* Per-map scores — status (live / зіграно / далі) is derived on the site */}
+            <div className="rounded-lg border border-border bg-surface-2/40 p-2.5 text-[0.6875rem] leading-relaxed text-ink-subtle">
+              Статус кожної карти (LIVE / зіграно / далі) і загальний рахунок рахуються
+              автоматично з вето та рахунку карт. Перша незавершена карта — LIVE. Карта
+              вважається завершеною, коли хтось набрав 13.{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  const picks = editing.veto.filter(
+                    (v) => v.action === "pick" || v.action === "decider",
+                  );
+                  const byName = new Map(editing.maps.map((m) => [m.name, m] as const));
+                  up({ maps: picks.map((v) => byName.get(v.map) ?? { name: v.map, a: 0, b: 0 }) });
+                }}
+                className="font-semibold text-accent hover:underline"
+              >
+                Заповнити карти з вето
+              </button>
+            </div>
             <ListEditor
-              label="Рахунок по картах (для завершених)"
+              label="Карти матчу (рахунок)"
               rows={editing.maps}
               onChange={(maps) => up({ maps })}
               addLabel="Додати карту"
