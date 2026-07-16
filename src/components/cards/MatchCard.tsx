@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { Target, ChevronRight } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
@@ -57,6 +58,7 @@ export function MatchCard({ match }: { match: Match }) {
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
   const showScore = isLive || isFinished;
+  const hasQuestions = match.openQuestions > 0;
   const aLead = match.scoreA > match.scoreB;
   const bLead = match.scoreB > match.scoreA;
 
@@ -72,10 +74,20 @@ export function MatchCard({ match }: { match: Match }) {
     >
       <div className="flex items-center justify-between gap-2 px-4 pt-3">
         <span className="flex min-w-0 items-center gap-2 text-xs text-ink-subtle">
-          {isEvent && <BlastMark className="size-3.5 shrink-0 text-accent" />}
+          {match.tournamentIcon ? (
+            <Image
+              src={match.tournamentIcon}
+              alt=""
+              width={14}
+              height={14}
+              className="size-3.5 shrink-0 object-contain"
+            />
+          ) : (
+            isEvent && <BlastMark className="size-3.5 shrink-0 text-accent" />
+          )}
           <span className="truncate font-medium">{tour?.shortName ?? match.tournamentName}</span>
-          <span className="text-ink-faint">·</span>
-          <span className="shrink-0">{match.stage}</span>
+          {match.stage && <span className="text-ink-faint">·</span>}
+          {match.stage && <span className="shrink-0">{match.stage}</span>}
         </span>
         {isLive ? (
           <LiveBadge />
@@ -98,26 +110,20 @@ export function MatchCard({ match }: { match: Match }) {
 
       {/* Context strip — always present so every state has equal height */}
       <div className="mx-4 mb-3 flex items-center justify-between gap-2 rounded-md bg-surface-2 px-2.5 py-1.5 text-xs">
+        <span className="text-ink-subtle">{match.format}</span>
         {isLive ? (
-          <>
-            <span className="truncate text-ink-subtle">{match.format}</span>
-            <span className="shrink-0 font-semibold text-live">У прямому ефірі</span>
-          </>
+          <span className="shrink-0 font-semibold text-live">У прямому ефірі</span>
         ) : isFinished ? (
-          <>
-            <span className="text-ink-subtle">{match.format}</span>
-            <span className="shrink-0 font-semibold text-ink-subtle">{t("finishedLabel")}</span>
-          </>
+          <span className="shrink-0 font-semibold text-ink-subtle">{t("finishedLabel")}</span>
+        ) : hasQuestions ? (
+          <span className="shrink-0 font-semibold text-info">{t("predictionsOpen")}</span>
         ) : (
-          <>
-            <span className="text-ink-subtle">{match.format}</span>
-            <span className="shrink-0 font-semibold text-info">{t("predictionsOpen")}</span>
-          </>
+          <span className="shrink-0 font-semibold text-ink-subtle">{match.timeLabel}</span>
         )}
       </div>
 
       <div className="mt-auto flex items-center justify-between border-t border-border px-4 py-2.5">
-        {match.openQuestions > 0 ? (
+        {hasQuestions ? (
           <>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
               <Target className="size-3.5 text-accent" />
@@ -134,7 +140,7 @@ export function MatchCard({ match }: { match: Match }) {
         ) : (
           <>
             <span className="text-xs font-medium text-ink-subtle">
-              {t("predictionsClosed")}
+              {isFinished ? t("finishedLabel") : "Деталі матчу"}
             </span>
             <ChevronRight className="size-4 text-ink-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
           </>

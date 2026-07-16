@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { ChevronLeft, Target, Swords, Ban, CircleCheck, History } from "lucide-react";
@@ -11,23 +12,12 @@ import {
   getTournament,
   matchTeam,
   playedMaps,
+  type Match,
   type PlayedMap,
-  type VetoStep,
 } from "@/lib/data";
 import { getMatchById } from "@/lib/db/matches";
 import { getQuestionsForMatch } from "@/lib/db/questions";
 import { cn } from "@/lib/utils";
-
-// --- Fallback veto (design-first) when a match has none set in the DB ---
-const defaultVeto: VetoStep[] = [
-  { team: "a", action: "ban", map: "Anubis" },
-  { team: "b", action: "ban", map: "Dust II" },
-  { team: "a", action: "pick", map: "Mirage" },
-  { team: "b", action: "pick", map: "Ancient" },
-  { team: "a", action: "ban", map: "Nuke" },
-  { team: "b", action: "ban", map: "Train" },
-  { team: "-", action: "decider", map: "Inferno" },
-];
 
 export default async function MatchPage({
   params,
@@ -42,8 +32,14 @@ export default async function MatchPage({
   const b = matchTeam(match, "b");
   const tour = getTournament(match.tournamentSlug);
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
-  const veto = match.veto && match.veto.length > 0 ? match.veto : defaultVeto;
+  const veto = match.veto ?? [];
   const maps = playedMaps(match);
+  // Which team picked each map (for the map score-strip hover).
+  const pickedBy = new Map<string, string>();
+  for (const v of veto) {
+    if (v.action === "pick") pickedBy.set(v.map, v.team === "a" ? a.tag : v.team === "b" ? b.tag : "");
+    else if (v.action === "decider") pickedBy.set(v.map, "Decider");
+  }
   const questions = await getQuestionsForMatch(id);
   const isLive = match.status === "live";
   const showScore = isLive || match.status === "finished";
@@ -78,7 +74,18 @@ export default async function MatchPage({
                 {tour.name}
               </Link>
             ) : (
-              <span className="truncate font-semibold">{match.tournamentName}</span>
+              <span className="flex min-w-0 items-center gap-1.5 truncate font-semibold">
+                {match.tournamentIcon && (
+                  <Image
+                    src={match.tournamentIcon}
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="size-4 shrink-0 object-contain"
+                  />
+                )}
+                {match.tournamentName}
+              </span>
             )}
             <span className="shrink-0">{match.stage} · {match.format}</span>
           </div>
@@ -98,7 +105,7 @@ export default async function MatchPage({
               <MobileTeamRow team={a} score={match.scoreA} leading={match.scoreA > match.scoreB} showScore={showScore} />
               <MobileTeamRow team={b} score={match.scoreB} leading={match.scoreB > match.scoreA} showScore={showScore} />
             </div>
-            {maps.length > 0 && <MapScoreStrip maps={maps} />}
+            {maps.length > 0 && <MapScoreStrip maps={maps} pickedBy={pickedBy} />}
           </div>
 
           {/* sm+: big logos at the edges, names inside, score centered */}
@@ -148,7 +155,7 @@ export default async function MatchPage({
                   VS
                 </span>
               )}
-              {maps.length > 0 && <MapScoreStrip maps={maps} />}
+              {maps.length > 0 && <MapScoreStrip maps={maps} pickedBy={pickedBy} />}
             </div>
 
             <div className="flex flex-1 items-center justify-end gap-4">
@@ -190,47 +197,9 @@ export default async function MatchPage({
         )}
       </section>
 
-      {/* Maps of the series — status auto-derived (finished / live / upcoming) */}
-      {maps.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-            <Swords className="size-4 text-ink-subtle" /> Карти матчу
-            <span className="tnum font-mono text-ink-subtle">({maps.length})</span>
-          </h3>
-          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
-            {maps.map((m, i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-3 text-sm">
-                <span className="flex items-center gap-2 font-semibold text-ink">
-                  <span className="text-ink-faint">{i + 1}</span>
-                  {m.name}
-                  {m.status === "live" && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-live/15 px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-live">
-                      <span className="size-1.5 animate-pulse rounded-full bg-live" /> Live
-                    </span>
-                  )}
-                  {m.status === "upcoming" && (
-                    <span className="text-[0.625rem] font-medium uppercase tracking-wide text-ink-faint">
-                      далі
-                    </span>
-                  )}
-                </span>
-                {m.status === "upcoming" ? (
-                  <span className="text-xs text-ink-faint">—</span>
-                ) : (
-                  <span className="tnum font-mono">
-                    <span className={cn("font-bold", m.a > m.b ? "text-accent" : "text-ink")}>{m.a}</span>
-                    <span className="mx-2 text-ink-faint">:</span>
-                    <span className={cn("font-bold", m.b > m.a ? "text-accent" : "text-ink")}>{m.b}</span>
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* CONTEXT: subordinate */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {veto.length > 0 && (
         <section className="space-y-3">
           <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
             <Swords className="size-4 text-ink-subtle" />
@@ -269,6 +238,7 @@ export default async function MatchPage({
             })}
           </div>
         </section>
+        )}
 
         <section className="space-y-3">
           <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
@@ -322,29 +292,43 @@ export default async function MatchPage({
   );
 }
 
-function MapScoreStrip({ maps }: { maps: PlayedMap[] }) {
+function MapScoreStrip({
+  maps,
+  pickedBy,
+}: {
+  maps: PlayedMap[];
+  pickedBy: Map<string, string>;
+}) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-1.5">
-      {maps.map((m, i) => (
-        <span
-          key={i}
-          className={cn(
-            "tnum inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-[0.625rem] font-semibold",
-            m.status === "live"
-              ? "bg-live/15 text-live ring-1 ring-live/30"
-              : m.status === "finished"
-                ? "bg-surface-2 text-ink-muted"
-                : "bg-surface-2 text-ink-faint",
-          )}
-          title={`${m.name}${m.status === "live" ? " · LIVE" : ""}`}
-        >
-          {m.name.slice(0, 3)}
-          <span>
-            {m.a}:{m.b}
+      {maps.map((m, i) => {
+        const picker = pickedBy.get(m.name);
+        return (
+          <span
+            key={i}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
+              m.status === "live"
+                ? "bg-live/15 text-live ring-1 ring-live/30"
+                : m.status === "finished"
+                  ? "bg-surface-2 text-ink"
+                  : "bg-surface-2 text-ink-faint",
+            )}
+            title={picker ? (picker === "Decider" ? `${m.name} · decider` : `${m.name} · пік ${picker}`) : m.name}
+          >
+            {m.name}
+            {m.status === "finished" ? (
+              <span className="tnum font-mono">
+                {m.a}:{m.b}
+              </span>
+            ) : m.status === "live" ? (
+              <span className="inline-flex items-center gap-1 text-[0.625rem] font-bold uppercase">
+                <span className="size-1.5 animate-pulse rounded-full bg-live" /> live
+              </span>
+            ) : null}
           </span>
-          {m.status === "live" && <span className="size-1.5 rounded-full bg-live" />}
-        </span>
-      ))}
+        );
+      })}
     </div>
   );
 }

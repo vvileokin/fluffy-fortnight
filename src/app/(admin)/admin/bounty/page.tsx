@@ -303,8 +303,8 @@ export default function BountyAdmin() {
                   </div>
                 )}
 
-                {/* Final preview for the bracket stage */}
-                {isBracket && finalists.length > 0 && (
+                {/* Final preview — SF winners form the grand final */}
+                {meta.id === "sf" && finalists.length > 0 && (
                   <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 px-3.5 py-2.5">
                     <Crown className="size-5 text-accent" />
                     <div className="min-w-0">

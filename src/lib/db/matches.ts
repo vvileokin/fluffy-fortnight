@@ -33,6 +33,7 @@ type Row = {
   team_b_rank: number | null;
   tournament_name: string | null;
   tournament_icon: string | null;
+  updated_at: string | null;
 };
 
 function customTeam(
@@ -114,6 +115,7 @@ function toMatch(r: Row): Match {
     teamBData: customTeam(r.team_b, r.team_b_name, r.team_b_logo, r.team_b_color, r.team_b_rank),
     tournamentName: r.tournament_name ?? undefined,
     tournamentIcon: r.tournament_icon ?? undefined,
+    updatedISO: r.updated_at ?? undefined,
   });
 }
 

@@ -4,7 +4,7 @@ import * as React from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Clock, Check, Lock, CircleHelp, Trophy } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { getMatch, getTeam, type Question } from "@/lib/data";
+import { getMatch, matchTeam, type Question, type Match } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -12,9 +12,11 @@ import { cn } from "@/lib/utils";
 export function QuestionCard({
   question,
   withMatch = false,
+  match: matchProp,
 }: {
   question: Question;
   withMatch?: boolean;
+  match?: Match;
 }) {
   const user = useUser();
   const router = useRouter();
@@ -23,7 +25,8 @@ export function QuestionCard({
 
   const locked = question.status === "locked" || question.status === "resolved";
   const upcoming = question.status === "upcoming";
-  const match = withMatch ? getMatch(question.matchId) : undefined;
+  // Prefer the passed match (works for DB matches); fall back to the static catalog.
+  const match = matchProp ?? (withMatch ? getMatch(question.matchId) : undefined);
 
   // Load this user's saved answer.
   React.useEffect(() => {
@@ -67,11 +70,11 @@ export function QuestionCard({
           href={`/matches/${match.id}`}
           className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs text-ink-muted transition-colors hover:text-ink"
         >
-          <TeamLogo team={getTeam(match.a)} size="xs" />
-          <span className="font-semibold">{getTeam(match.a).tag}</span>
+          <TeamLogo team={matchTeam(match, "a")} size="xs" />
+          <span className="font-semibold">{matchTeam(match, "a").tag}</span>
           <span className="text-ink-faint">vs</span>
-          <span className="font-semibold">{getTeam(match.b).tag}</span>
-          <TeamLogo team={getTeam(match.b)} size="xs" />
+          <span className="font-semibold">{matchTeam(match, "b").tag}</span>
+          <TeamLogo team={matchTeam(match, "b")} size="xs" />
           <span className="ml-auto truncate text-ink-subtle">{match.stage}</span>
         </Link>
       )}
@@ -165,8 +168,8 @@ export function QuestionCard({
             <span className="flex items-center gap-1 font-semibold text-success">
               <Check className="size-3.5" strokeWidth={3} /> Збережено
             </span>
-          ) : picked && question.result === "pending" ? (
-            <span className="text-ink-subtle">Очікує результат</span>
+          ) : locked ? (
+            <span className="text-ink-subtle">{picked ? "Твій вибір зафіксовано" : "Без відповіді"}</span>
           ) : picked ? (
             <span className="text-ink-subtle">Можна змінити до дедлайну</span>
           ) : upcoming ? (

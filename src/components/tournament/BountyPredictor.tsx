@@ -136,8 +136,8 @@ export function BountyPredictor() {
           {locked ? <Lock className="size-4 shrink-0 text-warning" /> : <Info className="size-4 shrink-0 text-info" />}
           {locked
             ? deadlinePassed
-              ? "Прийом прогнозів завершено."
-              : "Стадія ще не відкрита."
+              ? "Прийом прогнозів завершено — дедлайн минув."
+              : "Голосування у цій стадії закрито."
             : meta.note}
         </p>
         <div className="flex items-center gap-2">
@@ -150,8 +150,6 @@ export function BountyPredictor() {
 
       {!configured ? (
         <StagePlaceholder />
-      ) : meta.kind === "bracket" ? (
-        <BracketStage teams={state.teams} winners={state.winners} reward={meta.reward} />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
@@ -181,6 +179,8 @@ export function BountyPredictor() {
               );
             })}
           </div>
+
+          {meta.id === "sf" && <FinalBanner winners={state.winners} reward={meta.reward} />}
 
           {!locked && (
             <div className="flex items-center justify-between border-t border-border pt-4">
@@ -293,49 +293,26 @@ function StagePlaceholder() {
   );
 }
 
-function BracketStage({ teams, winners, reward }: { teams: string[]; winners: string[]; reward: number }) {
-  const semis = teams.slice(0, 4).map(getTeam);
+function FinalBanner({ winners, reward }: { winners: string[]; reward: number }) {
   const finalists = winners.slice(0, 2).map(getTeam);
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {[
-          { label: "Півфінал 1", pair: [semis[0], semis[1]] },
-          { label: "Півфінал 2", pair: [semis[2], semis[3]] },
-        ].map(({ label, pair }) => (
-          <div key={label} className="rounded-lg border border-border bg-surface p-4">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">{label}</p>
-            <div className="mt-3 space-y-2">
-              {pair.map((t, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2.5 rounded-md border border-border bg-surface-2 px-3 py-2.5 text-sm text-ink"
-                >
-                  {t ? <TeamLogo team={t} size="sm" /> : <span className="size-6 rounded-md border border-border bg-surface" />}
-                  <span className="font-semibold">{t ? t.name : "Очікує команду"}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+  if (finalists.length === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/50 px-4 py-3 text-sm text-ink-muted">
+        <Info className="size-4 shrink-0 text-info" />
+        Фінал сформується з переможців півфіналів (адмін познач «пройшов далі») — до +{reward}.
       </div>
-      {finalists.length > 0 ? (
-        <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3">
-          <Trophy className="size-5 shrink-0 text-accent" />
-          <div className="min-w-0">
-            <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">Гранд-фінал</p>
-            <p className="truncate text-sm font-bold text-ink">
-              {finalists.map((t) => t.name).join(" vs ")}
-              {finalists.length < 2 && " · очікує 2-го фіналіста"}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/50 px-4 py-3 text-sm text-ink-muted">
-          <Info className="size-4 shrink-0 text-info" />
-          Фінал сформується автоматично після переможців півфіналів — до +{reward} за вгадану стадію.
-        </div>
-      )}
+    );
+  }
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3">
+      <Trophy className="size-5 shrink-0 text-accent" />
+      <div className="min-w-0">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">Гранд-фінал</p>
+        <p className="truncate text-sm font-bold text-ink">
+          {finalists.map((t) => t.name).join(" vs ")}
+          {finalists.length < 2 && " · очікує 2-го фіналіста"}
+        </p>
+      </div>
     </div>
   );
 }

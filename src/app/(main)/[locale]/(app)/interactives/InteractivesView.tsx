@@ -1,9 +1,16 @@
 import { Target } from "lucide-react";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { QuestionCard } from "@/components/match/QuestionCard";
-import { type Question } from "@/lib/data";
+import { type Question, type Match } from "@/lib/data";
 
-export function InteractivesView({ questions }: { questions: Question[] }) {
+export function InteractivesView({
+  questions,
+  matches = [],
+}: {
+  questions: Question[];
+  matches?: Match[];
+}) {
+  const matchById = new Map(matches.map((m) => [m.id, m]));
   // Show everything still answerable; resolved/locked ones drop off here but
   // remain visible (closed) on their match and tournament pages.
   const active = questions.filter(
@@ -17,7 +24,7 @@ export function InteractivesView({ questions }: { questions: Question[] }) {
       {active.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {active.map((q) => (
-            <QuestionCard key={q.id} question={q} withMatch />
+            <QuestionCard key={q.id} question={q} withMatch match={matchById.get(q.matchId)} />
           ))}
         </div>
       ) : (

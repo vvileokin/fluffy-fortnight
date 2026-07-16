@@ -281,10 +281,10 @@ export const bountyStages: BountyStage[] = [
     id: "sf",
     title: "Півфінали та фінал",
     phase: "lan",
-    kind: "bracket",
+    kind: "picks",
     reward: 200,
     pairCount: 2,
-    note: "Півфінали пікаються навхрест, фінал формується системою.",
+    note: "Нижчі сіди півфіналів обирають суперника. Фінал формується з переможців.",
     locked: true,
   },
 ];
@@ -320,7 +320,14 @@ export type Match = {
   teamBData?: Team;
   tournamentName?: string;
   tournamentIcon?: string;
+  updatedISO?: string; // last admin edit — used to expire finished matches from feeds
 };
+
+/** Minutes since a finished match was last updated (proxy for "finished at"). */
+export function minutesSinceFinished(match: Match): number {
+  if (match.status !== "finished" || !match.updatedISO) return Infinity;
+  return (Date.now() - new Date(match.updatedISO).getTime()) / 60000;
+}
 
 export type MatchMap = { name: string; a: number; b: number };
 export type VetoStep = { team: string; action: "ban" | "pick" | "decider"; map: string };

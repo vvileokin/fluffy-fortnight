@@ -49,7 +49,9 @@ export function MatchesView({
     .map((key) => ({
       key,
       label: groupLabels[key],
-      items: visible.filter((m) => dayBucket(m) === key),
+      items: visible
+        .filter((m) => dayBucket(m) === key)
+        .sort((a, b) => (a.isEvent ? 0 : 1) - (b.isEvent ? 0 : 1)),
     }))
     .filter((g) => g.items.length > 0);
 

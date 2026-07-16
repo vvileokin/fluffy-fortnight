@@ -7,7 +7,7 @@ import { MatchCard } from "@/components/cards/MatchCard";
 import { GiveawayCard } from "@/components/cards/GiveawayCard";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import { tournaments } from "@/lib/data";
+import { tournaments, minutesSinceFinished, type Match } from "@/lib/data";
 import { getMatches } from "@/lib/db/matches";
 import { getLeaderboard } from "@/lib/db/leaderboard";
 import { getGiveaways } from "@/lib/db/giveaways";
@@ -15,9 +15,17 @@ import { getOpenQuestions } from "@/lib/db/questions";
 import { getSiteSettings, applyCovers } from "@/lib/db/settings";
 import { cn } from "@/lib/utils";
 
+// Event matches first, then live → upcoming → finished within each group.
+function feedRank(m: Match): number {
+  const group = m.isEvent ? 0 : 10;
+  const state = m.status === "live" ? 0 : m.status === "finished" ? 2 : 1;
+  return group + state;
+}
+
 export default async function HomePage() {
   const t = await getTranslations("home");
   const matches = await getMatches();
+  const matchById = new Map(matches.map((m) => [m.id, m]));
   const giveaways = await getGiveaways();
   const seasonLeaderboard = await getLeaderboard(8);
   const { covers } = await getSiteSettings();
@@ -25,9 +33,10 @@ export default async function HomePage() {
     tournaments.filter((t) => t.status !== "finished").slice(0, 3),
     covers,
   );
+  // Event matches lead; live before upcoming; a finished result lingers 10 min.
   const feedMatches = [...matches]
-    .filter((m) => m.status !== "finished")
-    .sort((a, b) => (a.status === "live" ? -1 : 1) - (b.status === "live" ? -1 : 1))
+    .filter((m) => m.status !== "finished" || minutesSinceFinished(m) < 10)
+    .sort((a, b) => feedRank(a) - feedRank(b))
     .slice(0, 6);
   const hotQuestions = await getOpenQuestions(2);
 
@@ -51,7 +60,7 @@ export default async function HomePage() {
           <SectionHeader icon={Target} title={t("hotPredictions")} href="/interactives" />
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {hotQuestions.map((q) => (
-              <QuestionCard key={q.id} question={q} withMatch />
+              <QuestionCard key={q.id} question={q} withMatch match={matchById.get(q.matchId)} />
             ))}
           </div>
         </section>
