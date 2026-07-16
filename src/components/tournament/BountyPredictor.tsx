@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Swords, Info, ChevronRight, Lock } from "lucide-react";
+import { Check, Swords, Info, ChevronRight, Lock, RotateCcw } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { bountyStages, getTeam } from "@/lib/data";
@@ -106,6 +106,38 @@ export function BountyPredictor() {
       .then(() => {});
   }
 
+  /** Un-pick one pair — frees that opponent for the other pairs. */
+  function clearPick(low: string) {
+    if (locked || !user) return;
+    setPicks((prev) => {
+      const stage = { ...(prev[active] ?? {}) };
+      delete stage[low];
+      return { ...prev, [active]: stage };
+    });
+    setSaved(false);
+    createClient()
+      .from("bounty_picks")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("stage_id", active)
+      .eq("low_slug", low)
+      .then(() => {});
+  }
+
+  /** Reset the whole draft for this stage. */
+  function resetStage() {
+    if (locked || !user || made === 0) return;
+    if (!confirm("Скинути весь драфт цієї стадії?")) return;
+    setPicks((prev) => ({ ...prev, [active]: {} }));
+    setSaved(false);
+    createClient()
+      .from("bounty_picks")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("stage_id", active)
+      .then(() => {});
+  }
+
   return (
     <div className="space-y-5">
       {/* Stage tabs */}
@@ -181,17 +213,33 @@ export function BountyPredictor() {
                     </p>
                   </div>
                   <ChevronRight className="size-4 shrink-0 text-ink-faint" />
-                  <HighPicker highs={availableHighs} value={chosen} disabled={locked} dropUp={dropUp} onPick={(h) => pick(low, h)} />
+                  <HighPicker
+                    highs={availableHighs}
+                    value={chosen}
+                    disabled={locked}
+                    dropUp={dropUp}
+                    onPick={(h) => pick(low, h)}
+                    onClear={() => clearPick(low)}
+                  />
                 </div>
               );
             })}
           </div>
 
           {!locked && (
-            <div className="flex items-center justify-between border-t border-border pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
               <span className="text-xs text-ink-subtle">
                 Обрано <span className="tnum font-semibold text-ink">{made}</span> / {lows.length}
               </span>
+              <div className="flex items-center gap-2">
+              <button
+                onClick={resetStage}
+                disabled={made === 0}
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-ink-subtle transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <RotateCcw className="size-3.5" />
+                Скинути
+              </button>
               <button
                 disabled={made < lows.length || lows.length === 0}
                 onClick={() => setSaved(true)}
@@ -206,6 +254,7 @@ export function BountyPredictor() {
               >
                 {saved ? <><Check className="size-4" strokeWidth={3} /> Прогноз збережено</> : "Зберегти bounty-прогноз"}
               </button>
+              </div>
             </div>
           )}
         </>
@@ -220,12 +269,14 @@ function HighPicker({
   disabled,
   dropUp,
   onPick,
+  onClear,
 }: {
   highs: string[];
   value?: string;
   disabled?: boolean;
   dropUp?: boolean;
   onPick: (slug: string) => void;
+  onClear: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const team = value ? getTeam(value) : null;
@@ -266,8 +317,11 @@ function HighPicker({
               return (
                 <button
                   key={h}
+                  // Clicking the already-picked team frees it up again.
+                  title={sel ? "Натисни, щоб звільнити команду" : undefined}
                   onClick={() => {
-                    onPick(h);
+                    if (sel) onClear();
+                    else onPick(h);
                     setOpen(false);
                   }}
                   className={cn(
