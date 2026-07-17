@@ -6,7 +6,21 @@ import { AuthForm } from "@/components/auth/AuthForm";
 
 export const metadata: Metadata = { title: "Вхід" };
 
-export default function LoginPage() {
+/** Auth routes bounce back here with ?error=… — say what actually went wrong. */
+const authErrors: Record<string, string> = {
+  telegram: "Не вдалося увійти через Telegram. Спробуй ще раз або обери інший спосіб.",
+  telegram_expired: "Сесія Telegram застаріла. Натисни «Продовжити з Telegram» ще раз.",
+  auth: "Не вдалося завершити вхід. Спробуй ще раз.",
+};
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  const initialError = error ? (authErrors[error] ?? authErrors.auth) : undefined;
+
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4 py-10">
       <div className="pointer-events-none absolute inset-0 aura-accent" />
@@ -29,7 +43,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <AuthForm mode="login" />
+        <AuthForm mode="login" initialError={initialError} />
 
         <p className="mt-4 text-center text-sm text-ink-muted">
           Немає акаунта?{" "}

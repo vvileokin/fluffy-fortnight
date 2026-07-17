@@ -10,13 +10,33 @@ const inputCls =
   "h-11 w-full rounded-lg border border-border bg-surface-2 pl-10 pr-3 text-sm text-ink placeholder:text-ink-subtle " +
   "transition-colors focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2";
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+/** Supabase returns raw English — translate the ones players actually hit. */
+function humanError(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login credentials"))
+    return "Невірна пошта або пароль. Якщо ти реєструвався через Google чи Telegram — заходь тим самим способом.";
+  if (m.includes("email not confirmed"))
+    return "Пошта не підтверджена. Перевір лист і підтверди адресу.";
+  if (m.includes("user already registered") || m.includes("already been registered"))
+    return "Такий акаунт уже існує. Спробуй увійти.";
+  if (m.includes("rate limit") || m.includes("too many"))
+    return "Забагато спроб. Зачекай хвилину і спробуй ще раз.";
+  return msg;
+}
+
+export function AuthForm({
+  mode,
+  initialError,
+}: {
+  mode: "login" | "register";
+  initialError?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [loading, setLoading] = React.useState<null | "google" | "email">(null);
-  const [error, setError] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(initialError ?? null);
   const [notice, setNotice] = React.useState<string | null>(null);
 
   const redirectTo =
@@ -67,7 +87,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       options: { redirectTo },
     });
     if (error) {
-      setError(error.message);
+      setError(humanError(error.message));
       setLoading(null);
     }
     // On success the browser is redirected to Google — no further work here.
@@ -91,11 +111,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         password,
         options: { emailRedirectTo: redirectTo },
       });
-      if (error) setError(error.message);
+      if (error) setError(humanError(error.message));
       else setNotice("Перевір пошту — ми надіслали лист для підтвердження.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
+      if (error) setError(humanError(error.message));
       else {
         router.push("/");
         router.refresh();
