@@ -19,12 +19,23 @@ export async function POST(request: Request) {
 
   const { data: q } = await admin
     .from("questions")
-    .select("title, options")
+    .select("title, options, match_id")
     .eq("id", question_id)
     .maybeSingle();
   const title = q?.title ? String(q.title) : "Прогноз";
   const options: OptionRow[] = Array.isArray(q?.options) ? q!.options : [];
   const reward = options.find((o) => o.id === correct_option_id)?.reward ?? 0;
+
+  // Predictions on BLAST event matches also count toward bounty points.
+  let isEvent = false;
+  if (q?.match_id) {
+    const { data: match } = await admin
+      .from("matches")
+      .select("is_event")
+      .eq("id", q.match_id)
+      .maybeSingle();
+    isEvent = !!match?.is_event;
+  }
 
   // Guard: if already resolved, don't award again.
   const { data: existing } = await admin
@@ -54,7 +65,7 @@ export async function POST(request: Request) {
   const userIds = [...new Set(preds.map((p) => p.user_id))];
   const { data: profiles } = await admin
     .from("profiles")
-    .select("id, points, correct, streak")
+    .select("id, points, bounty_points, correct, streak")
     .in("id", userIds);
   const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
 
@@ -65,7 +76,12 @@ export async function POST(request: Request) {
     if (!prof) continue;
     const won = p.option_id === correct_option_id;
     const next = won
-      ? { points: prof.points + reward, correct: prof.correct + 1, streak: prof.streak + 1 }
+      ? {
+          points: prof.points + reward,
+          correct: prof.correct + 1,
+          streak: prof.streak + 1,
+          ...(isEvent ? { bounty_points: prof.bounty_points + reward } : {}),
+        }
       : { streak: 0 };
     await admin.from("profiles").update(next).eq("id", p.user_id);
     notifs.push({

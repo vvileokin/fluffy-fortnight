@@ -45,16 +45,18 @@ export async function getBountyLeaderboard(limit = 50): Promise<LeaderRow[]> {
     if (ids.length === 0) return [];
     const { data } = await sb
       .from("profiles")
-      .select("id, handle, avatar_url, points, correct, streak")
+      .select("id, handle, avatar_url, bounty_points, correct, streak")
       .in("id", ids)
-      .order("points", { ascending: false })
+      .order("bounty_points", { ascending: false })
       .order("correct", { ascending: false })
       .limit(limit);
     if (!data) return [];
+    // Ranked by bounty points only (BLAST match predictions + draft pairs),
+    // not the full-season total.
     return data.map((p, i) => ({
       rank: i + 1,
       handle: p.handle,
-      points: p.points,
+      points: p.bounty_points,
       correct: p.correct,
       streak: p.streak,
       avatarUrl: p.avatar_url ?? undefined,

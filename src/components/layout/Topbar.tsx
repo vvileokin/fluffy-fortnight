@@ -40,6 +40,24 @@ export function Topbar() {
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<Notif[]>([]);
   const unread = items.filter((n) => !n.read).length;
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  // Close the notifications menu on any outside click or Escape. A plain
+  // overlay div couldn't do this reliably — it lived inside the header's
+  // stacking context, so clicks on higher-stacked elements never reached it.
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   React.useEffect(() => {
     if (!user) {
@@ -64,11 +82,14 @@ export function Topbar() {
   function markAll() {
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
     if (user) {
-      void createClient()
+      // NB: the Supabase builder only fires the request when awaited/then'd —
+      // `void builder` never sent it, so reads never persisted.
+      createClient()
         .from("notifications")
         .update({ read: true })
         .eq("user_id", user.id)
-        .eq("read", false);
+        .eq("read", false)
+        .then(() => {});
     }
   }
 
@@ -123,7 +144,7 @@ export function Topbar() {
           <Avatar name={handle} src={profile?.avatar_url} size="sm" />
         </Link>
 
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label={t("notifications")}
@@ -144,12 +165,6 @@ export function Topbar() {
           </button>
 
           {open && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setOpen(false)}
-                aria-hidden
-              />
               <div
                 role="dialog"
                 aria-label={t("notifications")}
@@ -205,7 +220,6 @@ export function Topbar() {
                   })}
                 </ul>
               </div>
-            </>
           )}
         </div>
       </div>
