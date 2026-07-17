@@ -54,24 +54,29 @@ export async function POST(request: Request) {
   let awarded = 0;
   if (hits.size > 0) {
     const ids = [...hits.keys()];
-    const { data: profiles } = await admin
+    const { data: profiles, error: profErr } = await admin
       .from("profiles")
-      .select("id, points, bounty_points, correct, streak")
+      .select("id, points, bounty_points, correct, bounty_correct")
       .in("id", ids);
+    // Bail before marking the stage resolved if a column is missing, so the
+    // admin can run the migration and re-resolve without losing the awards.
+    if (profErr) {
+      return NextResponse.json({ ok: false, error: profErr.message }, { status: 500 });
+    }
     const notifs: { user_id: string; kind: string; title: string }[] = [];
     for (const prof of profiles ?? []) {
       const n = hits.get(prof.id) ?? 0;
       if (n <= 0) continue;
       const add = n * reward;
-      // Correct bounty pairs count toward season points, bounty points,
-      // the "correct" tally and the streak.
+      // Correct pairs count toward points (season + bounty) and the correct
+      // tally (season + bounty) — but NOT the streak: streaks are match-only.
       await admin
         .from("profiles")
         .update({
           points: prof.points + add,
           bounty_points: prof.bounty_points + add,
           correct: prof.correct + n,
-          streak: prof.streak + n,
+          bounty_correct: prof.bounty_correct + n,
         })
         .eq("id", prof.id);
       notifs.push({

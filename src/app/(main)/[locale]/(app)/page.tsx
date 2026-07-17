@@ -27,7 +27,7 @@ export default async function HomePage() {
   const matches = await getMatches();
   const matchById = new Map(matches.map((m) => [m.id, m]));
   const giveaways = await getGiveaways();
-  const seasonLeaderboard = await getLeaderboard(100);
+  const seasonLeaderboard = await getLeaderboard(1000);
   const { covers } = await getSiteSettings();
   const currentTournaments = applyCovers(
     tournaments.filter((t) => t.status !== "finished").slice(0, 3),

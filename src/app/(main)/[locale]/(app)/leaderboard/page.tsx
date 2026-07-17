@@ -8,7 +8,7 @@ import { formatInt } from "@/lib/utils";
 export const metadata: Metadata = { title: "Лідерборд" };
 
 export default async function LeaderboardPage() {
-  const rows = await getLeaderboard(100);
+  const rows = await getLeaderboard(1000);
   const me = rows.find((r) => r.isYou);
 
   const stats = [
