@@ -44,39 +44,31 @@ export function AuthForm({
       ? `${window.location.origin}/auth/callback`
       : undefined;
 
-  // Load the Telegram widget script once (provides window.Telegram.Login.auth).
-  React.useEffect(() => {
-    if (document.getElementById("tg-widget")) return;
-    const s = document.createElement("script");
-    s.id = "tg-widget";
-    s.src = "https://telegram.org/js/telegram-widget.js?22";
-    s.async = true;
-    document.body.appendChild(s);
-  }, []);
+  const tgSlot = React.useRef<HTMLDivElement>(null);
+  const [tgUnavailable, setTgUnavailable] = React.useState(false);
 
-  function signInWithTelegram() {
-    setError(null);
-    setNotice(null);
-    const botId = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
-    const tg = (window as unknown as { Telegram?: { Login?: { auth: (o: object, cb: (u: unknown) => void) => void } } }).Telegram;
-    if (!botId || !tg?.Login) {
-      setNotice("Вхід через Telegram буде доступний після публікації на домені.");
+  // Telegram login via the official widget in redirect mode: it navigates to
+  // Telegram and back to /auth/telegram with the signed params. The older
+  // Telegram.Login.auth() flow relied on a popup, which iOS blocks — that's
+  // what produced "can't open this page" on iPhone.
+  React.useEffect(() => {
+    const username = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
+    const slot = tgSlot.current;
+    if (!slot || slot.childElementCount > 0) return;
+    if (!username) {
+      setTgUnavailable(true);
       return;
     }
-    tg.Login.auth({ bot_id: botId, request_access: "write" }, (user) => {
-      if (!user) {
-        setError("Вхід через Telegram скасовано.");
-        return;
-      }
-      const params = new URLSearchParams(
-        Object.entries(user as Record<string, string>).reduce(
-          (acc, [k, v]) => (v != null ? { ...acc, [k]: String(v) } : acc),
-          {} as Record<string, string>,
-        ),
-      ).toString();
-      window.location.href = `/auth/telegram?${params}`;
-    });
-  }
+    const s = document.createElement("script");
+    s.src = "https://telegram.org/js/telegram-widget.js?22";
+    s.async = true;
+    s.setAttribute("data-telegram-login", username);
+    s.setAttribute("data-size", "large");
+    s.setAttribute("data-radius", "8");
+    s.setAttribute("data-request-access", "write");
+    s.setAttribute("data-auth-url", `${window.location.origin}/auth/telegram`);
+    slot.appendChild(s);
+  }, []);
 
   async function signInWithGoogle() {
     setError(null);
@@ -141,15 +133,14 @@ export function AuthForm({
           )}
           Продовжити з Google
         </button>
-        <button
-          type="button"
-          onClick={signInWithTelegram}
-          disabled={loading !== null}
-          className="flex h-11 items-center justify-center gap-2.5 rounded-lg border border-border-strong bg-surface-2 text-sm font-semibold text-ink transition-colors hover:bg-surface-3 disabled:opacity-60"
-        >
-          <Send className="size-4 text-info" />
-          Продовжити з Telegram
-        </button>
+        {/* Telegram renders its own button here (redirect flow — iOS safe). */}
+        <div ref={tgSlot} className="flex min-h-11 items-center justify-center" />
+        {tgUnavailable && (
+          <p className="flex items-start gap-1.5 text-xs font-medium text-ink-subtle">
+            <Send className="mt-px size-3.5 shrink-0 text-info" />
+            Вхід через Telegram тимчасово недоступний.
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-3 py-1">
