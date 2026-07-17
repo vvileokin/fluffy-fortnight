@@ -180,6 +180,21 @@ body {
   }
 }
 
+/* Bounty draft: on desktop (hover-capable, fine pointer) hovering a chosen
+   opponent reveals a clear-X and fades the default icon. Touch keeps the
+   list-based unpick, so the X never shows there. */
+.pick-clear {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .pick-clear {
+    display: grid;
+  }
+  .group:hover .pick-swords {
+    opacity: 0;
+  }
+}
+
 /* Faint yellow radial used sparingly behind hero / key CTA */
 .aura-accent {
   background:

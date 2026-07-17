@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Swords, Info, ChevronRight, Lock, RotateCcw } from "lucide-react";
+import { Check, Swords, Info, ChevronRight, Lock, RotateCcw, X } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { bountyStages, getTeam } from "@/lib/data";
@@ -291,7 +291,7 @@ function HighPicker({
   const team = value ? getTeam(value) : null;
 
   return (
-    <div className="relative shrink-0">
+    <div className="group relative shrink-0">
       <button
         onClick={() => !disabled && setOpen((v) => !v)}
         disabled={disabled}
@@ -308,8 +308,29 @@ function HighPicker({
         ) : (
           <span className="flex-1 px-1 text-sm font-semibold text-ink-muted">Обрати</span>
         )}
-        <Swords className="size-4 shrink-0 text-ink-subtle" />
+        <Swords
+          className={cn(
+            "size-4 shrink-0 text-ink-subtle transition-opacity",
+            // Fades out on desktop hover so the clear-X can take its place.
+            value && !disabled && "pick-swords",
+          )}
+        />
       </button>
+
+      {/* Desktop: hover a chosen team → X to free it (mobile clears via the list). */}
+      {value && !disabled && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+          aria-label="Прибрати вибір"
+          className="pick-clear absolute right-1.5 top-1/2 size-7 -translate-y-1/2 place-items-center rounded-md text-ink-subtle transition-colors hover:bg-surface-3 hover:text-danger"
+        >
+          <X className="size-4" strokeWidth={2.5} />
+        </button>
+      )}
 
       {open && !disabled && (
         <>
