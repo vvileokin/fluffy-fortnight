@@ -8,20 +8,23 @@ import { Avatar } from "@/components/ui/Avatar";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
 
-function RankMedal({ rank }: { rank: number }) {
+function RankMedal({ rank, rankEnd }: { rank: number; rankEnd?: number }) {
   const styles: Record<number, string> = {
     1: "text-tier1",
     2: "text-ink",
     3: "text-warning",
   };
+  // Tied scores share a span of positions, e.g. "3—5".
+  const tied = rankEnd !== undefined && rankEnd > rank;
   return (
     <span
       className={cn(
-        "tnum font-mono text-sm font-bold",
+        "tnum whitespace-nowrap font-mono font-bold",
+        tied ? "text-[0.6875rem]" : "text-sm",
         styles[rank] ?? "text-ink-subtle",
       )}
     >
-      {rank}
+      {tied ? `${rank}—${rankEnd}` : rank}
     </span>
   );
 }
@@ -62,8 +65,8 @@ function Row({
           : "hover:bg-surface-2",
       )}
     >
-      <span className="grid w-6 shrink-0 place-items-center">
-        <RankMedal rank={row.rank} />
+      <span className="grid w-10 shrink-0 place-items-center">
+        <RankMedal rank={row.rank} rankEnd={row.rankEnd} />
       </span>
       <span className="w-5 shrink-0">
         <Delta delta={row.delta} />

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAllRows } from "@/lib/db/paginate";
 
 type OptionRow = { id: string; reward: number };
 
@@ -47,12 +48,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, alreadyResolved: true, awarded: 0 });
   }
 
-  const { data: preds } = await admin
-    .from("predictions")
-    .select("user_id, option_id")
-    .eq("question_id", question_id);
+  // Page through predictions — a popular question can exceed PostgREST's
+  // 1000-row cap, and a truncated read would silently skip awarding people.
+  const { rows: preds, error: predsErr } = await fetchAllRows<{
+    user_id: string;
+    option_id: string;
+  }>((from, to) =>
+    admin
+      .from("predictions")
+      .select("user_id, option_id")
+      .eq("question_id", question_id)
+      .order("user_id", { ascending: true })
+      .range(from, to),
+  );
+  if (predsErr) {
+    return NextResponse.json({ ok: false, error: String(predsErr) }, { status: 500 });
+  }
 
-  const userIds = [...new Set((preds ?? []).map((p) => p.user_id))];
+  const userIds = [...new Set(preds.map((p) => p.user_id))];
   const { data: profiles, error: profErr } = await admin
     .from("profiles")
     .select("id, points, bounty_points, correct, streak, bounty_correct, bounty_streak")

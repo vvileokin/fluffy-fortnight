@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAllRows } from "@/lib/db/paginate";
 import { bountyStages } from "@/lib/data";
 
 // Score a bounty stage: award its reward (to points + bounty_points) to every
@@ -38,14 +39,27 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: preds } = await admin
-    .from("bounty_picks")
-    .select("user_id, low_slug, high_slug")
-    .eq("stage_id", stage_id);
+  // Page through every pick — a stage easily exceeds PostgREST's 1000-row cap,
+  // and a truncated read silently leaves late entrants unscored.
+  const { rows: preds, error: picksErr } = await fetchAllRows<{
+    user_id: string;
+    low_slug: string;
+    high_slug: string;
+  }>((from, to) =>
+    admin
+      .from("bounty_picks")
+      .select("user_id, low_slug, high_slug")
+      .eq("stage_id", stage_id)
+      .order("id", { ascending: true })
+      .range(from, to),
+  );
+  if (picksErr) {
+    return NextResponse.json({ ok: false, error: String(picksErr) }, { status: 500 });
+  }
 
   // Count correctly guessed pairs per user.
   const hits = new Map<string, number>();
-  for (const p of preds ?? []) {
+  for (const p of preds) {
     if (results[p.low_slug] && results[p.low_slug] === p.high_slug) {
       hits.set(p.user_id, (hits.get(p.user_id) ?? 0) + 1);
     }

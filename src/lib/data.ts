@@ -648,6 +648,8 @@ export const questions: Question[] = [
 
 export type LeaderRow = {
   rank: number;
+  /** Last position of a tie group — equals `rank` when the score is unique. */
+  rankEnd?: number;
   handle: string;
   points: number;
   correct: number;
@@ -656,6 +658,22 @@ export type LeaderRow = {
   delta?: number; // rank change
   avatarUrl?: string;
 };
+
+/**
+ * Standard competition ranking: a row's position is (number of rows scoring
+ * higher) + 1, and everyone on the same score shares the whole span of
+ * positions that group occupies — shown as "3 — 5".
+ */
+export function rankByPoints<T extends { points: number }>(
+  rows: T[],
+): (T & { rank: number; rankEnd: number })[] {
+  const higher = (pts: number) => rows.filter((r) => r.points > pts).length;
+  const same = (pts: number) => rows.filter((r) => r.points === pts).length;
+  return rows.map((r) => {
+    const x = higher(r.points);
+    return { ...r, rank: x + 1, rankEnd: x + same(r.points) };
+  });
+}
 
 export const seasonLeaderboard: LeaderRow[] = [
   { rank: 1, handle: "zaraza_ua", points: 18420, correct: 214, streak: 7, delta: 0 },
