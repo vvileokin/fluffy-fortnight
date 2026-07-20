@@ -146,7 +146,7 @@ export function QuestionCard({
         </div>
 
         {/* Footer */}
-        <div className="mt-3 flex items-center justify-between text-xs">
+        <div className="mt-3 flex items-center justify-between gap-2 text-xs">
           <span
             className={cn(
               "flex items-center gap-1.5 font-medium",
@@ -155,27 +155,29 @@ export function QuestionCard({
           >
             {locked ? (
               <>
-                <Lock className="size-3.5" /> Прийом закрито
+                <Lock className="size-3.5 shrink-0" /> Прийом закрито
               </>
             ) : (
               <>
-                <Clock className="size-3.5" /> Дедлайн: {question.deadlineLabel}
+                <Clock className="size-3.5 shrink-0" /> Дедлайн: {question.deadlineLabel}
               </>
             )}
           </span>
 
+          {/* The "Збережено" flash is short and always shown; the rest is secondary
+              helper text that only competes for room on phones, so it waits for sm+. */}
           {justSaved ? (
-            <span className="flex items-center gap-1 font-semibold text-success">
+            <span className="flex shrink-0 items-center gap-1 font-semibold text-success">
               <Check className="size-3.5" strokeWidth={3} /> Збережено
             </span>
           ) : locked ? (
-            <span className="text-ink-subtle">{picked ? "Твій вибір зафіксовано" : "Без відповіді"}</span>
+            <span className="hidden shrink-0 text-ink-subtle sm:inline">{picked ? "Твій вибір зафіксовано" : "Без відповіді"}</span>
           ) : picked ? (
-            <span className="text-ink-subtle">Можна змінити до дедлайну</span>
+            <span className="hidden shrink-0 text-ink-subtle sm:inline">Можна змінити до дедлайну</span>
           ) : upcoming ? (
-            <span className="text-ink-subtle">Відкриється перед матчем</span>
+            <span className="hidden shrink-0 text-ink-subtle sm:inline">Відкриється перед матчем</span>
           ) : (
-            <span className="text-ink-subtle">Обери варіант</span>
+            <span className="hidden shrink-0 text-ink-subtle sm:inline">Обери варіант</span>
           )}
         </div>
       </div>
