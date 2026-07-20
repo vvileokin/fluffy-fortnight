@@ -84,7 +84,7 @@ export default async function ProfilePage() {
   const stats = [
     { icon: Crown, label: "Місце в сезоні", value: `#${rank}` },
     { icon: Target, label: "Поінтів", value: formatInt(points) },
-    { icon: TrendingUp, label: "Вірних", value: String(correct) },
+    { icon: TrendingUp, label: "Правильних", value: String(correct) },
     { icon: Flame, label: "Серія", value: String(streak) },
   ];
 

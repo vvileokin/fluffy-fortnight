@@ -15,12 +15,7 @@ export default async function LeaderboardPage() {
   const stats = [
     { icon: Crown, label: "Твоє місце", value: me ? `#${me.rank}` : "—" },
     { icon: Target, label: "Поінтів у сезоні", value: me ? formatInt(me.points) : "0" },
-    {
-      icon: TrendingUp,
-      label: "Вірних прогнозів",
-      value: me ? String(me.correct) : "0",
-      hint: "Вірні відповіді разом: прогнози на матчі та вгадані пари в bounty-драфті.",
-    },
+    { icon: TrendingUp, label: "Правильних прогнозів", value: me ? String(me.correct) : "0" },
     { icon: Flame, label: "Серія", value: me ? String(me.streak) : "0", hint: STREAK_HINT },
   ];
 

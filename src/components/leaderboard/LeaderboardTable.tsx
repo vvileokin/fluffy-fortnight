@@ -106,7 +106,7 @@ function Row({
       {showCorrect && (
         <span className="tnum hidden w-24 shrink-0 text-right text-xs text-ink-muted sm:block">
           {row.correct}
-          <span className="text-ink-subtle"> вірних</span>
+          <span className="text-ink-subtle"> правильних</span>
         </span>
       )}
       <span className="tnum flex w-20 shrink-0 items-center justify-end gap-1 font-mono text-sm font-bold text-accent">
