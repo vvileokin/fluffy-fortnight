@@ -8,6 +8,7 @@ import { LiveBadge } from "@/components/ui/Badge";
 import {
   getTournament,
   matchTeam,
+  matchTimeLabel,
   type Match,
   type Team,
 } from "@/lib/data";
@@ -98,7 +99,7 @@ export function MatchCard({ match }: { match: Match }) {
               isFinished ? "text-ink-subtle" : "text-info",
             )}
           >
-            {match.timeLabel}
+            {matchTimeLabel(match)}
           </span>
         )}
       </div>
@@ -118,7 +119,7 @@ export function MatchCard({ match }: { match: Match }) {
         ) : hasQuestions ? (
           <span className="shrink-0 font-semibold text-info">{t("predictionsOpen")}</span>
         ) : (
-          <span className="shrink-0 font-semibold text-ink-subtle">{match.timeLabel}</span>
+          <span className="shrink-0 font-semibold text-ink-subtle">{matchTimeLabel(match)}</span>
         )}
       </div>
 

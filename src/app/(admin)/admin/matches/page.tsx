@@ -29,6 +29,7 @@ type MatchForm = {
   status: string;
   format: string;
   stage: string;
+  start_at: string; // datetime-local value — drives day grouping and the label
   time_label: string;
   score_a: number;
   score_b: number;
@@ -56,6 +57,15 @@ type MatchForm = {
   isNew?: boolean;
 };
 
+/** DB timestamp → value a <input type="datetime-local"> accepts. */
+function isoToLocalInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function blank(): MatchForm {
   return {
     // Empty on purpose — the API builds a readable id from the team names.
@@ -67,6 +77,7 @@ function blank(): MatchForm {
     status: "upcoming",
     format: "BO3",
     stage: "",
+    start_at: "",
     time_label: "",
     score_a: 0,
     score_b: 0,
@@ -168,6 +179,7 @@ export default function MatchesAdmin() {
       status: data.status,
       format: data.format,
       stage: data.stage ?? "",
+      start_at: isoToLocalInput(data.start_at),
       time_label: data.time_label ?? "",
       score_a: data.score_a,
       score_b: data.score_b,
@@ -201,6 +213,7 @@ export default function MatchesAdmin() {
     const e = editing;
     const payload = {
       ...e,
+      start_at: e.start_at ? new Date(e.start_at).toISOString() : null,
       h2h: { a: e.h2h_a, b: e.h2h_b },
       tournament_slug: e.customTournament ? "custom" : e.tournament_slug,
       team_a_name: e.customA ? e.team_a_name : "",
@@ -450,8 +463,13 @@ export default function MatchesAdmin() {
               <Field label="Рахунок B">
                 <input type="number" className={cn(inputCls, "tnum font-mono")} value={editing.score_b} onChange={(e) => up({ score_b: Number(e.target.value) })} />
               </Field>
-              <Field label="Час / мітка">
-                <input className={inputCls} value={editing.time_label} onChange={(e) => up({ time_label: e.target.value })} placeholder="21 лип · 17:00" />
+              <Field label="Дата й час матчу">
+                <input
+                  type="datetime-local"
+                  className={inputCls}
+                  value={editing.start_at}
+                  onChange={(e) => up({ start_at: e.target.value })}
+                />
               </Field>
             </div>
 

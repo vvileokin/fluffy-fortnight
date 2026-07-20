@@ -12,6 +12,7 @@ import {
   getTeam,
   getTournament,
   matchTeam,
+  matchTimeLabel,
   playedMaps,
   type Match,
   type PlayedMap,
@@ -98,7 +99,7 @@ export default async function MatchPage({
                 <LiveBadge />
               ) : (
                 <span className="text-xs font-semibold text-info">
-                  {match.timeLabel}
+                  {matchTimeLabel(match)}
                 </span>
               )}
             </div>
@@ -128,7 +129,7 @@ export default async function MatchPage({
                 <LiveBadge />
               ) : (
                 <span className="text-xs font-semibold text-info">
-                  {match.timeLabel}
+                  {matchTimeLabel(match)}
                 </span>
               )}
               {showScore ? (

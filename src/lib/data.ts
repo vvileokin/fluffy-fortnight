@@ -359,6 +359,26 @@ export function formatMatchDay(day: string): string {
   });
 }
 
+/**
+ * When a match starts, phrased relative to today — "Сьогодні 13:00" turns into
+ * "Вчора 13:00" on its own. Falls back to whatever label was typed in for
+ * matches that have no date set yet.
+ */
+export function matchTimeLabel(m: Match, now: Date = new Date()): string {
+  const day = matchDay(m.startISO);
+  if (!day) return m.timeLabel;
+  const time = new Date(m.startISO).toLocaleTimeString("uk-UA", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: MATCH_TZ,
+  });
+  const off = dayOffset(day, matchDay(now));
+  if (off === 0) return `Сьогодні ${time}`;
+  if (off === 1) return `Завтра ${time}`;
+  if (off === -1) return `Вчора ${time}`;
+  return `${formatMatchDay(day)} ${time}`;
+}
+
 export type MatchDayGroup = { key: string; label: string; live: boolean; items: Match[] };
 
 /**
