@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/db/paginate";
+import { recomputeStreaks } from "@/lib/db/streaks";
 
 type OptionRow = { id: string; reward: number };
 
@@ -83,29 +84,30 @@ export async function POST(request: Request) {
     const prof = byId.get(p.user_id);
     if (!prof) continue;
     const won = p.option_id === correct_option_id;
-    // Match predictions drive both the general and (for BLAST) the bounty
-    // streak — a miss resets it.
-    const next = won
-      ? {
+    // Points and correct-counts accrue here; streaks are recomputed below,
+    // since a match's questions resolve one at a time and the rule looks at
+    // the match as a whole.
+    if (won) {
+      await admin
+        .from("profiles")
+        .update({
           points: prof.points + reward,
           correct: prof.correct + 1,
-          streak: prof.streak + 1,
           ...(isEvent
             ? {
                 bounty_points: prof.bounty_points + reward,
                 bounty_correct: prof.bounty_correct + 1,
-                bounty_streak: prof.bounty_streak + 1,
               }
             : {}),
-        }
-      : { streak: 0, ...(isEvent ? { bounty_streak: 0 } : {}) };
-    await admin.from("profiles").update(next).eq("id", p.user_id);
+        })
+        .eq("id", p.user_id);
+      awarded++;
+    }
     notifs.push({
       user_id: p.user_id,
       kind: "reward",
       title: won ? `Прогноз «${title}» зіграв — +${reward} поінтів` : `Прогноз «${title}» не зіграв`,
     });
-    if (won) awarded++;
   }
   if (notifs.length > 0) await admin.from("notifications").insert(notifs);
 
@@ -116,6 +118,9 @@ export async function POST(request: Request) {
     resolved_at: new Date().toISOString(),
   });
   await admin.from("questions").update({ status: "resolved" }).eq("id", question_id);
+
+  // Streaks are replayed after the result is recorded so this question counts.
+  await recomputeStreaks(admin, userIds);
 
   return NextResponse.json({ ok: true, awarded, reward });
 }
