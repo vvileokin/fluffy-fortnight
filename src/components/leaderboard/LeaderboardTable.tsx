@@ -8,6 +8,16 @@ import { Avatar } from "@/components/ui/Avatar";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
 
+/** Explains what a streak counts — shown on hover (native tooltip, so the
+ *  table's overflow-hidden container can't clip it). */
+export const STREAK_HINT =
+  "Серія — прогнози поспіль без жодної помилки.\n" +
+  "• Рахуються лише прогнози на матчі — пари з драфту на серію не впливають.\n" +
+  "• Усі твої прогнози на матч вірні → серія росте на їх кількість.\n" +
+  "• Хоча б один хибний прогноз на матч → серія обнуляється.";
+
+const STREAK_HINT_BOUNTY = `${STREAK_HINT}\n• Тут враховуються лише матчі BLAST.`;
+
 function RankMedal({ rank, rankEnd }: { rank: number; rankEnd?: number }) {
   const styles: Record<number, string> = {
     1: "text-tier1",
@@ -85,7 +95,10 @@ function Row({
           </span>
         )}
       </span>
-      <span className="hidden w-9 shrink-0 items-center justify-end gap-0.5 text-xs text-warning sm:flex">
+      <span
+        className="hidden w-9 shrink-0 cursor-help items-center justify-end gap-0.5 text-xs text-warning sm:flex"
+        title={blastPoints ? STREAK_HINT_BOUNTY : STREAK_HINT}
+      >
         {row.streak > 0 && (
           <>
             <Flame className="size-3.5" />
