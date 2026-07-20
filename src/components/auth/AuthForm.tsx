@@ -80,19 +80,31 @@ export function AuthForm({
     // On success the browser is redirected to Google — no further work here.
   }
 
+  /** Our own checks — the form is noValidate so the browser's grey bubbles
+   *  (which can't be styled) never appear. */
+  function validate(): string | null {
+    if (!email.trim()) return "Вкажи пошту.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return "Перевір адресу пошти — схоже, у ній помилка.";
+    if (password.length < 6) return "Пароль має бути щонайменше 6 символів.";
+    if (mode === "register" && password !== confirm) return "Паролі не збігаються.";
+    return null;
+  }
+
   async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setNotice(null);
+
+    const invalid = validate();
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
+
     setLoading("email");
     const supabase = createClient();
 
     if (mode === "register") {
-      if (password !== confirm) {
-        setError("Паролі не збігаються.");
-        setLoading(null);
-        return;
-      }
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -145,7 +157,7 @@ export function AuthForm({
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <form className="space-y-2.5" onSubmit={submitEmail}>
+      <form className="space-y-2.5" onSubmit={submitEmail} noValidate>
         <div className="relative">
           <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-subtle" />
           <input
@@ -188,13 +200,16 @@ export function AuthForm({
         )}
 
         {error && (
-          <p className="flex items-start gap-1.5 text-xs font-medium text-danger">
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-xs font-medium leading-snug text-danger"
+          >
             <CircleAlert className="mt-px size-3.5 shrink-0" />
             {error}
           </p>
         )}
         {notice && (
-          <p className="flex items-start gap-1.5 text-xs font-medium text-success">
+          <p className="flex items-start gap-2 rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-xs font-medium leading-snug text-success">
             <CircleCheck className="mt-px size-3.5 shrink-0" />
             {notice}
           </p>
