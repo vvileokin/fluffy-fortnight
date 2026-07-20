@@ -1,15 +1,8 @@
 import { Target } from "lucide-react";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { QuestionCard } from "@/components/match/QuestionCard";
-import {
-  questionMaxReward,
-  sortQuestionsByMatch,
-  type Question,
-  type Match,
-} from "@/lib/data";
-
-/** Predictions paying +40 or more are the "Full Buy" tier; the rest are "Eco". */
-const FULL_BUY_FROM = 40;
+import { LiveBadge } from "@/components/ui/Badge";
+import { groupQuestionsByDay, type Question, type Match } from "@/lib/data";
 
 export function InteractivesView({
   questions,
@@ -24,22 +17,8 @@ export function InteractivesView({
     (q) => q.status === "open" || q.status === "upcoming",
   );
 
-  // Within each tier, the earliest match comes first.
-  const ordered = sortQuestionsByMatch(active, matchById);
-  const sections = [
-    {
-      key: "full-buy",
-      title: "Full Buy",
-      hint: `від +${FULL_BUY_FROM}`,
-      items: ordered.filter((q) => questionMaxReward(q) >= FULL_BUY_FROM),
-    },
-    {
-      key: "eco",
-      title: "Eco",
-      hint: `до +${FULL_BUY_FROM}`,
-      items: ordered.filter((q) => questionMaxReward(q) < FULL_BUY_FROM),
-    },
-  ].filter((s) => s.items.length > 0);
+  // Same day sections as the match list, so both pages read the same way.
+  const sections = groupQuestionsByDay(active, matchById);
 
   return (
     <div className="space-y-6">
@@ -50,11 +29,14 @@ export function InteractivesView({
           {sections.map((s) => (
             <section key={s.key} className="space-y-3">
               <div className="flex items-center gap-2.5">
-                <span className="size-1.5 rounded-full bg-ink-faint" />
+                {s.live ? (
+                  <LiveBadge />
+                ) : (
+                  <span className="size-1.5 rounded-full bg-ink-faint" />
+                )}
                 <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
-                  {s.title}
+                  {s.label}
                 </h2>
-                <span className="text-xs font-semibold text-accent">{s.hint}</span>
                 <span className="tnum text-xs font-semibold text-ink-subtle">
                   {s.items.length}
                 </span>

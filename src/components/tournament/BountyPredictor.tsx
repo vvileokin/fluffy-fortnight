@@ -210,16 +210,23 @@ export function BountyPredictor() {
                       <TeamLogo team={lowTeam} size="md" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-ink">{lowTeam.name}</p>
-                        <p className="text-[0.6875rem] text-ink-subtle">
-                          нижчий сід · пікає
-                          {actual && (
-                            <span className={cn("ml-1.5 font-semibold", correct ? "text-success" : "text-danger")}>
-                              · {correct ? "вгадано" : "не вгадано"} (vs {getTeam(actual).tag})
-                            </span>
-                          )}
-                        </p>
+                        {actual ? (
+                          <p className={cn(
+                            "mt-0.5 flex items-center gap-1 text-[0.6875rem] font-semibold",
+                            correct ? "text-success" : "text-danger",
+                          )}>
+                            {correct ? (
+                              <Check className="size-3 shrink-0" strokeWidth={3} />
+                            ) : (
+                              <X className="size-3 shrink-0" strokeWidth={3} />
+                            )}
+                            <span className="truncate">обрали {getTeam(actual).tag}</span>
+                          </p>
+                        ) : (
+                          <p className="truncate text-[0.6875rem] text-ink-subtle">нижчий сід</p>
+                        )}
                       </div>
-                      <ChevronRight className="size-4 shrink-0 text-ink-faint" />
+                      <ChevronRight className="hidden size-4 shrink-0 text-ink-faint sm:block" />
                       <HighPicker
                         highs={availableHighs}
                         value={chosen}

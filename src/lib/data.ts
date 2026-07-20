@@ -456,6 +456,59 @@ export function groupMatchesByDay(matches: Match[], now: Date = new Date()): Mat
     }));
 }
 
+export type QuestionDayGroup = { key: string; label: string; live: boolean; items: Question[] };
+
+/**
+ * The same day sections as the match list, but for predictions: a question sits
+ * in the day its match is played, so "Завтра" becomes "Сьогодні" on its own.
+ * Only open questions reach here, so there are no "played" buckets.
+ */
+export function groupQuestionsByDay(
+  questions: Question[],
+  matchById: Map<string, Match>,
+  now: Date = new Date(),
+): QuestionDayGroup[] {
+  const today = matchDay(now);
+  type Bucket = QuestionDayGroup & { order: number };
+  const buckets = new Map<string, Bucket>();
+
+  const put = (b: Omit<Bucket, "items">, q: Question) => {
+    const bucket = buckets.get(b.key) ?? { ...b, items: [] as Question[] };
+    bucket.items.push(q);
+    buckets.set(b.key, bucket);
+  };
+
+  for (const q of questions) {
+    const m = matchById.get(q.matchId);
+    if (m?.status === "live") {
+      put({ key: "live", label: "Зараз у прямому ефірі", live: true, order: 0 }, q);
+      continue;
+    }
+    const day = m ? matchDay(m.startISO) : "";
+    const off = day ? dayOffset(day, today) : null;
+
+    // Matches with no date yet trail behind the scheduled ones.
+    if (off === null) put({ key: "later", label: "Далі", live: false, order: 500 }, q);
+    else if (off <= 0) put({ key: "today", label: "Сьогодні", live: false, order: 1 }, q);
+    else if (off === 1) put({ key: "tomorrow", label: "Завтра", live: false, order: 2 }, q);
+    else put({ key: `d-${day}`, label: formatMatchDay(day), live: false, order: 2 + off }, q);
+  }
+
+  const startOf = (q: Question) => matchById.get(q.matchId)?.startISO || "￿";
+  return [...buckets.values()]
+    .sort((a, b) => a.order - b.order)
+    .map(({ key, label, live, items }) => ({
+      key,
+      label,
+      live,
+      // Earliest match first; equal starts fall back to the bigger payout.
+      items: items.sort(
+        (a, b) =>
+          startOf(a).localeCompare(startOf(b)) || questionMaxReward(b) - questionMaxReward(a),
+      ),
+    }));
+}
+
 export type MatchMap = { name: string; a: number; b: number };
 export type VetoStep = { team: string; action: "ban" | "pick" | "decider"; map: string };
 export type H2H = {
