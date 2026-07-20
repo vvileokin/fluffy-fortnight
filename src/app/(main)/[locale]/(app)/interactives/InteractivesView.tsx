@@ -1,7 +1,15 @@
 import { Target } from "lucide-react";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { QuestionCard } from "@/components/match/QuestionCard";
-import { type Question, type Match } from "@/lib/data";
+import {
+  questionMaxReward,
+  sortQuestionsByMatch,
+  type Question,
+  type Match,
+} from "@/lib/data";
+
+/** Predictions paying +40 or more are the "Full Buy" tier; the rest are "Eco". */
+const FULL_BUY_FROM = 40;
 
 export function InteractivesView({
   questions,
@@ -11,20 +19,57 @@ export function InteractivesView({
   matches?: Match[];
 }) {
   const matchById = new Map(matches.map((m) => [m.id, m]));
-  // Show everything still answerable; resolved/locked ones drop off here but
-  // remain visible (closed) on their match and tournament pages.
+  // Only what's still answerable; resolved/locked ones stay on their match page.
   const active = questions.filter(
     (q) => q.status === "open" || q.status === "upcoming",
   );
+
+  // Within each tier, the earliest match comes first.
+  const ordered = sortQuestionsByMatch(active, matchById);
+  const sections = [
+    {
+      key: "full-buy",
+      title: "Full Buy",
+      hint: `від +${FULL_BUY_FROM}`,
+      items: ordered.filter((q) => questionMaxReward(q) >= FULL_BUY_FROM),
+    },
+    {
+      key: "eco",
+      title: "Eco",
+      hint: `до +${FULL_BUY_FROM}`,
+      items: ordered.filter((q) => questionMaxReward(q) < FULL_BUY_FROM),
+    },
+  ].filter((s) => s.items.length > 0);
 
   return (
     <div className="space-y-6">
       <PageIntro icon={Target} title="Інтерактиви" />
 
-      {active.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {active.map((q) => (
-            <QuestionCard key={q.id} question={q} withMatch match={matchById.get(q.matchId)} />
+      {sections.length > 0 ? (
+        <div className="space-y-8">
+          {sections.map((s) => (
+            <section key={s.key} className="space-y-3">
+              <div className="flex items-center gap-2.5">
+                <span className="size-1.5 rounded-full bg-ink-faint" />
+                <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
+                  {s.title}
+                </h2>
+                <span className="text-xs font-semibold text-accent">{s.hint}</span>
+                <span className="tnum text-xs font-semibold text-ink-subtle">
+                  {s.items.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {s.items.map((q) => (
+                  <QuestionCard
+                    key={q.id}
+                    question={q}
+                    withMatch
+                    match={matchById.get(q.matchId)}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       ) : (

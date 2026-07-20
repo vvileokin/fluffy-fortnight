@@ -27,7 +27,7 @@ export const teams: Record<string, Team> = {
   flyquest: { slug: "flyquest", name: "FlyQuest", tag: "FLY", logo: "/teams/flyquest.svg", brand: "#0A8A3F", ink: "white", region: "Oceania", worldRank: 19 },
   gaimin: { slug: "gaimin", name: "Gaimin Gladiators", tag: "GG", logo: "/teams/gaimin-gladiators.png", brand: "#5A2D91", ink: "white", region: "EU", worldRank: 27 },
   gamerlegion: { slug: "gamerlegion", name: "GamerLegion", tag: "GL", logo: "/teams/gamerlegion.svg", brand: "#D81E27", ink: "white", region: "EU", worldRank: 21 },
-  heroic: { slug: "heroic", name: "Heroic", tag: "HER", logo: "/teams/heroic.svg", brand: "#E4002B", ink: "white", region: "EU", worldRank: 34 },
+  heroic: { slug: "heroic", name: "HEROIC", tag: "HER", logo: "/teams/heroic.svg", brand: "#E4002B", ink: "white", region: "EU", worldRank: 34 },
   lynn: { slug: "lynn", name: "Lynn Vision", tag: "LV", logo: "/teams/lynn.svg", brand: "#C1121C", ink: "white", region: "Asia", worldRank: 24 },
   m80: { slug: "m80", name: "M80", tag: "M80", logo: "/teams/m80.svg", brand: "#E7442E", ink: "white", region: "NA", worldRank: 28 },
   mibr: { slug: "mibr", name: "MIBR", tag: "MIBR", logo: "/teams/mibr.svg", brand: "#14213D", ink: "white", region: "SA", worldRank: 18 },
@@ -35,24 +35,24 @@ export const teams: Record<string, Team> = {
   sinners: { slug: "sinners", name: "SINNERS", tag: "SIN", logo: "/teams/sinners.svg", brand: "#C8102E", ink: "white", region: "EU", worldRank: 51 },
   sharks: { slug: "sharks", name: "Sharks", tag: "SHK", logo: "/teams/sharks.svg", brand: "#0B4DA2", ink: "white", region: "SA", worldRank: 32 },
   thunder: { slug: "thunder", name: "THUNDERTDU", tag: "TDU", logo: "/teams/thunderdownunder.png", brand: "#F39200", ink: "black", region: "Oceania", worldRank: 41 },
-  liquid: { slug: "liquid", name: "Team Liquid", tag: "TL", logo: "/teams/liquid.svg", brand: "#0A1F44", ink: "white", region: "NA", worldRank: 41 },
+  liquid: { slug: "liquid", name: "Liquid", tag: "TL", logo: "/teams/liquid.svg", brand: "#0A1F44", ink: "white", region: "NA", worldRank: 41 },
   tyloo: { slug: "tyloo", name: "TYLOO", tag: "TY", logo: "/teams/tyloo.png", brand: "#D71920", ink: "white", region: "Asia", worldRank: 17 },
 
   // --- BLAST Bounty S2 field (top seeds) ---
-  vitality: { slug: "vitality", name: "Team Vitality", tag: "VIT", logo: "/teams/vitality.svg", brand: "#F2C200", ink: "black", region: "EU", worldRank: 3 },
-  spirit: { slug: "spirit", name: "Team Spirit", tag: "SPT", logo: "/teams/spirit.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 1 },
+  vitality: { slug: "vitality", name: "Vitality", tag: "VIT", logo: "/teams/vitality.svg", brand: "#F2C200", ink: "black", region: "EU", worldRank: 3 },
+  spirit: { slug: "spirit", name: "Spirit", tag: "SPT", logo: "/teams/spirit.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 1 },
   falcons: { slug: "falcons", name: "Falcons", tag: "FLC", logo: "/teams/falcons.svg", brand: "#0E7A3C", ink: "white", region: "EU", worldRank: 2 },
   mouz: { slug: "mouz", name: "MOUZ", tag: "MOUZ", logo: "/teams/mouz.svg", brand: "#DC1E28", ink: "white", region: "EU", worldRank: 8 },
   mongolz: { slug: "mongolz", name: "The MongolZ", tag: "MGZ", logo: "/teams/mongolz.svg", brand: "#17181C", ink: "white", region: "Asia", worldRank: 14 },
   aurora: { slug: "aurora", name: "Aurora", tag: "AUR", logo: "/teams/aurora.svg", brand: "#6A2BD9", ink: "white", region: "EU", worldRank: 9 },
   astralis: { slug: "astralis", name: "Astralis", tag: "AST", logo: "/teams/astralis.svg", brand: "#E11B22", ink: "white", region: "EU", worldRank: 18 },
   furia: { slug: "furia", name: "FURIA", tag: "FUR", logo: "/teams/furia.svg", brand: "#17181C", ink: "white", region: "SA", worldRank: 5 },
-  fut: { slug: "fut", name: "FUT Esports", tag: "FUT", logo: "/teams/fut.svg", brand: "#0AA0C8", ink: "white", region: "EU", worldRank: 12 },
-  g2: { slug: "g2", name: "G2 Esports", tag: "G2", logo: "/teams/g2.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 11 },
+  fut: { slug: "fut", name: "FUT", tag: "FUT", logo: "/teams/fut.svg", brand: "#0AA0C8", ink: "white", region: "EU", worldRank: 12 },
+  g2: { slug: "g2", name: "G2", tag: "G2", logo: "/teams/g2.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 11 },
   nemiga: { slug: "nemiga", name: "Nemiga", tag: "NMG", logo: "/teams/nemiga.svg", brand: "#D81E27", ink: "white", region: "EU", worldRank: 52 },
-  magic: { slug: "magic", name: "Magic Esports", tag: "MAG", logo: "/teams/magic.svg", brand: "#7A2BD9", ink: "white", region: "NA", worldRank: 24 },
-  pain: { slug: "pain", name: "paiN Gaming", tag: "paiN", logo: "/teams/pain.svg", brand: "#E11B22", ink: "white", region: "SA", worldRank: 27 },
-  faze: { slug: "faze", name: "FaZe Clan", tag: "FaZe", logo: "/teams/faze.svg", brand: "#E4002B", ink: "white", region: "EU", worldRank: 16 },
+  magic: { slug: "magic", name: "magic", tag: "MAG", logo: "/teams/magic.svg", brand: "#7A2BD9", ink: "white", region: "NA", worldRank: 24 },
+  pain: { slug: "pain", name: "paiN", tag: "paiN", logo: "/teams/pain.svg", brand: "#E11B22", ink: "white", region: "SA", worldRank: 27 },
+  faze: { slug: "faze", name: "FaZe", tag: "FaZe", logo: "/teams/faze.svg", brand: "#E4002B", ink: "white", region: "EU", worldRank: 16 },
   nip: { slug: "nip", name: "Ninjas in Pyjamas", tag: "NIP", logo: "/teams/nip.svg", brand: "#101319", ink: "white", region: "EU", worldRank: 29 },
 
   // --- BLAST Bounty S2 field (lower seeds) ---
@@ -62,7 +62,7 @@ export const teams: Record<string, Team> = {
   gentlemates: { slug: "gentlemates", name: "Gentle Mates", tag: "M8", logo: "/teams/gentlemates.svg", brand: "#E63980", ink: "white", region: "EU", worldRank: 37 },
   hotu: { slug: "hotu", name: "HOTU", tag: "HOTU", logo: "/teams/hotu.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 42 },
   nemesis: { slug: "nemesis", name: "Nemesis", tag: "NEM", logo: "/teams/nemesis.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 30 },
-  fokus: { slug: "fokus", name: "Fokus", tag: "FKS", logo: "/teams/fokus.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 48 },
+  fokus: { slug: "fokus", name: "FOKUS", tag: "FKS", logo: "/teams/fokus.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 48 },
   nucleartigers: { slug: "nucleartigers", name: "Nuclear TigeRES", tag: "NT", logo: "/teams/nucleartigers.svg", brand: "#E7442E", ink: "white", region: "Asia", worldRank: 36 },
   eyeballers: { slug: "eyeballers", name: "EYEBALLERS", tag: "EYE", logo: "/teams/eyeballers.svg", brand: "#E8C81E", ink: "black", region: "EU", worldRank: 31 },
   hundredthieves: { slug: "hundredthieves", name: "100 Thieves", tag: "100T", logo: "/teams/hundredthieves.svg", brand: "#E4002B", ink: "white", region: "NA", worldRank: 46 },
@@ -377,6 +377,26 @@ export function matchTimeLabel(m: Match, now: Date = new Date()): string {
   if (off === 1) return `Завтра ${time}`;
   if (off === -1) return `Вчора ${time}`;
   return `${formatMatchDay(day)} ${time}`;
+}
+
+/** Best payout on offer for a question — what the card advertises. */
+export function questionMaxReward(q: Question): number {
+  return q.options.reduce((max, o) => Math.max(max, o.reward), 0);
+}
+
+/**
+ * Questions ordered the way their matches are played, so the earliest match's
+ * predictions come first. Ties fall back to the bigger payout.
+ */
+export function sortQuestionsByMatch(
+  questions: Question[],
+  matchById: Map<string, Match>,
+): Question[] {
+  const startOf = (q: Question) => matchById.get(q.matchId)?.startISO || "￿";
+  return [...questions].sort(
+    (a, b) =>
+      startOf(a).localeCompare(startOf(b)) || questionMaxReward(b) - questionMaxReward(a),
+  );
 }
 
 export type MatchDayGroup = { key: string; label: string; live: boolean; items: Match[] };
