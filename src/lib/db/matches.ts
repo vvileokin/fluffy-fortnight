@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { inkForColor, playedMaps, seriesScore, type Match, type Team } from "@/lib/data";
 
@@ -160,7 +161,10 @@ export async function getMatches(): Promise<Match[]> {
   }
 }
 
-export async function getMatchById(id: string): Promise<Match | undefined> {
+/** Cached per request: generateMetadata and the page itself both ask for the same match. */
+export const getMatchById = cache(async function getMatchById(
+  id: string,
+): Promise<Match | undefined> {
   try {
     const sb = await createClient();
     const { data } = await sb.from("matches").select("*").eq("id", id).maybeSingle();
@@ -169,4 +173,4 @@ export async function getMatchById(id: string): Promise<Match | undefined> {
     /* fall through */
   }
   return undefined;
-}
+});

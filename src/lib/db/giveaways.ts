@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { type Giveaway } from "@/lib/data";
 
@@ -50,7 +51,10 @@ export async function getGiveaways(): Promise<Giveaway[]> {
   }
 }
 
-export async function getGiveawayBySlug(slug: string): Promise<Giveaway | undefined> {
+/** Cached per request: generateMetadata and the page itself both ask for the same giveaway. */
+export const getGiveawayBySlug = cache(async function getGiveawayBySlug(
+  slug: string,
+): Promise<Giveaway | undefined> {
   try {
     const sb = await createClient();
     const { data } = await sb.from("giveaways").select("*").eq("slug", slug).maybeSingle();
@@ -59,4 +63,4 @@ export async function getGiveawayBySlug(slug: string): Promise<Giveaway | undefi
     /* fall through */
   }
   return undefined;
-}
+});

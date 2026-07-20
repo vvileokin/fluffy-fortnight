@@ -23,12 +23,18 @@ function feedRank(m: Match): number {
 }
 
 export default async function HomePage() {
-  const t = await getTranslations("home");
-  const matches = await getMatches();
+  // Nothing here depends on anything else, so pay for one round-trip, not five.
+  const [t, matches, giveaways, seasonLeaderboard, { covers }, openQuestions] =
+    await Promise.all([
+      getTranslations("home"),
+      getMatches(),
+      getGiveaways(),
+      getLeaderboard(50), // the home page only shows the top few
+
+      getSiteSettings(),
+      getOpenQuestions(100),
+    ]);
   const matchById = new Map(matches.map((m) => [m.id, m]));
-  const giveaways = await getGiveaways();
-  const seasonLeaderboard = await getLeaderboard(1000);
-  const { covers } = await getSiteSettings();
   const currentTournaments = applyCovers(
     tournaments.filter((t) => t.status !== "finished").slice(0, 3),
     covers,
@@ -39,7 +45,7 @@ export default async function HomePage() {
     .sort((a, b) => feedRank(a) - feedRank(b))
     .slice(0, 6);
   // The two biggest payouts on offer — that's what earns a spot on the home page.
-  const hotQuestions = [...(await getOpenQuestions(100))]
+  const hotQuestions = [...openQuestions]
     .sort((a, b) => questionMaxReward(b) - questionMaxReward(a))
     .slice(0, 2);
 

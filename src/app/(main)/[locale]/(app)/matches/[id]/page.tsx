@@ -27,7 +27,11 @@ export default async function MatchPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const match = await getMatchById(id);
+  // Both are keyed by the same id, so fetch them side by side.
+  const [match, questions] = await Promise.all([
+    getMatchById(id),
+    getQuestionsForMatch(id),
+  ]);
   if (!match) notFound();
 
   const a = matchTeam(match, "a");
@@ -42,7 +46,6 @@ export default async function MatchPage({
     if (v.action === "pick") pickedBy.set(v.map, v.team === "a" ? a.tag : v.team === "b" ? b.tag : "");
     else if (v.action === "decider") pickedBy.set(v.map, "Decider");
   }
-  const questions = await getQuestionsForMatch(id);
   const isLive = match.status === "live";
   const showScore = isLive || match.status === "finished";
 

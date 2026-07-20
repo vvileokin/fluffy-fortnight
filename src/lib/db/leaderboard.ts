@@ -8,15 +8,21 @@ import { rankByPoints, type LeaderRow } from "@/lib/data";
 export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
   try {
     const sb = await createClient();
-    const {
-      data: { user },
-    } = await sb.auth.getUser();
-    const { data, error } = await sb
-      .from("profiles")
-      .select("id, handle, avatar_url, points, correct, streak")
-      .order("points", { ascending: false })
-      .order("correct", { ascending: false })
-      .limit(limit);
+    // The rows don't depend on who's asking — only the "isYou" flag does.
+    const [
+      {
+        data: { user },
+      },
+      { data, error },
+    ] = await Promise.all([
+      sb.auth.getUser(),
+      sb
+        .from("profiles")
+        .select("id, handle, avatar_url, points, correct, streak")
+        .order("points", { ascending: false })
+        .order("correct", { ascending: false })
+        .limit(limit),
+    ]);
     if (error || !data) return [];
     return rankByPoints(
       data.map((p) => ({
