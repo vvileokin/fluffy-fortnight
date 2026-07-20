@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Crown, TrendingUp, Target, Flame } from "lucide-react";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { LeaderboardTable, STREAK_HINT } from "@/components/leaderboard/LeaderboardTable";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { getLeaderboard } from "@/lib/db/leaderboard";
 import { cn, formatInt } from "@/lib/utils";
 
@@ -32,20 +33,25 @@ export default async function LeaderboardPage() {
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            title={s.hint}
-            className={cn(
-              "rounded-lg border border-border bg-surface p-3.5",
-              s.hint && "cursor-help",
-            )}
-          >
-            <s.icon className="size-4 text-accent" />
-            <p className="tnum mt-2 font-mono text-xl font-bold text-ink">{s.value}</p>
-            <p className="mt-0.5 text-xs text-ink-subtle">{s.label}</p>
-          </div>
-        ))}
+        {stats.map((s) => {
+          const card = (
+            <>
+              <s.icon className="size-4 text-accent" />
+              <p className="tnum mt-2 font-mono text-xl font-bold text-ink">{s.value}</p>
+              <p className="mt-0.5 text-xs text-ink-subtle">{s.label}</p>
+            </>
+          );
+          const base = "block rounded-lg border border-border bg-surface p-3.5";
+          return s.hint ? (
+            <Tooltip key={s.label} as="div" label={s.hint} className={cn(base, "cursor-help")}>
+              {card}
+            </Tooltip>
+          ) : (
+            <div key={s.label} className={base}>
+              {card}
+            </div>
+          );
+        })}
       </div>
 
       {/* Full season board — this is the "see everything" destination, so no collapsing. */}

@@ -7,6 +7,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Tooltip } from "@/components/ui/Tooltip";
 import {
   getTeam,
   getTournament,
@@ -304,10 +305,10 @@ function MapScoreStrip({
       {maps.map((m, i) => {
         const picker = pickedBy.get(m.name);
         return (
-          <span
+          <Tooltip
             key={i}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
+              "inline-flex cursor-help items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
               m.status === "live"
                 ? "bg-live/15 text-live ring-1 ring-live/30"
                 : m.status === "finished"
@@ -316,7 +317,7 @@ function MapScoreStrip({
                     ? "bg-surface-2 text-ink-faint line-through decoration-ink-faint/70"
                     : "bg-surface-2 text-ink-faint",
             )}
-            title={
+            label={
               m.status === "skipped"
                 ? `${m.name} · не зіграно`
                 : picker
@@ -336,7 +337,7 @@ function MapScoreStrip({
                 <span className="size-1.5 animate-pulse rounded-full bg-live" /> live
               </span>
             ) : null}
-          </span>
+          </Tooltip>
         );
       })}
     </div>

@@ -6,6 +6,7 @@ import { formatInt } from "@/lib/utils";
 import { type LeaderRow } from "@/lib/data";
 import { Avatar } from "@/components/ui/Avatar";
 import { BlastMark } from "@/components/ui/BlastMark";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
 
 /** Shown on hover (native tooltip, so the table's overflow-hidden container
@@ -91,9 +92,9 @@ function Row({
           </span>
         )}
       </span>
-      <span
+      <Tooltip
+        label={blastPoints ? STREAK_HINT_BOUNTY : STREAK_HINT}
         className="hidden w-9 shrink-0 cursor-help items-center justify-end gap-0.5 text-xs text-warning sm:flex"
-        title={blastPoints ? STREAK_HINT_BOUNTY : STREAK_HINT}
       >
         {row.streak > 0 && (
           <>
@@ -101,7 +102,7 @@ function Row({
             <span className="tnum font-semibold">{row.streak}</span>
           </>
         )}
-      </span>
+      </Tooltip>
       {showCorrect && (
         <span className="tnum hidden w-24 shrink-0 text-right text-xs text-ink-muted sm:block">
           {row.correct}
@@ -165,8 +166,10 @@ export function LeaderboardTable({
         className,
       )}
     >
-      {inline.map((row) => (
-        <Row key={row.handle} row={row} showCorrect={showCorrect} blastPoints={blastPoints} />
+      {/* Handles aren't unique (two players can share a display name), so the
+          key has to include the position. */}
+      {inline.map((row, i) => (
+        <Row key={`${i}-${row.handle}`} row={row} showCorrect={showCorrect} blastPoints={blastPoints} />
       ))}
 
       {/* You rank below the visible top — dots, then your highlighted row. */}
