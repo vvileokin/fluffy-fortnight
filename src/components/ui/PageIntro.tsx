@@ -1,4 +1,5 @@
 import { type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function PageIntro({
   icon: Icon,
@@ -10,9 +11,15 @@ export function PageIntro({
   subtitle?: string;
 }) {
   return (
-    <div className="flex items-start gap-3">
+    // With a subtitle the icon lines up with the title; on its own it centres.
+    <div className={cn("flex gap-3", subtitle ? "items-start" : "items-center")}>
       {Icon && (
-        <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-lg bg-surface-2 text-accent">
+        <span
+          className={cn(
+            "grid size-10 shrink-0 place-items-center rounded-lg bg-surface-2 text-accent",
+            subtitle && "mt-0.5",
+          )}
+        >
           <Icon className="size-5" strokeWidth={2.25} />
         </span>
       )}

@@ -329,6 +329,93 @@ export function minutesSinceFinished(match: Match): number {
   return (Date.now() - new Date(match.updatedISO).getTime()) / 60000;
 }
 
+/* --- Match scheduling: "today"/"tomorrow" derived from the clock --- */
+
+// Matches are scheduled in Kyiv time, and pinning the zone keeps the server and
+// the browser on the same calendar day (otherwise a late-evening match lands in
+// different buckets either side of hydration).
+const MATCH_TZ = "Europe/Kyiv";
+
+/** Calendar day (YYYY-MM-DD) of an instant, in the tournament's timezone. */
+export function matchDay(value: string | Date): string {
+  const d = typeof value === "string" ? new Date(value) : value;
+  if (!value || Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-CA", { timeZone: MATCH_TZ });
+}
+
+/** Whole days from `today` to `day`; negative for the past. */
+function dayOffset(day: string, today: string): number {
+  return Math.round(
+    (Date.parse(`${day}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000,
+  );
+}
+
+/** "22 липня" */
+export function formatMatchDay(day: string): string {
+  return new Date(`${day}T00:00:00Z`).toLocaleDateString("uk-UA", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  });
+}
+
+export type MatchDayGroup = { key: string; label: string; live: boolean; items: Match[] };
+
+/**
+ * Bucket matches into day sections that follow the clock: live first, then
+ * today, tomorrow and each later date, then finished ones under "Вчора" or the
+ * date they were played. A match entered for the 22nd shows as "Завтра" on the
+ * 21st and moves to "Сьогодні" on the 22nd on its own.
+ */
+export function groupMatchesByDay(matches: Match[], now: Date = new Date()): MatchDayGroup[] {
+  const today = matchDay(now);
+  type Bucket = MatchDayGroup & { order: number; done: boolean };
+  const buckets = new Map<string, Bucket>();
+
+  const put = (b: Omit<Bucket, "items">, m: Match) => {
+    const bucket = buckets.get(b.key) ?? { ...b, items: [] as Match[] };
+    bucket.items.push(m);
+    buckets.set(b.key, bucket);
+  };
+
+  for (const m of matches) {
+    if (m.status === "live") {
+      put({ key: "live", label: "Зараз у прямому ефірі", live: true, order: 0, done: false }, m);
+      continue;
+    }
+    const day = matchDay(m.startISO);
+    const off = day ? dayOffset(day, today) : null;
+
+    if (m.status === "finished") {
+      if (off === null) put({ key: "done", label: "Завершені", live: false, order: 9999, done: true }, m);
+      else if (off === 0) put({ key: "done-today", label: "Сьогодні", live: false, order: 900, done: true }, m);
+      else if (off === -1) put({ key: "done-yesterday", label: "Вчора", live: false, order: 901, done: true }, m);
+      else put({ key: `done-${day}`, label: formatMatchDay(day), live: false, order: 900 - off, done: true }, m);
+      continue;
+    }
+
+    // Upcoming — an overdue one (date already past) still reads as today.
+    if (off === null) put({ key: "later", label: "Далі", live: false, order: 500, done: false }, m);
+    else if (off <= 0) put({ key: "today", label: "Сьогодні", live: false, order: 1, done: false }, m);
+    else if (off === 1) put({ key: "tomorrow", label: "Завтра", live: false, order: 2, done: false }, m);
+    else put({ key: `d-${day}`, label: formatMatchDay(day), live: false, order: 2 + off, done: false }, m);
+  }
+
+  const byStart = (a: Match, b: Match) => (a.startISO || "").localeCompare(b.startISO || "");
+  return [...buckets.values()]
+    .sort((a, b) => a.order - b.order)
+    .map(({ key, label, live, items, done }) => ({
+      key,
+      label,
+      live,
+      // Event matches lead; then chronological — most recent first once played.
+      items: items.sort(
+        (a, b) =>
+          (a.isEvent ? 0 : 1) - (b.isEvent ? 0 : 1) || (done ? byStart(b, a) : byStart(a, b)),
+      ),
+    }));
+}
+
 export type MatchMap = { name: string; a: number; b: number };
 export type VetoStep = { team: string; action: "ban" | "pick" | "decider"; map: string };
 export type H2H = {

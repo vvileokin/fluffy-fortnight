@@ -16,6 +16,7 @@ import {
 import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { MatchCard } from "@/components/cards/MatchCard";
+import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { BracketPredictor } from "@/components/tournament/BracketPredictor";
 import { BountyPredictor } from "@/components/tournament/BountyPredictor";
@@ -60,6 +61,15 @@ export function TournamentView({
 
   const [tab, setTab] = React.useState<Tab>(t.isEvent ? "bounty" : "overview");
   const teams = t.teamSlugs.map(getTeam);
+  // The overview is a snapshot: only what's on now or still to come.
+  const upcomingMatches = matches
+    .filter((m) => m.status !== "finished")
+    .sort(
+      (a, b) =>
+        (a.status === "live" ? 0 : 1) - (b.status === "live" ? 0 : 1) ||
+        (a.startISO || "").localeCompare(b.startISO || ""),
+    )
+    .slice(0, 4);
 
   return (
     <div className="space-y-6">
@@ -162,13 +172,13 @@ export function TournamentView({
       {tab === "overview" && (
         <div className="space-y-6">
           <TeamsGrid slugs={t.teamSlugs} compact />
-          {matches.length > 0 && (
+          {upcomingMatches.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
                 Найближчі матчі
               </h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {matches.slice(0, 4).map((m) => (
+                {upcomingMatches.map((m) => (
                   <MatchCard key={m.id} match={m} />
                 ))}
               </div>
@@ -194,11 +204,7 @@ export function TournamentView({
       {tab === "schedule" && (
         <div className="space-y-3">
           {matches.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {matches.map((m) => (
-                <MatchCard key={m.id} match={m} />
-              ))}
-            </div>
+            <MatchDayGroups matches={matches} />
           ) : (
             <EmptyPanel text="Розклад матчів з’явиться ближче до старту." />
           )}
