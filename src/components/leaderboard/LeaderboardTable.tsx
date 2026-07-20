@@ -8,15 +8,11 @@ import { Avatar } from "@/components/ui/Avatar";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
 
-/** Explains what a streak counts — shown on hover (native tooltip, so the
- *  table's overflow-hidden container can't clip it). */
-export const STREAK_HINT =
-  "Серія — прогнози поспіль без жодної помилки.\n" +
-  "• Рахуються лише прогнози на матчі — пари з драфту на серію не впливають.\n" +
-  "• Усі твої прогнози на матч вірні → серія росте на їх кількість.\n" +
-  "• Хоча б один хибний прогноз на матч → серія обнуляється.";
+/** Shown on hover (native tooltip, so the table's overflow-hidden container
+ *  can't clip it). */
+export const STREAK_HINT = "Рахуються лише прогнози на матчі";
 
-const STREAK_HINT_BOUNTY = `${STREAK_HINT}\n• Тут враховуються лише матчі BLAST.`;
+const STREAK_HINT_BOUNTY = "Рахуються лише прогнози на матчі BLAST";
 
 function RankMedal({ rank, rankEnd }: { rank: number; rankEnd?: number }) {
   const styles: Record<number, string> = {
