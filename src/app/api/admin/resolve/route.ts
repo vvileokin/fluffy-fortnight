@@ -3,6 +3,7 @@ import { isAdmin } from "@/lib/admin-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/db/paginate";
 import { recomputeStreaks } from "@/lib/db/streaks";
+import { getTeam } from "@/lib/data";
 
 type OptionRow = { id: string; reward: number };
 
@@ -29,15 +30,26 @@ export async function POST(request: Request) {
   const reward = options.find((o) => o.id === correct_option_id)?.reward ?? 0;
 
   // Predictions on BLAST event matches also count toward bounty points.
+  // The match label also goes into the notification so it names the game,
+  // not just the question.
   let isEvent = false;
+  let matchLabel = "";
   if (q?.match_id) {
     const { data: match } = await admin
       .from("matches")
-      .select("is_event")
+      .select("is_event, team_a, team_b, team_a_name, team_b_name")
       .eq("id", q.match_id)
       .maybeSingle();
     isEvent = !!match?.is_event;
+    if (match) {
+      const teamLabel = (slug: string | null, name: string | null) =>
+        name || (slug ? getTeam(slug)?.tag ?? getTeam(slug)?.name ?? slug : "");
+      const a = teamLabel(match.team_a, match.team_a_name);
+      const b = teamLabel(match.team_b, match.team_b_name);
+      if (a && b) matchLabel = `${a} vs ${b}`;
+    }
   }
+  const prefix = matchLabel ? `${matchLabel} · ` : "";
 
   // Guard: if already resolved, don't award again.
   const { data: existing } = await admin
@@ -106,7 +118,9 @@ export async function POST(request: Request) {
     notifs.push({
       user_id: p.user_id,
       kind: "reward",
-      title: won ? `Прогноз «${title}» зіграв — +${reward} поінтів` : `Прогноз «${title}» не зіграв`,
+      title: won
+        ? `${prefix}прогноз «${title}» зіграв — +${reward} поінтів`
+        : `${prefix}прогноз «${title}» не зіграв`,
     });
   }
   if (notifs.length > 0) await admin.from("notifications").insert(notifs);

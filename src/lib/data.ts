@@ -292,6 +292,43 @@ export const bountyStages: BountyStage[] = [
 export type MatchStatus = "live" | "upcoming" | "finished";
 export type MatchFormat = "BO1" | "BO3" | "BO5";
 
+/**
+ * Playoff bracket beyond the opening round. Teams aren't decided yet, so these
+ * are TBD slots that carry only their scheduled time and format. The opening
+ * "Round of 32" is filled from real matches at render time. Times are Kyiv.
+ */
+export type BracketSlot = { startISO: string; format: MatchFormat };
+export type BracketRound = { key: string; stage: 1 | 2; title: string; slots: BracketSlot[] };
+
+export const bracketPlayoffRounds: BracketRound[] = [
+  {
+    key: "qf",
+    stage: 1,
+    title: "Чвертьфінали",
+    slots: [
+      { startISO: "2026-07-30T16:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-30T19:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-31T15:30:00+03:00", format: "BO3" },
+      { startISO: "2026-07-31T18:30:00+03:00", format: "BO3" },
+    ],
+  },
+  {
+    key: "sf",
+    stage: 2,
+    title: "Півфінали",
+    slots: [
+      { startISO: "2026-08-01T13:30:00+03:00", format: "BO3" },
+      { startISO: "2026-08-01T16:30:00+03:00", format: "BO3" },
+    ],
+  },
+  {
+    key: "gf",
+    stage: 2,
+    title: "Гранд-фінал",
+    slots: [{ startISO: "2026-08-02T13:30:00+03:00", format: "BO5" }],
+  },
+];
+
 export type Match = {
   id: string;
   tournamentSlug: string;
@@ -365,9 +402,14 @@ export function formatMatchDay(day: string): string {
  * matches that have no date set yet.
  */
 export function matchTimeLabel(m: Match, now: Date = new Date()): string {
-  const day = matchDay(m.startISO);
-  if (!day) return m.timeLabel;
-  const time = new Date(m.startISO).toLocaleTimeString("uk-UA", {
+  return matchDay(m.startISO) ? slotTimeLabel(m.startISO, now) : m.timeLabel;
+}
+
+/** Same relative phrasing as matchTimeLabel, from a bare ISO (bracket TBD slots). */
+export function slotTimeLabel(iso: string, now: Date = new Date()): string {
+  const day = matchDay(iso);
+  if (!day) return "";
+  const time = new Date(iso).toLocaleTimeString("uk-UA", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: MATCH_TZ,

@@ -12,14 +12,15 @@ import {
   CalendarDays,
   GitFork,
   Crown,
+  History,
 } from "lucide-react";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { MatchCard } from "@/components/cards/MatchCard";
 import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { BracketPredictor } from "@/components/tournament/BracketPredictor";
 import { BountyPredictor } from "@/components/tournament/BountyPredictor";
+import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import {
   getTeam,
   formatPrize,
@@ -31,7 +32,7 @@ import { ChevronDown } from "lucide-react";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
 
-type Tab = "overview" | "bounty" | "teams" | "schedule" | "predictor" | "leaderboard";
+type Tab = "overview" | "bounty" | "teams" | "schedule" | "results" | "predictor" | "leaderboard";
 
 export function TournamentView({
   tournament: t,
@@ -53,6 +54,7 @@ export function TournamentView({
       : []),
     { id: "teams", label: "Команди", icon: Users },
     { id: "schedule", label: "Розклад", icon: CalendarDays },
+    { id: "results", label: "Результати", icon: History },
     ...(t.isEvent
       ? []
       : [{ id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork }]),
@@ -61,15 +63,7 @@ export function TournamentView({
 
   const [tab, setTab] = React.useState<Tab>(t.isEvent ? "bounty" : "overview");
   const teams = t.teamSlugs.map(getTeam);
-  // The overview is a snapshot: only what's on now or still to come.
-  const upcomingMatches = matches
-    .filter((m) => m.status !== "finished")
-    .sort(
-      (a, b) =>
-        (a.status === "live" ? 0 : 1) - (b.status === "live" ? 0 : 1) ||
-        (a.startISO || "").localeCompare(b.startISO || ""),
-    )
-    .slice(0, 4);
+  const finishedMatches = matches.filter((m) => m.status === "finished");
 
   return (
     <div className="space-y-6">
@@ -172,16 +166,12 @@ export function TournamentView({
       {tab === "overview" && (
         <div className="space-y-6">
           <TeamsGrid slugs={t.teamSlugs} compact />
-          {upcomingMatches.length > 0 && (
+          {matches.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
-                Найближчі матчі
+                Сітка турніру
               </h2>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {upcomingMatches.map((m) => (
-                  <MatchCard key={m.id} match={m} />
-                ))}
-              </div>
+              <TournamentBracket matches={matches} />
             </div>
           )}
         </div>
@@ -207,6 +197,16 @@ export function TournamentView({
             <MatchDayGroups matches={matches} />
           ) : (
             <EmptyPanel text="Розклад матчів з’явиться ближче до старту." />
+          )}
+        </div>
+      )}
+
+      {tab === "results" && (
+        <div className="space-y-3">
+          {finishedMatches.length > 0 ? (
+            <MatchDayGroups matches={finishedMatches} />
+          ) : (
+            <EmptyPanel text="Ще немає зіграних матчів цього турніру." />
           )}
         </div>
       )}
