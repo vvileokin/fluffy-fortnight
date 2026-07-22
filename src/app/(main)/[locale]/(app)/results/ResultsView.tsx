@@ -51,9 +51,7 @@ export function ResultsView({
         </div>
       ) : (
         <>
-          {options.length > 2 && (
-            <FilterTabs options={options} value={tour} onChange={setTour} />
-          )}
+          <FilterTabs options={options} value={tour} onChange={setTour} />
           <MatchDayGroups matches={visible} />
         </>
       )}

@@ -33,7 +33,7 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
     <div className="space-y-4">
       <StageSection title="Stage 1" defaultOpen>
         {roundOf32.length > 0 && (
-          <RoundBlock title="Round of 32" count={roundOf32.length}>
+          <RoundBlock title="Раунд 32" count={roundOf32.length}>
             {roundOf32.map((m) => (
               <RealMatch key={m.id} match={m} />
             ))}
@@ -122,11 +122,12 @@ function RealMatch({ match }: { match: Match }) {
     <Link
       href={`/matches/${match.id}`}
       className={cn(
-        "block overflow-hidden rounded-lg border transition-colors hover:border-border-strong",
+        // The 2px left border runs the full card height — the grey accent line.
+        "block overflow-hidden rounded-lg border border-l-2 transition-colors hover:border-border-strong",
         isLive ? "border-live/40 bg-surface" : "border-border bg-surface",
       )}
     >
-      <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-[0.6875rem]">
+      <div className="flex items-center justify-between gap-2 px-3 pb-1.5 pt-1 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{match.format}</span>
         {isLive ? (
           <LiveBadge />
@@ -157,12 +158,7 @@ function TeamLine({
   showScore: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 border-l-2 px-3 py-1.5",
-        win ? "border-l-success" : lose ? "border-l-danger/40" : "border-l-transparent",
-      )}
-    >
+    <div className="flex items-center gap-2 px-3 py-1.5">
       <TeamLogo team={team} size="xs" />
       <span
         className={cn(
@@ -188,8 +184,8 @@ function TeamLine({
 
 function TbdMatch({ slot }: { slot: BracketSlot }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-dashed border-border bg-surface/50">
-      <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-[0.6875rem]">
+    <div className="overflow-hidden rounded-lg border border-l-2 border-dashed border-border bg-surface/50">
+      <div className="flex items-center justify-between gap-2 px-3 pb-1.5 pt-1 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{slot.format}</span>
         <span className="font-semibold text-info">{slotTimeLabel(slot.startISO)}</span>
       </div>

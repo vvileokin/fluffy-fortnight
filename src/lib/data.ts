@@ -302,6 +302,21 @@ export type BracketRound = { key: string; stage: 1 | 2; title: string; slots: Br
 
 export const bracketPlayoffRounds: BracketRound[] = [
   {
+    key: "r16",
+    stage: 1,
+    title: "Раунд 16",
+    slots: [
+      { startISO: "2026-07-25T16:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-25T19:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-26T16:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-26T19:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-27T16:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-27T19:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-28T16:00:00+03:00", format: "BO3" },
+      { startISO: "2026-07-28T19:00:00+03:00", format: "BO3" },
+    ],
+  },
+  {
     key: "qf",
     stage: 1,
     title: "Чвертьфінали",
