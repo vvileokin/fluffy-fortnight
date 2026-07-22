@@ -4,7 +4,6 @@ import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { LiveBadge } from "@/components/ui/Badge";
 import {
   matchTeam,
   matchTimeLabel,
@@ -122,15 +121,14 @@ function RealMatch({ match }: { match: Match }) {
     <Link
       href={`/matches/${match.id}`}
       className={cn(
-        // The 2px left border runs the full card height — the grey accent line.
-        "block overflow-hidden rounded-lg border border-l-2 transition-colors hover:border-border-strong",
+        "block overflow-hidden rounded-lg border transition-colors hover:border-border-strong",
         isLive ? "border-live/40 bg-surface" : "border-border bg-surface",
       )}
     >
-      <div className="flex items-center justify-between gap-2 px-3 pb-1.5 pt-1 text-[0.6875rem]">
+      <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{match.format}</span>
         {isLive ? (
-          <LiveBadge />
+          <LiveTag />
         ) : (
           <span className={cn("font-semibold", isFinished ? "text-ink-subtle" : "text-info")}>
             {matchTimeLabel(match)}
@@ -184,8 +182,8 @@ function TeamLine({
 
 function TbdMatch({ slot }: { slot: BracketSlot }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-l-2 border-dashed border-border bg-surface/50">
-      <div className="flex items-center justify-between gap-2 px-3 pb-1.5 pt-1 text-[0.6875rem]">
+    <div className="overflow-hidden rounded-lg border border-dashed border-border bg-surface/50">
+      <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{slot.format}</span>
         <span className="font-semibold text-info">{slotTimeLabel(slot.startISO)}</span>
       </div>
@@ -193,6 +191,16 @@ function TbdMatch({ slot }: { slot: BracketSlot }) {
       <div className="h-px bg-border" />
       <TbdLine />
     </div>
+  );
+}
+
+/** Compact live marker — plain red text on the same line as the time label. */
+function LiveTag() {
+  return (
+    <span className="inline-flex items-center gap-1 font-bold uppercase tracking-wide text-live">
+      <span className="live-dot inline-block size-1.5 rounded-full bg-live" />
+      LIVE
+    </span>
   );
 }
 
