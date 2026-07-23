@@ -33,7 +33,8 @@ export const teams: Record<string, Team> = {
   mibr: { slug: "mibr", name: "MIBR", tag: "MIBR", logo: "/teams/mibr.svg", brand: "#14213D", ink: "white", region: "SA", worldRank: 18 },
   nrg: { slug: "nrg", name: "NRG", tag: "NRG", logo: "/teams/nrg.png", brand: "#1A1A1A", ink: "white", region: "NA", worldRank: 25 },
   sinners: { slug: "sinners", name: "SINNERS", tag: "SIN", logo: "/teams/sinners.svg", brand: "#C8102E", ink: "white", region: "EU", worldRank: 51 },
-  sharks: { slug: "sharks", name: "Sharks", tag: "SHK", logo: "/teams/sharks.svg", brand: "#0B4DA2", ink: "white", region: "SA", worldRank: 32 },
+  // DENDELE — rebrand of the former Sharks (slug kept so existing data still resolves).
+  sharks: { slug: "sharks", name: "DENDELE", tag: "DEN", logo: "/teams/dendele.svg", brand: "#0B4DA2", ink: "white", region: "SA", worldRank: 32 },
   thunder: { slug: "thunder", name: "THUNDERTDU", tag: "TDU", logo: "/teams/thunderdownunder.png", brand: "#F39200", ink: "black", region: "Oceania", worldRank: 41 },
   liquid: { slug: "liquid", name: "Liquid", tag: "TL", logo: "/teams/liquid.svg", brand: "#0A1F44", ink: "white", region: "NA", worldRank: 41 },
   tyloo: { slug: "tyloo", name: "TYLOO", tag: "TY", logo: "/teams/tyloo.png", brand: "#D71920", ink: "white", region: "Asia", worldRank: 17 },
@@ -297,50 +298,46 @@ export type MatchFormat = "BO1" | "BO3" | "BO5";
  * are TBD slots that carry only their scheduled time and format. The opening
  * "Round of 32" is filled from real matches at render time. Times are Kyiv.
  */
-export type BracketSlot = { startISO: string; format: MatchFormat };
-export type BracketRound = { key: string; stage: 1 | 2; title: string; slots: BracketSlot[] };
+export type BracketSlot = { startISO?: string; format: MatchFormat };
+export type BracketRound = {
+  key: string;
+  stage: 1 | 2;
+  title: string;
+  /** Which bounty stage's confirmed pairs seed this round (undefined = none). */
+  seedFrom?: string;
+  slots: BracketSlot[];
+};
 
+// Dates are left off on purpose — they show as TBD until the admin sets them.
+// Stage 1 is online (Round of 32 → Round of 16); Stage 2 is the LAN playoff
+// (Quarter-finals → Semi-finals → Grand final).
 export const bracketPlayoffRounds: BracketRound[] = [
   {
     key: "r16",
     stage: 1,
     title: "Раунд 16",
-    slots: [
-      { startISO: "2026-07-25T16:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-25T19:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-26T16:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-26T19:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-27T16:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-27T19:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-28T16:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-28T19:00:00+03:00", format: "BO3" },
-    ],
+    seedFrom: "r2",
+    slots: Array.from({ length: 8 }, () => ({ format: "BO3" as MatchFormat })),
   },
   {
     key: "qf",
-    stage: 1,
+    stage: 2,
     title: "Чвертьфінали",
-    slots: [
-      { startISO: "2026-07-30T16:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-30T19:00:00+03:00", format: "BO3" },
-      { startISO: "2026-07-31T15:30:00+03:00", format: "BO3" },
-      { startISO: "2026-07-31T18:30:00+03:00", format: "BO3" },
-    ],
+    seedFrom: "qf",
+    slots: Array.from({ length: 4 }, () => ({ format: "BO3" as MatchFormat })),
   },
   {
     key: "sf",
     stage: 2,
     title: "Півфінали",
-    slots: [
-      { startISO: "2026-08-01T13:30:00+03:00", format: "BO3" },
-      { startISO: "2026-08-01T16:30:00+03:00", format: "BO3" },
-    ],
+    seedFrom: "sf",
+    slots: Array.from({ length: 2 }, () => ({ format: "BO3" as MatchFormat })),
   },
   {
     key: "gf",
     stage: 2,
     title: "Гранд-фінал",
-    slots: [{ startISO: "2026-08-02T13:30:00+03:00", format: "BO5" }],
+    slots: [{ format: "BO5" }],
   },
 ];
 
@@ -484,10 +481,14 @@ export function groupMatchesByDay(matches: Match[], now: Date = new Date()): Mat
     const off = day ? dayOffset(day, today) : null;
 
     if (m.status === "finished") {
-      if (off === null) put({ key: "done", label: "Завершені", live: false, order: 9999, done: true }, m);
-      else if (off === 0) put({ key: "done-today", label: "Сьогодні", live: false, order: 900, done: true }, m);
-      else if (off === -1) put({ key: "done-yesterday", label: "Вчора", live: false, order: 901, done: true }, m);
-      else put({ key: `done-${day}`, label: formatMatchDay(day), live: false, order: 900 - off, done: true }, m);
+      // No scheduled date? Fall back to when it finished, so a just-played match
+      // lands under "Сьогодні" at the top instead of a nameless bucket at the end.
+      const fday = day || (m.updatedISO ? matchDay(m.updatedISO) : "");
+      const foff = fday ? dayOffset(fday, today) : null;
+      if (foff === null) put({ key: "done", label: "Завершені", live: false, order: 9999, done: true }, m);
+      else if (foff === 0) put({ key: "done-today", label: "Сьогодні", live: false, order: 900, done: true }, m);
+      else if (foff === -1) put({ key: "done-yesterday", label: "Вчора", live: false, order: 901, done: true }, m);
+      else put({ key: `done-${fday}`, label: formatMatchDay(fday), live: false, order: 900 - foff, done: true }, m);
       continue;
     }
 

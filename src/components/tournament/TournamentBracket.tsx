@@ -4,25 +4,60 @@ import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { TeamLogo } from "@/components/ui/TeamLogo";
+import { createClient } from "@/lib/supabase/client";
 import {
   matchTeam,
   matchTimeLabel,
   slotTimeLabel,
+  getTeam,
   bracketPlayoffRounds,
   type Match,
   type Team,
   type BracketSlot,
+  type BracketRound,
 } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
+/** Confirmed pairs per bounty stage: stageId → list of [low, high] matchups. */
+type StagePairs = Record<string, [string, string][]>;
+
+/** Public read of each stage's confirmed results (the correct pairs). */
+function useStagePairs(): StagePairs {
+  const [pairs, setPairs] = React.useState<StagePairs>({});
+  React.useEffect(() => {
+    let cancelled = false;
+    createClient()
+      .from("bounty_stages")
+      .select("stage_id, results")
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const next: StagePairs = {};
+        for (const r of data) {
+          const results = r.results && typeof r.results === "object" && !Array.isArray(r.results)
+            ? (r.results as Record<string, string>)
+            : {};
+          const list = Object.entries(results).filter(([, high]) => !!high) as [string, string][];
+          if (list.length) next[r.stage_id] = list;
+        }
+        setPairs(next);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return pairs;
+}
+
 /**
  * The playoff bracket, drawn as columns that flow left → right the way a real
- * bracket does: Stage 1 (Round of 32 from the real matches, then Round of 16 and
- * the Quarter-finals) and Stage 2 (Semi-finals → Grand final). Only the opening
- * round has teams; later rounds are TBD slots with a scheduled time. Each stage
- * is a collapsible section, closed until opened.
+ * bracket does. Stage 1 is the online run (Round of 32 from the real matches,
+ * then Round of 16); Stage 2 is the LAN playoff (Quarter-finals → Semi-finals →
+ * Grand final). Later rounds fill in from the admin's confirmed draft pairs as
+ * they're set, and stay TBD until then. Each stage is a collapsible section,
+ * closed until opened.
  */
 export function TournamentBracket({ matches }: { matches: Match[] }) {
+  const pairs = useStagePairs();
   // First match to last — live and finished sort by their start time too.
   const roundOf32 = [...matches].sort((a, b) =>
     (a.startISO || "").localeCompare(b.startISO || ""),
@@ -46,9 +81,7 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
           )}
           {stage1.map((r) => (
             <RoundColumn key={r.key} title={r.title} count={r.slots.length}>
-              {r.slots.map((s, i) => (
-                <TbdMatch key={i} slot={s} />
-              ))}
+              <RoundSlots round={r} pairs={pairs} />
             </RoundColumn>
           ))}
         </BracketTrack>
@@ -58,14 +91,31 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
         <BracketTrack>
           {stage2.map((r) => (
             <RoundColumn key={r.key} title={r.title} count={r.slots.length}>
-              {r.slots.map((s, i) => (
-                <TbdMatch key={i} slot={s} />
-              ))}
+              <RoundSlots round={r} pairs={pairs} />
             </RoundColumn>
           ))}
         </BracketTrack>
       </StageSection>
     </div>
+  );
+}
+
+/**
+ * A future round's cards: the admin's confirmed pairs first (teams shown, time
+ * still TBD), then blank TBD slots for the pairs not yet decided.
+ */
+function RoundSlots({ round, pairs }: { round: BracketRound; pairs: StagePairs }) {
+  const seeded = (round.seedFrom ? pairs[round.seedFrom] : undefined) ?? [];
+  const blanks = Math.max(0, round.slots.length - seeded.length);
+  return (
+    <>
+      {seeded.map(([low, high], i) => (
+        <PairMatch key={`p${i}`} low={low} high={high} format={round.slots[i]?.format ?? "BO3"} />
+      ))}
+      {Array.from({ length: blanks }, (_, i) => (
+        <TbdMatch key={`t${i}`} slot={round.slots[seeded.length + i] ?? { format: "BO3" }} />
+      ))}
+    </>
   );
 }
 
@@ -209,11 +259,31 @@ function TbdMatch({ slot }: { slot: BracketSlot }) {
     <div className="overflow-hidden rounded-lg border border-dashed border-border bg-surface/50">
       <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{slot.format}</span>
-        <span className="font-semibold text-info">{slotTimeLabel(slot.startISO)}</span>
+        <span className="font-semibold text-ink-subtle">
+          {slot.startISO ? slotTimeLabel(slot.startISO) : "TBD"}
+        </span>
       </div>
       <TbdLine />
       <div className="h-px bg-border" />
       <TbdLine />
+    </div>
+  );
+}
+
+/** A confirmed matchup whose time isn't set yet: both teams shown, time TBD. */
+function PairMatch({ low, high, format }: { low: string; high: string; format: string }) {
+  const a = getTeam(high); // higher seed on top
+  const b = getTeam(low);
+  if (!a || !b) return <TbdMatch slot={{ format: format as BracketSlot["format"] }} />;
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-surface">
+      <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
+        <span className="font-medium text-ink-subtle">{format}</span>
+        <span className="font-semibold text-ink-subtle">TBD</span>
+      </div>
+      <TeamLine team={a} score={0} win={false} lose={false} showScore={false} />
+      <div className="h-px bg-border" />
+      <TeamLine team={b} score={0} win={false} lose={false} showScore={false} />
     </div>
   );
 }

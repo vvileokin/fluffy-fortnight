@@ -117,12 +117,19 @@ export function TournamentView({
           <h1 className="mt-3 text-balance text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
             {t.name}
           </h1>
-          {/* Meta: a tidy 2-column grid on phones (so it doesn't wrap into a
-              blur of text), a single inline row from sm up. */}
-          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm text-ink-muted sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-2">
+          {/* Phones: the facts sit in a solid bordered panel with hairline
+              dividers, so nothing floats over the neon and blurs together. */}
+          <div className="mt-4 grid grid-cols-2 overflow-hidden rounded-xl border border-white/10 bg-black/30 sm:hidden">
+            <StatCell icon={Calendar} value={t.dateLabel} />
+            <StatCell icon={t.online ? Wifi : MapPin} value={t.location} className="border-l border-white/10" />
+            <StatCell icon={Users} value={`${teams.length} команд`} className="border-t border-white/10" />
+            <StatCell icon={Trophy} value={formatPrize(t.prizeUSD)} accent className="border-l border-t border-white/10" />
+          </div>
+          {/* Laptop and up: the original inline row. */}
+          <dl className="mt-4 hidden flex-wrap gap-x-6 gap-y-2 text-sm text-ink-muted sm:flex">
             <div className="flex items-center gap-2">
               <Calendar className="size-4 shrink-0 text-ink-subtle" />
-              <span className="truncate">{t.dateLabel}</span>
+              {t.dateLabel}
             </div>
             <div className="flex items-center gap-2">
               {t.online ? (
@@ -130,7 +137,7 @@ export function TournamentView({
               ) : (
                 <MapPin className="size-4 shrink-0 text-ink-subtle" />
               )}
-              <span>{t.location}</span>
+              {t.location}
             </div>
             <div className="flex items-center gap-2">
               <Users className="size-4 shrink-0 text-ink-subtle" />
@@ -292,6 +299,32 @@ function TeamsGrid({ slugs, compact }: { slugs: string[]; compact?: boolean }) {
           />
         </button>
       )}
+    </div>
+  );
+}
+
+function StatCell({
+  icon: Icon,
+  value,
+  accent,
+  className,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  value: string;
+  accent?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-center gap-2.5 p-3", className)}>
+      <Icon className="size-4 shrink-0 text-ink-subtle" />
+      <span
+        className={cn(
+          "min-w-0 truncate text-sm font-semibold",
+          accent ? "font-mono text-accent" : "text-ink",
+        )}
+      >
+        {value}
+      </span>
     </div>
   );
 }

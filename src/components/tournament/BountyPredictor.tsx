@@ -185,18 +185,23 @@ export function BountyPredictor() {
         </div>
       </div>
 
-      {!configured ? (
+      {!configured && user ? (
         <StagePlaceholder />
       ) : (
         <div className="relative">
           <div
             className={cn(
               "space-y-5",
-              // Signed-out visitors see only a short, blurred teaser of the pairs.
+              // Signed-out visitors see only a short, blurred teaser (of the pairs
+              // if the stage is set up, otherwise of the placeholder) behind the gate.
               !user && "pointer-events-none max-h-80 select-none overflow-hidden blur-[5px]",
             )}
             aria-hidden={!user}
           >
+          {!configured ? (
+            <StagePlaceholder />
+          ) : (
+          <>
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
             {lowColumns.map((col, ci) => (
               <div key={ci} className="space-y-2.5">
@@ -280,6 +285,8 @@ export function BountyPredictor() {
               </button>
               </div>
             </div>
+          )}
+          </>
           )}
           </div>
           {!user && <DraftLoginGate />}
