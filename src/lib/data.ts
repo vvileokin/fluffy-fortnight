@@ -352,7 +352,9 @@ export function roundKeyForStage(stage: string): "r16" | "qf" | "sf" | "gf" | nu
   if (/чверт|quarter|\bqf\b/.test(s)) return "qf";
   if (/півфінал|пiвфінал|semi[\s-]?final|\bsf\b/.test(s)) return "sf";
   if (/гранд|grand|\bфінал\b|\bfinal\b|\bgf\b/.test(s)) return "gf";
-  if (/раунд\s*16|round\s*(of\s*)?16|\br16\b|1\/8/.test(s)) return "r16";
+  // "Stage 2" is the label used for the Round-of-16 matches.
+  if (/раунд\s*16|round\s*(of\s*)?16|\br16\b|1\/8|stage\s*2|стейдж\s*2|стад[іи]я\s*2/.test(s))
+    return "r16";
   return null; // opening round → Round of 32
 }
 
