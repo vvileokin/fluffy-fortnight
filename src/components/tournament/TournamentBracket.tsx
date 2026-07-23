@@ -135,7 +135,7 @@ function StageSection({
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 bg-surface-2 px-4 py-3 text-left transition-colors hover:bg-surface-3"
+        className="flex w-full items-center justify-between gap-3 bg-surface px-4 py-3 text-left transition-colors hover:bg-surface-2"
       >
         <span className="flex min-w-0 items-baseline gap-2">
           <span className="text-sm font-bold uppercase tracking-wide text-ink">{title}</span>

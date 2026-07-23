@@ -13,6 +13,7 @@ import {
   GitFork,
   Crown,
   History,
+  Swords,
 } from "lucide-react";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { TeamLogo } from "@/components/ui/TeamLogo";
@@ -117,15 +118,8 @@ export function TournamentView({
           <h1 className="mt-3 text-balance text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
             {t.name}
           </h1>
-          {/* Phones: the facts sit in a solid bordered panel with hairline
-              dividers, so nothing floats over the neon and blurs together. */}
-          <div className="mt-4 grid grid-cols-2 overflow-hidden rounded-xl border border-white/10 bg-black/30 sm:hidden">
-            <StatCell icon={Calendar} value={t.dateLabel} />
-            <StatCell icon={t.online ? Wifi : MapPin} value={t.location} className="border-l border-white/10" />
-            <StatCell icon={Users} value={`${teams.length} команд`} className="border-t border-white/10" />
-            <StatCell icon={Trophy} value={formatPrize(t.prizeUSD)} accent className="border-l border-t border-white/10" />
-          </div>
-          {/* Laptop and up: the original inline row. */}
+          {/* Laptop and up: the original inline meta row. On phones the facts
+              move into the Огляд tab (see below), keeping the banner clean. */}
           <dl className="mt-4 hidden flex-wrap gap-x-6 gap-y-2 text-sm text-ink-muted sm:flex">
             <div className="flex items-center gap-2">
               <Calendar className="size-4 shrink-0 text-ink-subtle" />
@@ -148,7 +142,7 @@ export function TournamentView({
               {formatPrize(t.prizeUSD)}
             </div>
           </dl>
-          <p className="mt-4 text-xs text-ink-subtle sm:mt-3">Формат: {t.format}</p>
+          <p className="mt-3 hidden text-xs text-ink-subtle sm:block">Формат: {t.format}</p>
         </div>
       </div>
 
@@ -178,6 +172,40 @@ export function TournamentView({
       {/* Panels */}
       {tab === "overview" && (
         <div className="space-y-6">
+          {/* Phones only: the tournament facts live here instead of the banner. */}
+          <section className="space-y-3 sm:hidden">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
+              Про турнір
+            </h2>
+            <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-surface">
+              <StatCell icon={Calendar} label="Дати" value={t.dateLabel} />
+              <StatCell
+                icon={t.online ? Wifi : MapPin}
+                label="Локація"
+                value={t.location}
+                className="border-l border-border"
+              />
+              <StatCell
+                icon={Users}
+                label="Команди"
+                value={`${teams.length}`}
+                className="border-t border-border"
+              />
+              <StatCell
+                icon={Trophy}
+                label="Призовий"
+                value={formatPrize(t.prizeUSD)}
+                accent
+                className="border-l border-t border-border"
+              />
+              <StatCell
+                icon={Swords}
+                label="Формат"
+                value={t.format}
+                className="col-span-2 border-t border-border"
+              />
+            </div>
+          </section>
           <TeamsGrid slugs={t.teamSlugs} compact />
           {matches.length > 0 && (
             <div className="space-y-3">
@@ -305,26 +333,33 @@ function TeamsGrid({ slugs, compact }: { slugs: string[]; compact?: boolean }) {
 
 function StatCell({
   icon: Icon,
+  label,
   value,
   accent,
   className,
 }: {
   icon: React.ComponentType<{ className?: string }>;
+  label: string;
   value: string;
   accent?: boolean;
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-2.5 p-3", className)}>
-      <Icon className="size-4 shrink-0 text-ink-subtle" />
-      <span
-        className={cn(
-          "min-w-0 truncate text-sm font-semibold",
-          accent ? "font-mono text-accent" : "text-ink",
-        )}
-      >
-        {value}
-      </span>
+    <div className={cn("flex items-start gap-2.5 p-3.5", className)}>
+      <Icon className="mt-0.5 size-4 shrink-0 text-ink-subtle" />
+      <div className="min-w-0">
+        <div className="text-[0.625rem] font-medium uppercase tracking-wide text-ink-subtle">
+          {label}
+        </div>
+        <div
+          className={cn(
+            "truncate text-sm font-semibold",
+            accent ? "font-mono text-accent" : "text-ink",
+          )}
+        >
+          {value}
+        </div>
+      </div>
     </div>
   );
 }
