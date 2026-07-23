@@ -192,9 +192,10 @@ export function BountyPredictor() {
           <div
             className={cn(
               "space-y-5",
-              // Signed-out visitors see only a short, blurred teaser (of the pairs
-              // if the stage is set up, otherwise of the placeholder) behind the gate.
-              !user && "pointer-events-none max-h-80 select-none overflow-hidden blur-[5px]",
+              // Signed-out visitors see a fixed-height blurred teaser behind the
+              // gate. A fixed height (not just a cap) keeps the centred gate card
+              // inside the box even when the stage is empty, so it can't spill out.
+              !user && "pointer-events-none h-80 select-none overflow-hidden blur-[5px]",
             )}
             aria-hidden={!user}
           >
