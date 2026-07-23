@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Check, Swords, Info, ChevronRight, Lock, RotateCcw, X } from "lucide-react";
+import { Check, Swords, Info, ChevronRight, Lock, RotateCcw, X, LogIn } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { bountyStages, getTeam } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter, Link } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -146,7 +146,7 @@ export function BountyPredictor() {
   return (
     <div className="space-y-5">
       {/* Stage tabs */}
-      <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto overflow-y-hidden pb-1">
         {bountyStages.map((s) => {
           const on = s.id === active;
           return (
@@ -188,7 +188,15 @@ export function BountyPredictor() {
       {!configured ? (
         <StagePlaceholder />
       ) : (
-        <>
+        <div className="relative">
+          <div
+            className={cn(
+              "space-y-5",
+              // Signed-out visitors see only a short, blurred teaser of the pairs.
+              !user && "pointer-events-none max-h-80 select-none overflow-hidden blur-[5px]",
+            )}
+            aria-hidden={!user}
+          >
           <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
             {lowColumns.map((col, ci) => (
               <div key={ci} className="space-y-2.5">
@@ -273,8 +281,34 @@ export function BountyPredictor() {
               </div>
             </div>
           )}
-        </>
+          </div>
+          {!user && <DraftLoginGate />}
+        </div>
       )}
+    </div>
+  );
+}
+
+/** Overlay shown over the blurred pairs — sign in to reveal and draft. */
+function DraftLoginGate() {
+  return (
+    <div className="absolute inset-0 grid place-items-center p-4">
+      <div className="w-full max-w-xs rounded-xl border border-border bg-surface/90 p-5 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)] backdrop-blur-sm">
+        <div className="mx-auto grid size-11 place-items-center rounded-full bg-[color-mix(in_oklch,var(--accent)_14%,transparent)] text-accent">
+          <Lock className="size-5" />
+        </div>
+        <p className="mt-3 text-sm font-bold text-ink">Прогнози доступні після входу</p>
+        <p className="mt-1 text-xs text-ink-subtle">
+          Увійди, щоб побачити пари та зробити свій bounty-прогноз.
+        </p>
+        <Link
+          href="/login"
+          className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
+        >
+          <LogIn className="size-4" />
+          Увійти
+        </Link>
+      </div>
     </div>
   );
 }

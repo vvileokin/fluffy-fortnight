@@ -16,9 +16,11 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * The playoff bracket: Stage 1 (the opening Round of 32 filled from real matches,
- * in play order, then the Quarter-finals) and Stage 2 (Semi-finals → Grand final).
- * Only the opening round has teams yet; later rounds are TBD slots with a time.
+ * The playoff bracket, drawn as columns that flow left → right the way a real
+ * bracket does: Stage 1 (Round of 32 from the real matches, then Round of 16 and
+ * the Quarter-finals) and Stage 2 (Semi-finals → Grand final). Only the opening
+ * round has teams; later rounds are TBD slots with a scheduled time. Each stage
+ * is a collapsible section, closed until opened.
  */
 export function TournamentBracket({ matches }: { matches: Match[] }) {
   // First match to last — live and finished sort by their start time too.
@@ -28,33 +30,40 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
   const stage1 = bracketPlayoffRounds.filter((r) => r.stage === 1);
   const stage2 = bracketPlayoffRounds.filter((r) => r.stage === 2);
 
+  const stage1Count = roundOf32.length + stage1.reduce((n, r) => n + r.slots.length, 0);
+  const stage2Count = stage2.reduce((n, r) => n + r.slots.length, 0);
+
   return (
-    <div className="space-y-4">
-      <StageSection title="Stage 1" defaultOpen>
-        {roundOf32.length > 0 && (
-          <RoundBlock title="Раунд 32" count={roundOf32.length}>
-            {roundOf32.map((m) => (
-              <RealMatch key={m.id} match={m} />
-            ))}
-          </RoundBlock>
-        )}
-        {stage1.map((r) => (
-          <RoundBlock key={r.key} title={r.title} count={r.slots.length}>
-            {r.slots.map((s, i) => (
-              <TbdMatch key={i} slot={s} />
-            ))}
-          </RoundBlock>
-        ))}
+    <div className="space-y-3">
+      <StageSection title="Stage 1" subtitle="Онлайн-раунди" count={stage1Count}>
+        <BracketTrack>
+          {roundOf32.length > 0 && (
+            <RoundColumn title="Раунд 32" count={roundOf32.length}>
+              {roundOf32.map((m) => (
+                <RealMatch key={m.id} match={m} />
+              ))}
+            </RoundColumn>
+          )}
+          {stage1.map((r) => (
+            <RoundColumn key={r.key} title={r.title} count={r.slots.length}>
+              {r.slots.map((s, i) => (
+                <TbdMatch key={i} slot={s} />
+              ))}
+            </RoundColumn>
+          ))}
+        </BracketTrack>
       </StageSection>
 
-      <StageSection title="Stage 2" defaultOpen>
-        {stage2.map((r) => (
-          <RoundBlock key={r.key} title={r.title} count={r.slots.length}>
-            {r.slots.map((s, i) => (
-              <TbdMatch key={i} slot={s} />
-            ))}
-          </RoundBlock>
-        ))}
+      <StageSection title="Stage 2" subtitle="Плейоф на LAN" count={stage2Count}>
+        <BracketTrack>
+          {stage2.map((r) => (
+            <RoundColumn key={r.key} title={r.title} count={r.slots.length}>
+              {r.slots.map((s, i) => (
+                <TbdMatch key={i} slot={s} />
+              ))}
+            </RoundColumn>
+          ))}
+        </BracketTrack>
       </StageSection>
     </div>
   );
@@ -62,31 +71,48 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
 
 function StageSection({
   title,
-  defaultOpen,
+  subtitle,
+  count,
   children,
 }: {
   title: string;
-  defaultOpen?: boolean;
+  subtitle: string;
+  count: number;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = React.useState(!!defaultOpen);
+  const [open, setOpen] = React.useState(false);
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 bg-surface-2 px-4 py-3 text-left transition-colors hover:bg-surface-3"
+        className="flex w-full items-center justify-between gap-3 bg-surface-2 px-4 py-3 text-left transition-colors hover:bg-surface-3"
       >
-        <span className="text-sm font-bold uppercase tracking-wide text-ink">{title}</span>
-        <ChevronDown
-          className={cn("size-4 text-ink-subtle transition-transform duration-200", open && "rotate-180")}
-        />
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="text-sm font-bold uppercase tracking-wide text-ink">{title}</span>
+          <span className="truncate text-xs text-ink-subtle">{subtitle}</span>
+        </span>
+        <span className="flex shrink-0 items-center gap-2">
+          <span className="tnum text-xs font-semibold text-ink-subtle">{count} матчів</span>
+          <ChevronDown
+            className={cn("size-4 text-ink-subtle transition-transform duration-200", open && "rotate-180")}
+          />
+        </span>
       </button>
-      {open && <div className="space-y-5 p-4">{children}</div>}
+      {open && <div className="p-3 sm:p-4">{children}</div>}
     </div>
   );
 }
 
-function RoundBlock({
+/** Horizontal, swipeable track of round columns — the bracket flows across it. */
+function BracketTrack({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="no-scrollbar -mx-3 flex gap-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
+      {children}
+    </div>
+  );
+}
+
+function RoundColumn({
   title,
   count,
   children,
@@ -96,14 +122,12 @@ function RoundBlock({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-2.5">
-      <div className="flex items-center gap-2">
+    <section className="flex w-[13.5rem] shrink-0 flex-col gap-2.5">
+      <div className="flex items-center gap-2 px-0.5">
         <h3 className="text-xs font-bold uppercase tracking-wide text-ink-muted">{title}</h3>
         <span className="tnum text-xs font-semibold text-ink-subtle">{count}</span>
       </div>
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {children}
-      </div>
+      {children}
     </section>
   );
 }

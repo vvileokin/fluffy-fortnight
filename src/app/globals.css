@@ -129,6 +129,18 @@ html {
   background: transparent;
 }
 
+/* Opt-out: hide the scrollbar on horizontal tab/filter strips. The Tailwind
+   arbitrary variants don't win over the global `* { scrollbar-width }` rule,
+   so this is hand-written. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);

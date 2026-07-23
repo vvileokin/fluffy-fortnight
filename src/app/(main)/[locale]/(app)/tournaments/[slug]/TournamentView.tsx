@@ -64,6 +64,8 @@ export function TournamentView({
   const [tab, setTab] = React.useState<Tab>(t.isEvent ? "bounty" : "overview");
   const teams = t.teamSlugs.map(getTeam);
   const finishedMatches = matches.filter((m) => m.status === "finished");
+  // Schedule shows what's still to come; played matches live in Results.
+  const scheduleMatches = matches.filter((m) => m.status !== "finished");
 
   return (
     <div className="space-y-6">
@@ -90,9 +92,11 @@ export function TournamentView({
             }}
           />
         )}
-        {/* Readability scrim over the neon so the title/dates stay legible */}
+        {/* Readability scrim over the neon so the title/dates stay legible.
+            Phones keep it dark all the way down — that's where the meta sits and
+            the raw neon washed the text out. */}
         {t.isEvent && (
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/10 sm:from-black/60 sm:via-black/30 sm:to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/65 to-black/60 sm:from-black/60 sm:via-black/30 sm:to-transparent" />
         )}
         <div className="relative p-5 sm:p-7">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -113,34 +117,36 @@ export function TournamentView({
           <h1 className="mt-3 text-balance text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
             {t.name}
           </h1>
-          <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-muted">
+          {/* Meta: a tidy 2-column grid on phones (so it doesn't wrap into a
+              blur of text), a single inline row from sm up. */}
+          <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm text-ink-muted sm:flex sm:flex-wrap sm:gap-x-6 sm:gap-y-2">
             <div className="flex items-center gap-2">
-              <Calendar className="size-4 text-ink-subtle" />
-              {t.dateLabel}
+              <Calendar className="size-4 shrink-0 text-ink-subtle" />
+              <span className="truncate">{t.dateLabel}</span>
             </div>
             <div className="flex items-center gap-2">
               {t.online ? (
-                <Wifi className="size-4 text-ink-subtle" />
+                <Wifi className="size-4 shrink-0 text-ink-subtle" />
               ) : (
-                <MapPin className="size-4 text-ink-subtle" />
+                <MapPin className="size-4 shrink-0 text-ink-subtle" />
               )}
-              {t.location}
+              <span>{t.location}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="size-4 text-ink-subtle" />
+              <Users className="size-4 shrink-0 text-ink-subtle" />
               {teams.length} команд
             </div>
             <div className="flex items-center gap-2 font-mono font-bold text-accent">
-              <Trophy className="size-4" />
+              <Trophy className="size-4 shrink-0" />
               {formatPrize(t.prizeUSD)}
             </div>
           </dl>
-          <p className="mt-3 text-xs text-ink-subtle">Формат: {t.format}</p>
+          <p className="mt-4 text-xs text-ink-subtle sm:mt-3">Формат: {t.format}</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border">
         {tabs.map((tb) => {
           const active = tb.id === tab;
           return (
@@ -193,10 +199,10 @@ export function TournamentView({
 
       {tab === "schedule" && (
         <div className="space-y-3">
-          {matches.length > 0 ? (
-            <MatchDayGroups matches={matches} />
+          {scheduleMatches.length > 0 ? (
+            <MatchDayGroups matches={scheduleMatches} />
           ) : (
-            <EmptyPanel text="Розклад матчів з’явиться ближче до старту." />
+            <EmptyPanel text="Найближчих матчів немає — завершені дивись у Результатах." />
           )}
         </div>
       )}

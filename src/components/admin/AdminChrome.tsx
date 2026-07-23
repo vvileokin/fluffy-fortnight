@@ -136,7 +136,7 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Mobile section tabs */}
-        <div className="sticky top-14 z-10 flex gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-2 lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="no-scrollbar sticky top-14 z-10 flex gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-2 lg:hidden">
           {nav.map((item) => {
             const active =
               item.href === "/admin"
