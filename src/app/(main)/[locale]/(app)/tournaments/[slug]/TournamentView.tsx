@@ -172,39 +172,19 @@ export function TournamentView({
       {/* Panels */}
       {tab === "overview" && (
         <div className="space-y-6">
-          {/* Phones only: the tournament facts live here instead of the banner. */}
+          {/* Phones only: the tournament facts live here instead of the banner —
+              a plain label/value list so every value shows in full. */}
           <section className="space-y-3 sm:hidden">
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
               Про турнір
             </h2>
-            <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-surface">
-              <StatCell icon={Calendar} label="Дати" value={t.dateLabel} />
-              <StatCell
-                icon={t.online ? Wifi : MapPin}
-                label="Локація"
-                value={t.location}
-                className="border-l border-border"
-              />
-              <StatCell
-                icon={Users}
-                label="Команди"
-                value={`${teams.length}`}
-                className="border-t border-border"
-              />
-              <StatCell
-                icon={Trophy}
-                label="Призовий"
-                value={formatPrize(t.prizeUSD)}
-                accent
-                className="border-l border-t border-border"
-              />
-              <StatCell
-                icon={Swords}
-                label="Формат"
-                value={t.format}
-                className="col-span-2 border-t border-border"
-              />
-            </div>
+            <dl className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+              <MetaRow icon={Calendar} label="Дати" value={t.dateLabel} />
+              <MetaRow icon={t.online ? Wifi : MapPin} label="Локація" value={t.location} />
+              <MetaRow icon={Users} label="Команди" value={`${teams.length}`} />
+              <MetaRow icon={Trophy} label="Призовий" value={formatPrize(t.prizeUSD)} accent />
+              <MetaRow icon={Swords} label="Формат" value={t.format} />
+            </dl>
           </section>
           <TeamsGrid slugs={t.teamSlugs} compact />
           {matches.length > 0 && (
@@ -331,35 +311,31 @@ function TeamsGrid({ slugs, compact }: { slugs: string[]; compact?: boolean }) {
   );
 }
 
-function StatCell({
+function MetaRow({
   icon: Icon,
   label,
   value,
   accent,
-  className,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   accent?: boolean;
-  className?: string;
 }) {
   return (
-    <div className={cn("flex items-start gap-2.5 p-3.5", className)}>
-      <Icon className="mt-0.5 size-4 shrink-0 text-ink-subtle" />
-      <div className="min-w-0">
-        <div className="text-[0.625rem] font-medium uppercase tracking-wide text-ink-subtle">
-          {label}
-        </div>
-        <div
-          className={cn(
-            "truncate text-sm font-semibold",
-            accent ? "font-mono text-accent" : "text-ink",
-          )}
-        >
-          {value}
-        </div>
-      </div>
+    <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <dt className="flex shrink-0 items-center gap-2.5 text-sm text-ink-muted">
+        <Icon className="size-4 shrink-0 text-ink-subtle" />
+        {label}
+      </dt>
+      <dd
+        className={cn(
+          "text-right text-sm font-semibold",
+          accent ? "font-mono text-accent" : "text-ink",
+        )}
+      >
+        {value}
+      </dd>
     </div>
   );
 }

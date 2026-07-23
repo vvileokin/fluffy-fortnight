@@ -11,6 +11,7 @@ import {
   slotTimeLabel,
   getTeam,
   bracketPlayoffRounds,
+  roundKeyForStage,
   type Match,
   type Team,
   type BracketSlot,
@@ -59,14 +60,22 @@ function useStagePairs(): StagePairs {
 export function TournamentBracket({ matches }: { matches: Match[] }) {
   const pairs = useStagePairs();
   // First match to last — live and finished sort by their start time too.
-  const roundOf32 = [...matches].sort((a, b) =>
-    (a.startISO || "").localeCompare(b.startISO || ""),
-  );
+  const byTime = (a: Match, b: Match) => (a.startISO || "").localeCompare(b.startISO || "");
+  // Bind each real match to a round by its stage label; unlabelled ones (the
+  // opening bounty games) stay in the Round of 32.
+  const matchesByRound = new Map<string, Match[]>();
+  for (const m of matches) {
+    const key = roundKeyForStage(m.stage) ?? "r32";
+    (matchesByRound.get(key) ?? matchesByRound.set(key, []).get(key)!).push(m);
+  }
+  const roundOf32 = [...(matchesByRound.get("r32") ?? [])].sort(byTime);
   const stage1 = bracketPlayoffRounds.filter((r) => r.stage === 1);
   const stage2 = bracketPlayoffRounds.filter((r) => r.stage === 2);
 
-  const stage1Count = roundOf32.length + stage1.reduce((n, r) => n + r.slots.length, 0);
-  const stage2Count = stage2.reduce((n, r) => n + r.slots.length, 0);
+  const countFor = (r: BracketRound) =>
+    Math.max(r.slots.length, (matchesByRound.get(r.key) ?? []).length);
+  const stage1Count = roundOf32.length + stage1.reduce((n, r) => n + countFor(r), 0);
+  const stage2Count = stage2.reduce((n, r) => n + countFor(r), 0);
 
   return (
     <div className="space-y-3">
@@ -80,8 +89,8 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
             </RoundColumn>
           )}
           {stage1.map((r) => (
-            <RoundColumn key={r.key} title={r.title} count={r.slots.length}>
-              <RoundSlots round={r} pairs={pairs} />
+            <RoundColumn key={r.key} title={r.title} count={countFor(r)}>
+              <RoundSlots round={r} pairs={pairs} matches={matchesByRound.get(r.key) ?? []} />
             </RoundColumn>
           ))}
         </BracketTrack>
@@ -90,8 +99,8 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
       <StageSection title="Stage 2" subtitle="Плейоф на LAN" count={stage2Count}>
         <BracketTrack>
           {stage2.map((r) => (
-            <RoundColumn key={r.key} title={r.title} count={r.slots.length}>
-              <RoundSlots round={r} pairs={pairs} />
+            <RoundColumn key={r.key} title={r.title} count={countFor(r)}>
+              <RoundSlots round={r} pairs={pairs} matches={matchesByRound.get(r.key) ?? []} />
             </RoundColumn>
           ))}
         </BracketTrack>
@@ -101,19 +110,38 @@ export function TournamentBracket({ matches }: { matches: Match[] }) {
 }
 
 /**
- * A future round's cards: the admin's confirmed pairs first (teams shown, time
- * still TBD), then blank TBD slots for the pairs not yet decided.
+ * A round's cards: real (played/scheduled) matches bound to it first, then the
+ * admin's confirmed pairs that don't have a match yet (teams shown, time TBD),
+ * then blank TBD slots for the pairs still to be decided.
  */
-function RoundSlots({ round, pairs }: { round: BracketRound; pairs: StagePairs }) {
+function RoundSlots({
+  round,
+  pairs,
+  matches,
+}: {
+  round: BracketRound;
+  pairs: StagePairs;
+  matches: Match[];
+}) {
+  const byTime = (a: Match, b: Match) => (a.startISO || "").localeCompare(b.startISO || "");
+  const real = [...matches].sort(byTime);
+  const pairKey = (a: string, b: string) => [a, b].sort().join("|");
+  const covered = new Set(real.map((m) => pairKey(m.a, m.b)));
   const seeded = (round.seedFrom ? pairs[round.seedFrom] : undefined) ?? [];
-  const blanks = Math.max(0, round.slots.length - seeded.length);
+  const unplayed = seeded.filter(([low, high]) => !covered.has(pairKey(low, high)));
+  const used = real.length + unplayed.length;
+  const blanks = Math.max(0, round.slots.length - used);
+  const fmt = round.slots[0]?.format ?? "BO3";
   return (
     <>
-      {seeded.map(([low, high], i) => (
-        <PairMatch key={`p${i}`} low={low} high={high} format={round.slots[i]?.format ?? "BO3"} />
+      {real.map((m) => (
+        <RealMatch key={m.id} match={m} />
+      ))}
+      {unplayed.map(([low, high], i) => (
+        <PairMatch key={`p${i}`} low={low} high={high} format={fmt} />
       ))}
       {Array.from({ length: blanks }, (_, i) => (
-        <TbdMatch key={`t${i}`} slot={round.slots[seeded.length + i] ?? { format: "BO3" }} />
+        <TbdMatch key={`t${i}`} slot={round.slots[used + i] ?? { format: fmt }} />
       ))}
     </>
   );

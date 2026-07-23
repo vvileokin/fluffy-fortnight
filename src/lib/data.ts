@@ -341,6 +341,21 @@ export const bracketPlayoffRounds: BracketRound[] = [
   },
 ];
 
+/**
+ * Which bracket round a real match belongs to, read from its stage label. This
+ * is how a played match binds to a later round: name the stage "Чвертьфінал",
+ * "Півфінал", "Гранд-фінал" or "Раунд 16" and it lands there. Anything else —
+ * including the opening bounty rounds — stays in the Round of 32 column.
+ */
+export function roundKeyForStage(stage: string): "r16" | "qf" | "sf" | "gf" | null {
+  const s = (stage || "").toLowerCase();
+  if (/чверт|quarter|\bqf\b/.test(s)) return "qf";
+  if (/півфінал|пiвфінал|semi[\s-]?final|\bsf\b/.test(s)) return "sf";
+  if (/гранд|grand|\bфінал\b|\bfinal\b|\bgf\b/.test(s)) return "gf";
+  if (/раунд\s*16|round\s*(of\s*)?16|\br16\b|1\/8/.test(s)) return "r16";
+  return null; // opening round → Round of 32
+}
+
 export type Match = {
   id: string;
   tournamentSlug: string;
