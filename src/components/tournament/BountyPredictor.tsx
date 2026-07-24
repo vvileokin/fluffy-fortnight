@@ -17,6 +17,7 @@ type StageState = {
   winners: string[];
   results: Record<string, string>; // lowSlug -> actual highSlug
   seeds: Record<string, number>; // slug -> seed position
+  lockedPairs: string[]; // lower seeds whose pair the admin closed on its own
   locked: boolean;
   deadlineISO: string | null;
 };
@@ -50,9 +51,17 @@ export function BountyPredictor() {
   const highs = useSeeds ? [...rawHighs].sort(bySeed) : rawHighs;
   const deadlinePassed = !!state?.deadlineISO && new Date(state.deadlineISO).getTime() < Date.now();
   const locked = !!state?.locked || deadlinePassed;
+  // The admin can also close single pairs while the stage stays open.
+  const lockedPairs = state?.lockedPairs ?? [];
+  const pairLocked = (low: string) => locked || lockedPairs.includes(low);
+  const openLows = lows.filter((l) => !pairLocked(l));
   const configured = (state?.teams.length ?? 0) > 0;
   const stagePicks = picks[active] ?? {};
   const made = Object.keys(stagePicks).length;
+  // Completion is judged on the pairs still open — a pair closed before the
+  // player picked it is out of their hands.
+  const openMade = openLows.filter((l) => stagePicks[l]).length;
+  const allOpenPicked = lows.length > 0 && openLows.every((l) => stagePicks[l]);
   // Draft order runs down the left column first, then the right (1-8 | 9-16).
   const lowColumns = [
     lows.slice(0, Math.ceil(lows.length / 2)),
@@ -77,6 +86,7 @@ export function BountyPredictor() {
             winners: Array.isArray(r.winners) ? r.winners : [],
             results: r.results && typeof r.results === "object" && !Array.isArray(r.results) ? r.results : {},
             seeds: r.seeds && typeof r.seeds === "object" && !Array.isArray(r.seeds) ? r.seeds : {},
+            lockedPairs: Array.isArray(r.locked_pairs) ? r.locked_pairs : [],
             locked: !!r.locked,
             deadlineISO: r.deadline ?? null,
           };
@@ -107,7 +117,7 @@ export function BountyPredictor() {
   }, [user]);
 
   function pick(low: string, high: string) {
-    if (locked) return;
+    if (pairLocked(low)) return;
     if (!user) {
       router.push("/login");
       return;
@@ -125,7 +135,7 @@ export function BountyPredictor() {
 
   /** Un-pick one pair — frees that opponent for the other pairs. */
   function clearPick(low: string) {
-    if (locked || !user) return;
+    if (pairLocked(low) || !user) return;
     setPicks((prev) => {
       const stage = { ...(prev[active] ?? {}) };
       delete stage[low];
@@ -141,17 +151,25 @@ export function BountyPredictor() {
       .then(() => {});
   }
 
-  /** Reset the whole draft for this stage. */
+  /** Reset the still-open pairs of this stage — closed ones keep their pick. */
   function resetStage() {
-    if (locked || !user || made === 0) return;
-    if (!confirm("Скинути весь драфт цієї стадії?")) return;
-    setPicks((prev) => ({ ...prev, [active]: {} }));
+    if (locked || !user) return;
+    const clearable = openLows.filter((l) => stagePicks[l]);
+    if (clearable.length === 0) return;
+    const hasClosed = clearable.length < made;
+    if (!confirm(hasClosed ? "Скинути відкриті пари? Закриті залишаться." : "Скинути весь драфт цієї стадії?")) return;
+    setPicks((prev) => {
+      const stage = { ...(prev[active] ?? {}) };
+      for (const l of clearable) delete stage[l];
+      return { ...prev, [active]: stage };
+    });
     setSaved(false);
     createClient()
       .from("bounty_picks")
       .delete()
       .eq("user_id", user.id)
       .eq("stage_id", active)
+      .in("low_slug", clearable)
       .then(() => {});
   }
 
@@ -187,7 +205,9 @@ export function BountyPredictor() {
             ? deadlinePassed
               ? "Прийом прогнозів завершено — дедлайн минув."
               : "Голосування у цій стадії закрито."
-            : meta.note}
+            : lows.length > openLows.length
+              ? `${meta.note} Закриті пари вже не змінити (${lows.length - openLows.length} з ${lows.length}).`
+              : meta.note}
         </p>
         <div className="flex items-center gap-2">
           {state?.deadlineISO && (
@@ -223,6 +243,7 @@ export function BountyPredictor() {
                   const chosen = stagePicks[low];
                   const actual = state.results[low];
                   const correct = !!actual && chosen === actual;
+                  const closed = pairLocked(low);
                   const dropUp = col.length > 2 && ri >= col.length - 2;
                   // One team = one pair: hide high seeds already picked for other lows.
                   const takenByOthers = new Set(
@@ -248,6 +269,11 @@ export function BountyPredictor() {
                             )}
                             <span className="truncate">обрали {getTeam(actual).tag}</span>
                           </p>
+                        ) : closed && !locked ? (
+                          <p className="flex items-center gap-1 text-[0.6875rem] font-semibold text-warning">
+                            <Lock className="size-3 shrink-0" />
+                            <span className="truncate">пару закрито</span>
+                          </p>
                         ) : (
                           <p className="truncate text-[0.6875rem] text-ink-subtle">нижчий сід</p>
                         )}
@@ -256,7 +282,7 @@ export function BountyPredictor() {
                       <HighPicker
                         highs={availableHighs}
                         value={chosen}
-                        disabled={locked}
+                        disabled={closed}
                         dropUp={dropUp}
                         onPick={(h) => pick(low, h)}
                         onClear={() => clearPick(low)}
@@ -276,20 +302,20 @@ export function BountyPredictor() {
               <div className="flex items-center gap-2">
               <button
                 onClick={resetStage}
-                disabled={made === 0}
+                disabled={openMade === 0}
                 className="inline-flex h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-ink-subtle transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40 disabled:hover:bg-transparent"
               >
                 <RotateCcw className="size-3.5" />
                 Скинути
               </button>
               <button
-                disabled={made < lows.length || lows.length === 0}
+                disabled={!allOpenPicked}
                 onClick={() => setSaved(true)}
                 className={cn(
                   "inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors",
                   saved
                     ? "bg-success/15 text-success"
-                    : made >= lows.length && lows.length > 0
+                    : allOpenPicked
                       ? "bg-accent text-accent-ink hover:bg-accent-hover"
                       : "bg-surface-3 text-ink-faint",
                 )}

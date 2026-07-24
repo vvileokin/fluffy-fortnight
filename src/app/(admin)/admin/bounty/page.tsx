@@ -18,13 +18,14 @@ type StageState = {
   winners: string[];
   results: Record<string, string>; // lowSlug -> actual highSlug
   seeds: Record<string, number>; // slug -> seed position (1-8 high, 9-16 low)
+  lockedPairs: string[]; // lower seeds whose pair is already closed
   resolved: boolean;
   locked: boolean;
   deadline: string; // datetime-local value
 };
 
 function emptyState(): StageState {
-  return { teams: [], lowSeeds: [], winners: [], results: {}, seeds: {}, resolved: false, locked: false, deadline: "" };
+  return { teams: [], lowSeeds: [], winners: [], results: {}, seeds: {}, lockedPairs: [], resolved: false, locked: false, deadline: "" };
 }
 
 function isoToLocal(iso: string | null): string {
@@ -52,6 +53,7 @@ export default function BountyAdmin() {
         winners: Array.isArray(r.winners) ? r.winners : [],
         results: r.results && typeof r.results === "object" && !Array.isArray(r.results) ? r.results : {},
         seeds: r.seeds && typeof r.seeds === "object" && !Array.isArray(r.seeds) ? r.seeds : {},
+        lockedPairs: Array.isArray(r.locked_pairs) ? r.locked_pairs : [],
         resolved: !!r.resolved,
         locked: !!r.locked,
         deadline: isoToLocal(r.deadline),
@@ -107,6 +109,7 @@ export default function BountyAdmin() {
         winners: s.winners,
         results: s.results,
         seeds: s.seeds,
+        locked_pairs: s.lockedPairs,
         locked: s.locked,
         deadline: s.deadline ? new Date(s.deadline).toISOString() : null,
       }),
@@ -138,6 +141,29 @@ export default function BountyAdmin() {
     setState((p) => ({ ...p, [id]: next }));
     const res = await postStage(id, next);
     if (!res.ok) alert("Не вдалося змінити статус стадії");
+  }
+
+  /**
+   * Close (or reopen) a single pair — the rest of the stage keeps taking picks.
+   * Takes effect for players at once, so it persists immediately; picks that are
+   * already saved stay saved either way.
+   */
+  async function togglePairLock(id: string, lowSlug: string) {
+    const cur = state[id];
+    if (!cur || !loaded) return;
+    const closed = cur.lockedPairs.includes(lowSlug);
+    const next = {
+      ...cur,
+      lockedPairs: closed
+        ? cur.lockedPairs.filter((x) => x !== lowSlug)
+        : [...cur.lockedPairs, lowSlug],
+    };
+    setState((p) => ({ ...p, [id]: next }));
+    const res = await postStage(id, next);
+    if (!res.ok) {
+      setState((p) => ({ ...p, [id]: cur })); // put the old state back
+      alert("Не вдалося змінити статус пари");
+    }
   }
 
   async function resolveStage(id: string) {
@@ -184,6 +210,9 @@ export default function BountyAdmin() {
                     <p className="text-sm font-bold text-ink">{meta.title}</p>
                     <p className="text-xs text-ink-subtle">
                       Команд: {s.teams.length}/{expected} · до +{meta.reward}
+                      {!isBracket && s.lockedPairs.length > 0 && (
+                        <> · закрито пар: {s.lockedPairs.length}/{s.lowSeeds.length}</>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -269,7 +298,7 @@ export default function BountyAdmin() {
                           ? "познач 2 переможців півфіналів → фінал"
                           : meta.id === "r1"
                             ? "познач нижчі сіди (решта — вищі)"
-                            : "# — сід (1–8 вищі, 9–16 нижчі); драфт стане у цьому порядку"}
+                            : "# — сід (1–8 вищі, 9–16 нижчі) · замок закриває пару окремо"}
                       </span>
                     </div>
                     <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
@@ -277,6 +306,7 @@ export default function BountyAdmin() {
                         const t = getTeam(slug);
                         const low = s.lowSeeds.includes(slug);
                         const won = s.winners.includes(slug);
+                        const pairClosed = s.lockedPairs.includes(slug);
                         return (
                           <div key={slug} className="flex items-center gap-3 px-3 py-2">
                             <TeamLogo team={t} size="xs" />
@@ -308,6 +338,26 @@ export default function BountyAdmin() {
                                   </option>
                                 ))}
                               </select>
+                            )}
+                            {!isBracket && low && (
+                              <button
+                                onClick={() => togglePairLock(meta.id, slug)}
+                                disabled={!loaded}
+                                title={
+                                  pairClosed
+                                    ? "Пара закрита — натисни, щоб відкрити"
+                                    : "Закрити прийом прогнозів на цю пару"
+                                }
+                                className={cn(
+                                  "inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1 text-[0.6875rem] font-semibold transition-colors disabled:opacity-50",
+                                  pairClosed
+                                    ? "border-warning/50 bg-warning/10 text-warning"
+                                    : "border-border text-ink-subtle hover:bg-surface-2",
+                                )}
+                              >
+                                {pairClosed ? <Lock className="size-3" /> : <Unlock className="size-3" />}
+                                {pairClosed ? "закрита" : "відкрита"}
+                              </button>
                             )}
                             {!isBracket && (
                               <button

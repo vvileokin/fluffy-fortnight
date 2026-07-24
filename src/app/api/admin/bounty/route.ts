@@ -38,15 +38,28 @@ export async function POST(request: Request) {
     winners: asSlugs(b.winners).filter((s) => teamSet.has(s)),
     results,
     seeds,
+    // Pairs closed one by one, keyed by the lower seed.
+    locked_pairs: asSlugs(b.locked_pairs).filter((s) => teamSet.has(s)),
     locked: Boolean(b.locked),
     deadline: b.deadline ? new Date(b.deadline).toISOString() : null,
     updated_at: new Date().toISOString(),
   };
 
   const admin = createAdminClient();
-  const { error } = await admin.from("bounty_stages").upsert(row, { onConflict: "stage_id" });
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  // `seeds` and `locked_pairs` came in later migrations. If this database hasn't
+  // run them yet, drop the missing column and retry instead of failing the whole
+  // save — the rest of the stage still has to persist.
+  const optional = ["seeds", "locked_pairs"] as const;
+  let payload: Record<string, unknown> = row;
+  for (let attempt = 0; attempt <= optional.length; attempt++) {
+    const { error } = await admin.from("bounty_stages").upsert(payload, { onConflict: "stage_id" });
+    if (!error) return NextResponse.json({ ok: true });
+    const missing = optional.find((c) => c in payload && error.message.includes(c));
+    if (!missing) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+    payload = { ...payload };
+    delete payload[missing];
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: false, error: "не вдалося зберегти стадію" }, { status: 500 });
 }
