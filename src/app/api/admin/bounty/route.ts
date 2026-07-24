@@ -23,12 +23,21 @@ export async function POST(request: Request) {
   for (const [low, high] of Object.entries(rawResults)) {
     if (teamSet.has(low) && typeof high === "string" && teamSet.has(high)) results[low] = high;
   }
+  // Per-team seed number (position in the seeding); only keep valid teams/numbers.
+  const rawSeeds =
+    b.seeds && typeof b.seeds === "object" && !Array.isArray(b.seeds) ? b.seeds : {};
+  const seeds: Record<string, number> = {};
+  for (const [slug, n] of Object.entries(rawSeeds)) {
+    const num = Number(n);
+    if (teamSet.has(slug) && Number.isFinite(num)) seeds[slug] = num;
+  }
   const row = {
     stage_id: String(b.stage_id),
     teams,
     low_seeds: asSlugs(b.low_seeds).filter((s) => teamSet.has(s)),
     winners: asSlugs(b.winners).filter((s) => teamSet.has(s)),
     results,
+    seeds,
     locked: Boolean(b.locked),
     deadline: b.deadline ? new Date(b.deadline).toISOString() : null,
     updated_at: new Date().toISOString(),

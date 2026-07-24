@@ -17,13 +17,14 @@ type StageState = {
   lowSeeds: string[];
   winners: string[];
   results: Record<string, string>; // lowSlug -> actual highSlug
+  seeds: Record<string, number>; // slug -> seed position (1-8 high, 9-16 low)
   resolved: boolean;
   locked: boolean;
   deadline: string; // datetime-local value
 };
 
 function emptyState(): StageState {
-  return { teams: [], lowSeeds: [], winners: [], results: {}, resolved: false, locked: false, deadline: "" };
+  return { teams: [], lowSeeds: [], winners: [], results: {}, seeds: {}, resolved: false, locked: false, deadline: "" };
 }
 
 function isoToLocal(iso: string | null): string {
@@ -50,6 +51,7 @@ export default function BountyAdmin() {
         lowSeeds: Array.isArray(r.low_seeds) ? r.low_seeds : [],
         winners: Array.isArray(r.winners) ? r.winners : [],
         results: r.results && typeof r.results === "object" && !Array.isArray(r.results) ? r.results : {},
+        seeds: r.seeds && typeof r.seeds === "object" && !Array.isArray(r.seeds) ? r.seeds : {},
         resolved: !!r.resolved,
         locked: !!r.locked,
         deadline: isoToLocal(r.deadline),
@@ -85,6 +87,15 @@ export default function BountyAdmin() {
     upd(id, { [key]: cur.includes(slug) ? cur.filter((x) => x !== slug) : [...cur, slug] } as Partial<StageState>);
   }
 
+  function setSeed(id: string, slug: string, value: string) {
+    const s = state[id] ?? emptyState();
+    const next = { ...s.seeds };
+    const num = Number(value);
+    if (value.trim() === "" || !Number.isFinite(num)) delete next[slug];
+    else next[slug] = num;
+    upd(id, { seeds: next });
+  }
+
   function postStage(id: string, s: StageState) {
     return fetch("/api/admin/bounty", {
       method: "POST",
@@ -95,6 +106,7 @@ export default function BountyAdmin() {
         low_seeds: s.lowSeeds,
         winners: s.winners,
         results: s.results,
+        seeds: s.seeds,
         locked: s.locked,
         deadline: s.deadline ? new Date(s.deadline).toISOString() : null,
       }),
@@ -253,7 +265,11 @@ export default function BountyAdmin() {
                     <div className="mb-2 flex items-center justify-between text-xs font-semibold text-ink-muted">
                       <span>Команди у стадії ({s.teams.length})</span>
                       <span className="text-ink-subtle">
-                        {isBracket ? "познач 2 переможців півфіналів → фінал" : "познач нижчі сіди (решта — вищі)"}
+                        {isBracket
+                          ? "познач 2 переможців півфіналів → фінал"
+                          : meta.id === "r1"
+                            ? "познач нижчі сіди (решта — вищі)"
+                            : "# — сід (1–8 вищі, 9–16 нижчі); драфт стане у цьому порядку"}
                       </span>
                     </div>
                     <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
@@ -265,6 +281,17 @@ export default function BountyAdmin() {
                           <div key={slug} className="flex items-center gap-3 px-3 py-2">
                             <TeamLogo team={t} size="xs" />
                             <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{t.name}</span>
+                            {!isBracket && meta.id !== "r1" && (
+                              <input
+                                type="number"
+                                min={1}
+                                value={s.seeds[slug] ?? ""}
+                                onChange={(e) => setSeed(meta.id, slug, e.target.value)}
+                                placeholder="#"
+                                title="Позиція у сіді (1–8 вищі, 9–16 нижчі)"
+                                className="tnum h-8 w-12 shrink-0 rounded-md border border-border bg-surface-2 px-1.5 text-center text-xs text-ink focus:border-accent focus:outline-none"
+                              />
+                            )}
                             {!isBracket && low && (
                               <select
                                 value={s.results[slug] ?? ""}

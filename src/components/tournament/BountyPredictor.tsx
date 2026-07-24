@@ -16,6 +16,7 @@ type StageState = {
   lowSeeds: string[];
   winners: string[];
   results: Record<string, string>; // lowSlug -> actual highSlug
+  seeds: Record<string, number>; // slug -> seed position
   locked: boolean;
   deadlineISO: string | null;
 };
@@ -37,8 +38,16 @@ export function BountyPredictor() {
 
   const meta = bountyStages.find((s) => s.id === active)!;
   const state = stages[active];
-  const lows = state?.lowSeeds ?? [];
-  const highs = (state?.teams ?? []).filter((t) => !lows.includes(t));
+  // Later stages seat teams by the admin's seed numbers (lower seeds 9–16,
+  // higher seeds 1–8); round 32 keeps its original order.
+  const seeds = state?.seeds ?? {};
+  const bySeed = (a: string, b: string) =>
+    (seeds[a] ?? Number.POSITIVE_INFINITY) - (seeds[b] ?? Number.POSITIVE_INFINITY);
+  const useSeeds = active !== "r1" && Object.keys(seeds).length > 0;
+  const rawLows = state?.lowSeeds ?? [];
+  const lows = useSeeds ? [...rawLows].sort(bySeed) : rawLows;
+  const rawHighs = (state?.teams ?? []).filter((t) => !rawLows.includes(t));
+  const highs = useSeeds ? [...rawHighs].sort(bySeed) : rawHighs;
   const deadlinePassed = !!state?.deadlineISO && new Date(state.deadlineISO).getTime() < Date.now();
   const locked = !!state?.locked || deadlinePassed;
   const configured = (state?.teams.length ?? 0) > 0;
@@ -55,7 +64,9 @@ export function BountyPredictor() {
     let cancelled = false;
     createClient()
       .from("bounty_stages")
-      .select("stage_id, teams, low_seeds, winners, results, locked, deadline")
+      // select * (not an explicit list) so an un-migrated `seeds` column can't
+      // error the whole read and blank out the draft.
+      .select("*")
       .then(({ data }) => {
         if (cancelled || !data) return;
         const next: Record<string, StageState> = {};
@@ -65,6 +76,7 @@ export function BountyPredictor() {
             lowSeeds: Array.isArray(r.low_seeds) ? r.low_seeds : [],
             winners: Array.isArray(r.winners) ? r.winners : [],
             results: r.results && typeof r.results === "object" && !Array.isArray(r.results) ? r.results : {},
+            seeds: r.seeds && typeof r.seeds === "object" && !Array.isArray(r.seeds) ? r.seeds : {},
             locked: !!r.locked,
             deadlineISO: r.deadline ?? null,
           };
