@@ -1,23 +1,31 @@
 import { NextResponse } from "next/server";
-import { checkPassword, setAdminCookie, clearAdminCookie, isAdmin } from "@/lib/admin-auth";
+import { adminRole, needsBootstrap, claimFirstAdmin } from "@/lib/admin-auth";
+import { createClient } from "@/lib/supabase/server";
 
-// Whether the current request carries a valid admin cookie. The admin UI uses
-// this so the panel unlocks only when the server-side session is actually valid
-// (prevents the "panel looks logged in but every action is unauthorized" desync).
+// What the panel needs to decide what to show: the visitor's admin role (if
+// any), whether they're signed in at all, and whether the first admin seat is
+// still up for grabs.
 export async function GET() {
-  return NextResponse.json({ authed: await isAdmin() });
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const role = await adminRole();
+  return NextResponse.json({
+    authed: role !== null,
+    role,
+    signedIn: !!user,
+    handle: user ? (user.user_metadata?.name ?? user.email ?? null) : null,
+    canBootstrap: !!user && role === null && (await needsBootstrap()),
+  });
 }
 
+// Claim the first admin seat. Only works while nobody has access yet.
 export async function POST(request: Request) {
   const { password } = await request.json().catch(() => ({ password: "" }));
-  if (!checkPassword(String(password ?? ""))) {
-    return NextResponse.json({ ok: false }, { status: 401 });
+  const result = await claimFirstAdmin(String(password ?? ""));
+  if (!result.ok) {
+    return NextResponse.json({ ok: false, error: result.error }, { status: 401 });
   }
-  await setAdminCookie();
-  return NextResponse.json({ ok: true });
-}
-
-export async function DELETE() {
-  await clearAdminCookie();
   return NextResponse.json({ ok: true });
 }

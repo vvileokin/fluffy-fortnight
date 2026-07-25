@@ -1,37 +1,78 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-const COOKIE = "cs2ua_admin";
+export type AdminRole = "admin" | "editor";
 
-function token(): string {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "dev-secret";
-  return createHmac("sha256", secret).update("cs2ua-admin-v1").digest("hex");
+/** The signed-in visitor's admin role, or null if they have none. */
+export async function adminRole(): Promise<AdminRole | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // Read through the service role: the grant must not depend on the reader's
+  // own RLS view of the table.
+  const { data } = await createAdminClient()
+    .from("admin_users")
+    .select("role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const role = data?.role;
+  return role === "admin" || role === "editor" ? role : null;
 }
 
-export function checkPassword(pw: string): boolean {
-  const expected = process.env.ADMIN_PASSWORD ?? "";
-  return expected.length > 0 && pw === expected;
-}
-
+/** May use the admin panel at all (admin or editor). */
 export async function isAdmin(): Promise<boolean> {
-  const value = (await cookies()).get(COOKIE)?.value;
-  if (!value) return false;
-  const a = Buffer.from(value);
-  const b = Buffer.from(token());
-  return a.length === b.length && timingSafeEqual(a, b);
+  return (await adminRole()) !== null;
 }
 
-export async function setAdminCookie() {
-  (await cookies()).set(COOKIE, token(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 days — avoids the UI/cookie desync that made uploads 401
-  });
+/** May manage other people's access. */
+export async function isFullAdmin(): Promise<boolean> {
+  return (await adminRole()) === "admin";
 }
 
-export async function clearAdminCookie() {
-  (await cookies()).delete(COOKIE);
+/** True while nobody has been granted access yet — the bootstrap window. */
+export async function needsBootstrap(): Promise<boolean> {
+  const { count } = await createAdminClient()
+    .from("admin_users")
+    .select("user_id", { count: "exact", head: true });
+  return (count ?? 0) === 0;
+}
+
+function passwordMatches(pw: string): boolean {
+  const expected = process.env.ADMIN_PASSWORD ?? "";
+  if (expected.length === 0) return false;
+  // Compare digests: fixed width, so the check is constant-time and doesn't
+  // give the password's length away.
+  const a = createHash("sha256").update(pw).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+/**
+ * Claim the first admin seat: the signed-in account becomes admin if it gets
+ * ADMIN_PASSWORD right *and* no one holds access yet. Once the first grant
+ * lands this path is closed for good, so the shared password stops being a way
+ * in — it only ever bootstraps an empty table.
+ */
+export async function claimFirstAdmin(
+  password: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Спочатку увійди у свій акаунт на сайті." };
+  if (!(await needsBootstrap())) return { ok: false, error: "Доступ уже видано — попроси адміністратора." };
+  if (!passwordMatches(password)) return { ok: false, error: "Невірний пароль." };
+
+  const { error } = await createAdminClient()
+    .from("admin_users")
+    .insert({ user_id: user.id, role: "admin", note: "перший адміністратор" });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
