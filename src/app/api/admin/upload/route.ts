@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Upload an image to the public `media` bucket. Admin only. Returns public URL.
@@ -30,5 +31,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
   const { data } = admin.storage.from("media").getPublicUrl(path);
+  await logAdmin("upload", `Завантажив файл ${path}`);
   return NextResponse.json({ ok: true, url: data.publicUrl });
 }

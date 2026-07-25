@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/db/paginate";
 import { bountyStages } from "@/lib/data";
@@ -105,5 +106,6 @@ export async function POST(request: Request) {
 
   await admin.from("bounty_stages").update({ resolved: true }).eq("stage_id", stage_id);
 
+  await logAdmin("bounty", `Розрахував стадію ${stage_id}: нараховано ${awarded} гравцям (+${reward} за пару)`);
   return NextResponse.json({ ok: true, awarded, reward });
 }

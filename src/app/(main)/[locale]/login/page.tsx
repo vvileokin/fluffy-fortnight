@@ -10,6 +10,8 @@ export const metadata: Metadata = { title: "Вхід" };
 const authErrors: Record<string, string> = {
   telegram: "Не вдалося увійти через Telegram. Спробуй ще раз або обери інший спосіб.",
   telegram_expired: "Сесія Telegram застаріла. Натисни «Продовжити з Telegram» ще раз.",
+  telegram_conflict:
+    "Цю адресу вже займає інший акаунт, тож вхід через Telegram зупинено. Напиши нам — розберемось.",
   auth: "Не вдалося завершити вхід. Спробуй ще раз.",
 };
 

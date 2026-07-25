@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Save one BLAST Bounty stage's state (teams, low seeds, winners, deadline, lock).
@@ -53,7 +54,10 @@ export async function POST(request: Request) {
   let payload: Record<string, unknown> = row;
   for (let attempt = 0; attempt <= optional.length; attempt++) {
     const { error } = await admin.from("bounty_stages").upsert(payload, { onConflict: "stage_id" });
-    if (!error) return NextResponse.json({ ok: true });
+    if (!error) {
+      await logAdmin("bounty", `Зберіг стадію ${row.stage_id} (${row.locked ? "закрито" : "відкрито"})`);
+      return NextResponse.json({ ok: true });
+    }
     const missing = optional.find((c) => c in payload && error.message.includes(c));
     if (!missing) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

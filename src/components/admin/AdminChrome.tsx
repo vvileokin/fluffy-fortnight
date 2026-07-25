@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
   Target,
   Calculator,
   Gift,
@@ -24,7 +23,6 @@ import { cn } from "@/lib/utils";
 type IconType = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
 const nav: { href: string; label: string; icon: IconType; adminOnly?: boolean }[] = [
-  { href: "/admin", label: "Огляд", icon: LayoutDashboard },
   { href: "/admin/matches", label: "Матчі", icon: Swords },
   { href: "/admin/questions", label: "Питання", icon: Target },
   { href: "/admin/bounty", label: "BLAST Bounty", icon: BlastMark },

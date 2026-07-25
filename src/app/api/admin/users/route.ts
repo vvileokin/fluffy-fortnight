@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isFullAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -89,5 +90,12 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+  const { data: target } = await admin
+    .from("profiles")
+    .select("handle")
+    .eq("id", userId)
+    .maybeSingle();
+  const who = target?.handle ?? userId;
+  await logAdmin("users", role === null ? `Забрав доступ у ${who}` : `Надав ${who} роль «${role}»`);
   return NextResponse.json({ ok: true });
 }

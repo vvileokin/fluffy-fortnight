@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/db/paginate";
 import { recomputeStreaks } from "@/lib/db/streaks";
@@ -136,5 +137,6 @@ export async function POST(request: Request) {
   // Streaks are replayed after the result is recorded so this question counts.
   await recomputeStreaks(admin, userIds);
 
+  await logAdmin("resolve", `Розрахував питання ${question_id}: нараховано ${awarded} гравцям (+${reward})`);
   return NextResponse.json({ ok: true, awarded, reward });
 }

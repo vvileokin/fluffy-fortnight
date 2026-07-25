@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type OptionInput = { id?: string; label?: string; sublabel?: string; reward?: number };
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+  await logAdmin("questions", `Зберіг питання ${id}`);
   return NextResponse.json({ ok: true, id });
 }
 
@@ -62,5 +64,6 @@ export async function DELETE(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+  await logAdmin("questions", `Видалив питання ${id}`);
   return NextResponse.json({ ok: true });
 }

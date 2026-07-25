@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function slugify(s: string) {
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
     if (notifs.length > 0) await admin.from("notifications").insert(notifs);
   }
 
+  await logAdmin("giveaways", `Зберіг розіграш ${slug}`);
   return NextResponse.json({ ok: true, slug });
 }
 
@@ -70,5 +72,6 @@ export async function DELETE(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+  await logAdmin("giveaways", `Видалив розіграш ${slug}`);
   return NextResponse.json({ ok: true });
 }

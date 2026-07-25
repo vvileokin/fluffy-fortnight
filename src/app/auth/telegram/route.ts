@@ -33,9 +33,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=telegram`);
   }
 
-  // 2. Reject stale payloads (older than 24h).
+  // 2. Reject stale payloads. The widget redirects here immediately, so a few
+  //    minutes is plenty — a longer window would leave a signed callback URL
+  //    (browser history, referrer logs, a shared link) replayable as a login.
   const authDate = Number(data.auth_date ?? 0);
-  if (!authDate || Date.now() / 1000 - authDate > 86400) {
+  if (!authDate || Date.now() / 1000 - authDate > 300) {
     return NextResponse.redirect(`${origin}/login?error=telegram_expired`);
   }
 
@@ -60,7 +62,7 @@ export async function GET(request: Request) {
       // Already exists — fine, we'll just sign them in below.
     });
 
-  // 4. Mint a magic-link token and verify it to set the session cookies.
+  // 4. Mint a magic-link token for that address.
   const { data: link, error: linkError } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email,
@@ -70,6 +72,18 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=telegram`);
   }
 
+  // 5. Make sure that address really belongs to this Telegram account before
+  //    handing out a session. The site also has email/password signup, so
+  //    someone could have registered tg-<id>@users.cs2ua.com themselves and
+  //    waited for the real owner to sign in — which would have dropped them
+  //    into the stranger's account (and any access granted to it). A Telegram
+  //    account always carries its id in metadata; anything else is refused.
+  const claimedId = link?.user?.user_metadata?.telegram_id;
+  if (String(claimedId ?? "") !== String(data.id)) {
+    return NextResponse.redirect(`${origin}/login?error=telegram_conflict`);
+  }
+
+  // 6. Only now redeem the token, which sets the session cookies.
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({
     type: "magiclink",

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
+import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Save editable site content (promo banner + tournament covers). Admin only.
@@ -30,5 +31,6 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+  await logAdmin("content", "Оновив контент сайту");
   return NextResponse.json({ ok: true });
 }
