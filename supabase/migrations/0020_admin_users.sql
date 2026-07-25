@@ -39,10 +39,17 @@ create trigger profiles_freeze_admin
   for each row execute function public.freeze_profile_admin_flag();
 
 -- ── First admin ───────────────────────────────────────────────────────────────
--- Easiest: log into the site with your own account, open /admin and enter
--- ADMIN_PASSWORD once — that claims the first admin seat and then stops working.
+-- There is no password way in: the first seat is granted here, by hand. Sign
+-- into the site with your own account first so the profile row exists, then run
+-- ONE of these (replace the value with your own):
 --
--- Or seed it here. Find your id, then grant it:
---   select id, handle from public.profiles order by created_at limit 20;
---   insert into public.admin_users (user_id, role) values ('<your-uuid>', 'admin')
---     on conflict (user_id) do update set role = 'admin';
+--   insert into public.admin_users (user_id, role)
+--   select id, 'admin' from public.profiles where handle = 'ТВІЙ_НІК'
+--   on conflict (user_id) do update set role = 'admin';
+--
+-- Not sure which row is yours? List the newest accounts and grant by id:
+--   select id, handle, created_at from public.profiles order by created_at desc limit 20;
+--   insert into public.admin_users (user_id, role) values ('<твій-uuid>', 'admin')
+--   on conflict (user_id) do update set role = 'admin';
+--
+-- Everyone after you is granted from the panel, on Користувачі та ролі.

@@ -11,12 +11,10 @@ import {
   LayoutTemplate,
   Users,
   ScrollText,
-  Lock,
   LogOut,
   ShieldAlert,
   ExternalLink,
   Swords,
-  LogIn,
 } from "lucide-react";
 import { Brand } from "@/components/layout/Brand";
 import { BlastMark } from "@/components/ui/BlastMark";
@@ -37,44 +35,27 @@ const nav: { href: string; label: string; icon: IconType; adminOnly?: boolean }[
   { href: "/admin/audit", label: "Журнал аудиту", icon: ScrollText },
 ];
 
-type Access = {
-  authed: boolean;
-  role: "admin" | "editor" | null;
-  signedIn: boolean;
-  handle: string | null;
-  canBootstrap: boolean;
-};
-
-export function AdminChrome({ children }: { children: React.ReactNode }) {
-  const [access, setAccess] = React.useState<Access | null>(null);
+/**
+ * The panel shell. It only ever renders for someone the server already
+ * confirmed holds a grant — the layout decides that before this mounts.
+ */
+export function AdminChrome({
+  role,
+  children,
+}: {
+  role: "admin" | "editor";
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-
-  const refresh = React.useCallback(() => {
-    // Access is decided server-side from the signed-in account, so the UI and
-    // the API can never drift apart.
-    return fetch("/api/admin/login")
-      .then((r) => r.json())
-      .then((d: Access) => setAccess(d))
-      .catch(() =>
-        setAccess({ authed: false, role: null, signedIn: false, handle: null, canBootstrap: false }),
-      );
-  }, []);
-
-  React.useEffect(() => {
-    void refresh();
-  }, [refresh]);
 
   const logout = React.useCallback(() => {
     void createClient()
       .auth.signOut()
-      .then(() => refresh());
-  }, [refresh]);
-
-  if (access === null) return null; // avoid flash before we know
-  if (!access.authed) return <Gate access={access} onUnlock={refresh} />;
+      .then(() => location.reload());
+  }, []);
 
   // Editors don't manage other people's access, so that section isn't theirs.
-  const visibleNav = nav.filter((item) => !item.adminOnly || access.role === "admin");
+  const visibleNav = nav.filter((item) => !item.adminOnly || role === "admin");
 
   return (
     <div className="min-h-dvh">
@@ -178,110 +159,5 @@ export function AdminChrome({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
-  );
-}
-
-/**
- * Three ways in, depending on the visitor: sign into an account, claim the very
- * first admin seat, or be told they simply don't have access.
- */
-function Gate({ access, onUnlock }: { access: Access; onUnlock: () => void }) {
-  const [pw, setPw] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
-
-  async function claim(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ password: pw }),
-    }).catch(() => null);
-    setBusy(false);
-    if (res?.ok) {
-      onUnlock();
-      return;
-    }
-    const j = await res?.json().catch(() => ({}));
-    setError(j?.error || "Не вдалося отримати доступ.");
-  }
-
-  return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center px-4">
-      <div className="pointer-events-none absolute inset-0 aura-accent" />
-      <div className="relative w-full max-w-sm">
-        <div className="mb-6 flex flex-col items-center text-center">
-          <span className="grid size-14 place-items-center rounded-2xl border border-border bg-surface-2 text-accent">
-            <Lock className="size-6" />
-          </span>
-          <h1 className="mt-4 text-xl font-extrabold tracking-tight text-ink">
-            Адмін-панель CS2 UA
-          </h1>
-          <p className="mt-1.5 text-sm text-ink-muted">
-            {!access.signedIn
-              ? "Увійди у свій акаунт — доступ прив’язаний до нього."
-              : access.canBootstrap
-                ? "Панель ще нікому не належить. Введи пароль, щоб стати першим адміністратором."
-                : "Цей акаунт не має доступу до панелі."}
-          </p>
-        </div>
-
-        {!access.signedIn ? (
-          <div className="rounded-xl border border-border bg-surface p-5">
-            <Link
-              href="/login"
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-accent text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
-            >
-              <LogIn className="size-4" />
-              Увійти в акаунт
-            </Link>
-          </div>
-        ) : access.canBootstrap ? (
-          <form onSubmit={claim} className="space-y-3 rounded-xl border border-border bg-surface p-5">
-            <input
-              type="password"
-              autoFocus
-              value={pw}
-              onChange={(e) => {
-                setPw(e.target.value);
-                setError(null);
-              }}
-              placeholder="Пароль"
-              className={cn(
-                "h-11 w-full rounded-lg border bg-surface-2 px-3 text-sm text-ink placeholder:text-ink-subtle transition-colors focus:outline-none",
-                error ? "border-danger" : "border-border focus:border-accent",
-              )}
-            />
-            {error && <p className="text-xs font-medium text-danger">{error}</p>}
-            <button
-              type="submit"
-              disabled={busy}
-              className="flex h-11 w-full items-center justify-center rounded-lg bg-accent text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-60"
-            >
-              Отримати доступ
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-3 rounded-xl border border-border bg-surface p-5 text-center">
-            <p className="text-sm text-ink">
-              Ти увійшов як{" "}
-              <span className="font-bold">{access.handle ?? "невідомий акаунт"}</span>.
-            </p>
-            <p className="text-xs text-ink-subtle">
-              Попроси адміністратора видати доступ саме цьому акаунту.
-            </p>
-            <button
-              onClick={() => void createClient().auth.signOut().then(onUnlock)}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-border-strong text-sm font-semibold text-ink transition-colors hover:bg-surface-2"
-            >
-              <LogOut className="size-4" />
-              Вийти
-            </button>
-          </div>
-        )}
-      </div>
-    </main>
   );
 }
