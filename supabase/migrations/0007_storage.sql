@@ -1,5 +1,10 @@
 -- CS2 UA — public `media` storage bucket for images (admin covers + user avatars).
 -- Run in Supabase → SQL Editor. Safe to run more than once.
+--
+-- NOTE: the policies below were dropped in 0024_lints_storage_and_functions.sql
+-- (uploads go through the server, so clients need no storage access at all).
+-- Only the bucket creation in step 1 still applies — if you re-run this file,
+-- re-run 0024 after it.
 
 -- 1. Create (or make public) the `media` bucket.
 insert into storage.buckets (id, name, public)
