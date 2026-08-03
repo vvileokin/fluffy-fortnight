@@ -3,7 +3,6 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { Target, ChevronRight } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { BlastMark } from "@/components/ui/BlastMark";
 import { LiveBadge } from "@/components/ui/Badge";
 import {
   getTournament,
@@ -55,7 +54,6 @@ function TeamRow({
 export function MatchCard({ match }: { match: Match }) {
   const t = useTranslations("matches");
   const tour = getTournament(match.tournamentSlug);
-  const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const isLive = match.status === "live";
   const isFinished = match.status === "finished";
   const showScore = isLive || isFinished;
@@ -67,15 +65,12 @@ export function MatchCard({ match }: { match: Match }) {
     <Link
       href={`/matches/${match.id}`}
       className={cn(
-        "group card-interactive flex h-full flex-col rounded-lg border hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
-        isEvent
-          ? "event-aura-soft border-white/10"
-          : "border-border bg-surface hover:bg-surface-2",
+        "group card-interactive flex h-full flex-col rounded-lg border border-border bg-surface hover:border-border-strong hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
       )}
     >
       <div className="flex items-center justify-between gap-2 px-4 pt-3">
         <span className="flex min-w-0 items-center gap-2 text-xs text-ink-subtle">
-          {match.tournamentIcon ? (
+          {match.tournamentIcon && (
             <Image
               src={match.tournamentIcon}
               alt=""
@@ -83,10 +78,9 @@ export function MatchCard({ match }: { match: Match }) {
               height={14}
               className="size-3.5 shrink-0 object-contain"
             />
-          ) : (
-            isEvent && <BlastMark className="size-3.5 shrink-0 text-accent" />
           )}
-          <span className="truncate font-medium">{tour?.shortName ?? match.tournamentName}</span>
+          {/* Full name, trimmed by CSS only when it genuinely doesn't fit. */}
+          <span className="truncate font-medium">{tour?.name ?? match.tournamentName}</span>
           {match.stage && <span className="text-ink-faint">·</span>}
           {match.stage && <span className="shrink-0">{match.stage}</span>}
         </span>

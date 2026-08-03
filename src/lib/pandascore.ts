@@ -30,7 +30,7 @@ export type PsMatch = {
   number_of_games: number | null;
   match_type: string | null;
   league: { name: string | null } | null;
-  serie: { full_name: string | null; name: string | null } | null;
+  serie: { full_name: string | null; name: string | null; year: number | null } | null;
   tournament: { name: string | null } | null;
   opponents: { type: string; opponent: PsTeam }[] | null;
   results: { team_id: number; score: number }[] | null;
@@ -96,19 +96,33 @@ async function getList(path: string, params: Record<string, string> = {}): Promi
   return Array.isArray(data) ? (data as PsMatch[]) : [];
 }
 
-/** Matches that haven't started, soonest first. */
-export function upcomingMatches() {
-  return getList("/csgo/matches/upcoming", { sort: "begin_at" });
+/**
+ * Everything starting today or tomorrow, Kyiv time — finished, running and
+ * upcoming in one call. A date range covers all three states, so this costs a
+ * single request instead of three, and nothing outside the window comes back.
+ * Canceled matches are dropped: they're never worth reviewing.
+ */
+export async function matchesTodayAndTomorrow(): Promise<PsMatch[]> {
+  const list = await getList("/csgo/matches", {
+    "range[begin_at]": `${kyivDayStart(0)},${kyivDayStart(2)}`,
+    sort: "begin_at",
+  });
+  return list.filter((m) => m.status !== "canceled");
 }
 
-/** Matches being played right now. */
-export function runningMatches() {
-  return getList("/csgo/matches/running");
-}
-
-/** Recently played matches, newest first. */
-export function pastMatches(perPage = "50") {
-  return getList("/csgo/matches/past", { sort: "-begin_at", per_page: perPage });
+/**
+ * Start of the Kyiv day, `offset` days from today, as an ISO instant.
+ * Kyiv is the schedule everything on the site is pinned to.
+ */
+export function kyivDayStart(offset: number): string {
+  const now = new Date();
+  // What "today" is in Kyiv, regardless of where the server runs.
+  const kyiv = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Kyiv" }));
+  kyiv.setHours(0, 0, 0, 0);
+  kyiv.setDate(kyiv.getDate() + offset);
+  // Re-anchor to a real instant: the local clock above has no offset of its own.
+  const drift = now.getTime() - new Date(now.toLocaleString("en-US", { timeZone: "Europe/Kyiv" })).getTime();
+  return new Date(kyiv.getTime() + drift).toISOString();
 }
 
 /** BO3 / BO5 / BO1 from PandaScore's game count. */
@@ -128,13 +142,28 @@ export function scoreFor(m: PsMatch, teamId: number | null | undefined): number 
   return (m.results ?? []).find((r) => r.team_id === teamId)?.score ?? 0;
 }
 
-/** The most specific competition name PandaScore gives us. */
+/**
+ * A readable competition name. PandaScore splits this across three levels —
+ * league ("ESL Pro League"), serie ("Season 23") and tournament ("Playoffs") —
+ * and any of them can be null or already contain the others. Stitch them
+ * without repeating the league when the serie already names it.
+ */
 export function competitionOf(m: PsMatch): string {
-  return (
-    m.serie?.full_name ||
-    m.league?.name ||
-    m.serie?.name ||
-    m.tournament?.name ||
-    ""
-  );
+  const league = m.league?.name?.trim() ?? "";
+  const full = m.serie?.full_name?.trim() ?? "";
+  const serie = m.serie?.name?.trim() ?? "";
+  const year = m.serie?.year ? String(m.serie.year) : "";
+
+  if (full) {
+    const repeats = league && full.toLowerCase().includes(league.toLowerCase());
+    return repeats || !league ? full : `${league} ${full}`;
+  }
+  const tail = serie || year;
+  const joined = [league, tail].filter(Boolean).join(" ").trim();
+  return joined || m.tournament?.name?.trim() || "";
+}
+
+/** The bit within the competition — "Playoffs", "Group A", "Quarter-finals". */
+export function stageOf(m: PsMatch): string {
+  return m.tournament?.name?.trim() ?? "";
 }

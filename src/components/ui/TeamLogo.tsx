@@ -26,9 +26,16 @@ export function TeamLogo({
 }) {
   const px = sizeMap[size];
   const radius = Math.max(4, Math.round(px * 0.22));
-  const inner = Math.round(px * 0.64);
-  const filter =
-    team.ink === "black" ? "brightness(0)" : "brightness(0) invert(1)";
+  // Catalog logos are silhouettes drawn to be recoloured; logos that come from
+  // elsewhere (PandaScore, imported teams) are finished full-colour artwork, so
+  // they're shown as they are and given a little more room.
+  const external = /^https?:\/\//.test(team.logo);
+  const inner = Math.round(px * (external ? 0.76 : 0.64));
+  const filter = external
+    ? undefined
+    : team.ink === "black"
+      ? "brightness(0)"
+      : "brightness(0) invert(1)";
 
   return (
     <span

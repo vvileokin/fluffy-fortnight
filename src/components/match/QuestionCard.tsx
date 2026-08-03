@@ -71,9 +71,9 @@ export function QuestionCard({
           className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs text-ink-muted transition-colors hover:text-ink"
         >
           <TeamLogo team={matchTeam(match, "a")} size="xs" />
-          <span className="font-semibold">{matchTeam(match, "a").tag}</span>
-          <span className="text-ink-faint">vs</span>
-          <span className="font-semibold">{matchTeam(match, "b").tag}</span>
+          <span className="truncate font-semibold">{matchTeam(match, "a").name}</span>
+          <span className="shrink-0 text-ink-faint">vs</span>
+          <span className="truncate font-semibold">{matchTeam(match, "b").name}</span>
           <TeamLogo team={matchTeam(match, "b")} size="xs" />
           <span className="ml-auto truncate text-ink-subtle">{match.stage}</span>
         </Link>

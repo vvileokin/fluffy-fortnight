@@ -70,12 +70,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Approving needs both sides identified in our catalog.
+  // Approving needs both sides identified — either from the hardcoded catalog
+  // or from a team created during an earlier import.
   const slugA = String(body?.slug_a ?? "");
   const slugB = String(body?.slug_b ?? "");
-  if (!teams[slugA] || !teams[slugB]) {
+  const { data: customRows } = await admin
+    .from("custom_teams")
+    .select("slug, name, tag, logo, brand")
+    .in("slug", [slugA, slugB].filter(Boolean));
+  const custom = new Map((customRows ?? []).map((t) => [t.slug as string, t]));
+
+  const known = (s: string) => !!teams[s] || custom.has(s);
+  if (!known(slugA) || !known(slugB)) {
     return NextResponse.json(
-      { ok: false, error: "Спочатку обери обидві команди з каталогу" },
+      { ok: false, error: "Спочатку обери обидві команди" },
       { status: 400 },
     );
   }
@@ -95,7 +103,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const nameOf = (slug: string) => teams[slug]?.name ?? custom.get(slug)?.name ?? slug;
   const id = await buildMatchId(admin, `${slugify(slugA)}-vs-${slugify(slugB)}`);
+
+  // A team outside the hardcoded catalog travels with the match: its name,
+  // logo and colour are copied onto the row, which is how the site renders
+  // teams it doesn't know about.
+  const sideFields = (slug: string, side: "a" | "b") => {
+    const t = custom.get(slug);
+    if (!t) return {};
+    return {
+      [`team_${side}_name`]: t.name,
+      [`team_${side}_logo`]: t.logo,
+      [`team_${side}_color`]: t.brand,
+    };
+  };
 
   const { error } = await admin.from("matches").insert({
     id,
@@ -107,13 +129,15 @@ export async function POST(request: Request) {
     // enter, so an imported match starts as upcoming and moves on from there.
     status: "upcoming",
     format: row.number_of_games === 5 ? "BO5" : row.number_of_games === 1 ? "BO1" : "BO3",
-    stage: body?.stage ? String(body.stage) : (row.tournament_name ?? null),
+    stage: body?.stage ? String(body.stage) : (row.stage_name ?? null),
     start_at: row.begin_at,
     score_a: 0,
     score_b: 0,
     maps: [],
     veto: [],
-    tournament_name: row.serie_name ?? row.league_name ?? null,
+    tournament_name: row.competition ?? row.serie_name ?? row.league_name ?? null,
+    ...sideFields(slugA, "a"),
+    ...sideFields(slugB, "b"),
     updated_at: new Date().toISOString(),
   });
   if (error) {
@@ -139,7 +163,7 @@ export async function POST(request: Request) {
 
   await logAdmin(
     "import",
-    `Додав матч ${getTeam(slugA).name} vs ${getTeam(slugB).name} з PandaScore`,
+    `Додав матч ${nameOf(slugA)} vs ${nameOf(slugB)} з PandaScore`,
   );
 
   return NextResponse.json({ ok: true, match_id: id });

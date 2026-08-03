@@ -21,7 +21,7 @@ export function ResultsView({
     { value: "all", label: "Усі турніри" },
     ...tournaments
       .filter((t) => matches.some((m) => m.tournamentSlug === t.slug))
-      .map((t) => ({ value: t.slug, label: t.shortName })),
+      .map((t) => ({ value: t.slug, label: t.name })),
   ];
 
   const visible = matches.filter(

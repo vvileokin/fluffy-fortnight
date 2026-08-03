@@ -103,7 +103,7 @@ export function TournamentCardWide({ t }: { t: Tournament }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <Badge tone={t.tier === 1 ? "tier1" : "tier2"}>T{t.tier}</Badge>
-          <h3 className="truncate text-sm font-bold text-ink">{t.shortName}</h3>
+          <h3 className="truncate text-sm font-bold text-ink">{t.name}</h3>
         </div>
         <p className="mt-0.5 truncate text-xs text-ink-subtle">
           {t.dateLabel} · {t.location}

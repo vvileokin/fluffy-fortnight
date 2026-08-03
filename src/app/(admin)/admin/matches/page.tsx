@@ -141,12 +141,27 @@ function rowTeam(name: string | null, logo: string | null, color: string | null,
   return getTeam(slug);
 }
 
+type MatchStatus = "live" | "upcoming" | "finished";
+
+const statusTabs: { id: MatchStatus; label: string }[] = [
+  { id: "live", label: "Йдуть зараз" },
+  { id: "upcoming", label: "Майбутні" },
+  { id: "finished", label: "Завершені" },
+];
+
 export default function MatchesAdmin() {
   const [rows, setRows] = React.useState<Row[] | null>(null);
+  const [statusTab, setStatusTab] = React.useState<MatchStatus>("live");
   const [tableMissing, setTableMissing] = React.useState(false);
   const [editing, setEditing] = React.useState<MatchForm | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Finished matches read best newest-first; the other two soonest-first.
+  const visibleRows = React.useMemo(() => {
+    const list = (rows ?? []).filter((r) => r.status === statusTab);
+    return statusTab === "finished" ? list.reverse() : list;
+  }, [rows, statusTab]);
 
   const load = React.useCallback(async () => {
     const { data, error } = await createClient()
@@ -280,6 +295,35 @@ export default function MatchesAdmin() {
         </div>
       )}
 
+      {/* Matches split by where they are in their life, so the list you need is
+          never buried under the ones you don't. */}
+      <div className="no-scrollbar mb-4 flex gap-1 overflow-x-auto rounded-lg border border-border bg-surface p-1">
+        {statusTabs.map((tb) => {
+          const count = (rows ?? []).filter((r) => r.status === tb.id).length;
+          const on = tb.id === statusTab;
+          return (
+            <button
+              key={tb.id}
+              onClick={() => setStatusTab(tb.id)}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+                on ? "bg-accent text-accent-ink" : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+              )}
+            >
+              {tb.label}
+              <span
+                className={cn(
+                  "tnum rounded-full px-1.5 text-[0.6875rem] font-bold leading-tight",
+                  on ? "bg-[color-mix(in_oklch,var(--accent-ink)_16%,transparent)]" : "bg-surface-3 text-ink-subtle",
+                )}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       <Panel>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
@@ -293,17 +337,26 @@ export default function MatchesAdmin() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {(rows ?? []).map((r) => {
+              {visibleRows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-10 text-center text-sm text-ink-subtle">
+                    Тут порожньо.
+                  </td>
+                </tr>
+              )}
+              {visibleRows.map((r) => {
                 const a = rowTeam(r.team_a_name, r.team_a_logo, r.team_a_color, r.team_a);
                 const b = rowTeam(r.team_b_name, r.team_b_logo, r.team_b_color, r.team_b);
                 return (
                 <tr key={r.id} className="transition-colors hover:bg-surface-2">
                   <td className="px-4 py-3">
+                    {/* Full names — the column is wide enough, and tags alone
+                        ("SPT vs MNT") are needlessly cryptic. */}
                     <div className="flex items-center gap-2">
                       <TeamLogo team={a} size="xs" />
-                      <span className="font-semibold text-ink">{a.tag}</span>
-                      <span className="text-ink-faint">vs</span>
-                      <span className="font-semibold text-ink">{b.tag}</span>
+                      <span className="truncate font-semibold text-ink">{a.name}</span>
+                      <span className="shrink-0 text-ink-faint">vs</span>
+                      <span className="truncate font-semibold text-ink">{b.name}</span>
                       <TeamLogo team={b} size="xs" />
                     </div>
                   </td>
