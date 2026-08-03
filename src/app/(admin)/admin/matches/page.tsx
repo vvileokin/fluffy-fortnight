@@ -473,6 +473,22 @@ export default function MatchesAdmin() {
               </Field>
             </div>
 
+            {/* A format too short for the maps entered silently eats results:
+                the series "clinches" early and every later map is dropped. That
+                turned a 3–1 BO5 grand final into 2–0. Say so loudly. */}
+            {(() => {
+              const limit =
+                editing.format === "BO5" ? 5 : editing.format === "BO1" ? 1 : 3;
+              const filled = editing.maps.filter((m) => m.name.trim()).length;
+              if (filled <= limit) return null;
+              return (
+                <div className="rounded-lg border border-warning/50 bg-warning/10 p-2.5 text-[0.6875rem] leading-relaxed text-warning">
+                  Карт більше ({filled}), ніж дозволяє {editing.format} ({limit}). Зайві не
+                  враховуються в рахунку серії — перевір формат матчу.
+                </div>
+              );
+            })()}
+
             {/* Per-map scores — status (live / зіграно / далі) is derived on the site */}
             <div className="rounded-lg border border-border bg-surface-2/40 p-2.5 text-[0.6875rem] leading-relaxed text-ink-subtle">
               Статус кожної карти (LIVE / зіграно / далі) і загальний рахунок рахуються

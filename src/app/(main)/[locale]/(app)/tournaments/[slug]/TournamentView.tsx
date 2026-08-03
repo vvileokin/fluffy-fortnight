@@ -9,7 +9,6 @@ import {
   Wifi,
   Trophy,
   Users,
-  CalendarDays,
   GitFork,
   Crown,
   History,
@@ -20,7 +19,6 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { BracketPredictor } from "@/components/tournament/BracketPredictor";
-import { BountyPredictor } from "@/components/tournament/BountyPredictor";
 import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import {
   getTeam,
@@ -33,7 +31,7 @@ import { ChevronDown } from "lucide-react";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { cn } from "@/lib/utils";
 
-type Tab = "overview" | "bounty" | "teams" | "schedule" | "results" | "predictor" | "leaderboard";
+type Tab = "overview" | "teams" | "results" | "predictor" | "leaderboard";
 
 export function TournamentView({
   tournament: t,
@@ -50,11 +48,7 @@ export function TournamentView({
     icon: React.ComponentType<{ className?: string }>;
   }[] = [
     { id: "overview", label: "Огляд", icon: Trophy },
-    ...(t.isEvent
-      ? [{ id: "bounty" as Tab, label: "Bounty", icon: BlastMark }]
-      : []),
     { id: "teams", label: "Команди", icon: Users },
-    { id: "schedule", label: "Розклад", icon: CalendarDays },
     { id: "results", label: "Результати", icon: History },
     ...(t.isEvent
       ? []
@@ -62,11 +56,9 @@ export function TournamentView({
     { id: "leaderboard", label: "Лідерборд", icon: Crown },
   ];
 
-  const [tab, setTab] = React.useState<Tab>(t.isEvent ? "bounty" : "overview");
+  const [tab, setTab] = React.useState<Tab>("overview");
   const teams = t.teamSlugs.map(getTeam);
   const finishedMatches = matches.filter((m) => m.status === "finished");
-  // Schedule shows what's still to come; played matches live in Results.
-  const scheduleMatches = matches.filter((m) => m.status !== "finished");
 
   return (
     <div className="space-y-6">
@@ -198,29 +190,7 @@ export function TournamentView({
         </div>
       )}
 
-      {tab === "bounty" && (
-        <div className="rounded-xl border border-white/10 event-aura-soft p-5">
-          <div className="mb-4">
-            <h2 className="flex items-center gap-2 text-base font-bold text-ink">
-              <BlastMark className="size-5 text-accent" />
-              Bounty Predictor
-            </h2>
-          </div>
-          <BountyPredictor />
-        </div>
-      )}
-
       {tab === "teams" && <TeamsGrid slugs={t.teamSlugs} />}
-
-      {tab === "schedule" && (
-        <div className="space-y-3">
-          {scheduleMatches.length > 0 ? (
-            <MatchDayGroups matches={scheduleMatches} />
-          ) : (
-            <EmptyPanel text="Найближчих матчів немає — завершені дивись у Результатах." />
-          )}
-        </div>
-      )}
 
       {tab === "results" && (
         <div className="space-y-3">

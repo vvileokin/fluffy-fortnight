@@ -5,9 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Bell, Target, Swords, Gift, TrendingUp, Check, LogIn } from "lucide-react";
 import { Brand } from "./Brand";
-import { BlastMark } from "@/components/ui/BlastMark";
 import { Avatar } from "@/components/ui/Avatar";
-import { Tooltip } from "@/components/ui/Tooltip";
 import { displayName } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -96,7 +94,6 @@ export function Topbar() {
 
   const handle = profile?.handle || (user ? displayName(user) : "");
   const points = profile?.points ?? 0;
-  const bounty = profile?.bounty_points ?? 0;
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-[color-mix(in_oklch,var(--surface)_78%,transparent)] px-4 backdrop-blur-xl sm:px-6">
@@ -118,17 +115,9 @@ export function Topbar() {
 
       {user && (
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Bounty points earned in the event */}
-        <Tooltip
-          label="Bounty-поінти за прогнози BLAST"
-          className="flex cursor-help items-center gap-1 rounded-full border border-border bg-surface px-2 py-1.5 text-xs"
-        >
-          <BlastMark className="size-3.5 text-accent" />
-          <span className="tnum font-mono font-semibold text-ink">
-            {formatInt(bounty)}
-          </span>
-        </Tooltip>
-
+        {/* The BLAST event is over, so its bounty chip is off the bar. The
+            points themselves are untouched — they still count on the profile
+            and in the event leaderboard. */}
         <Link
           href="/profile"
           aria-label={`${handle}: ${points} ${t("points")}`}
