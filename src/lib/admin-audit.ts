@@ -10,7 +10,8 @@ export type AuditArea =
   | "giveaways"
   | "content"
   | "users"
-  | "upload";
+  | "upload"
+  | "import";
 
 /**
  * Record one admin action. Called after the change lands, so the log only shows

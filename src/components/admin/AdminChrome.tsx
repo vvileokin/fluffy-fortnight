@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   ExternalLink,
   Swords,
+  DatabaseZap,
 } from "lucide-react";
 import { Brand } from "@/components/layout/Brand";
 import { BlastMark } from "@/components/ui/BlastMark";
@@ -24,6 +25,7 @@ type IconType = React.ComponentType<{ className?: string; strokeWidth?: number }
 
 const nav: { href: string; label: string; icon: IconType; adminOnly?: boolean }[] = [
   { href: "/admin/matches", label: "Матчі", icon: Swords },
+  { href: "/admin/import", label: "Імпорт матчів", icon: DatabaseZap },
   { href: "/admin/questions", label: "Питання", icon: Target },
   { href: "/admin/bounty", label: "BLAST Bounty", icon: BlastMark },
   { href: "/admin/resolve", label: "Розрахунок", icon: Calculator },
