@@ -19,6 +19,7 @@ import {
 } from "@/lib/data";
 import { getMatchById } from "@/lib/db/matches";
 import { getQuestionsForMatch } from "@/lib/db/questions";
+import { getWorldRanks } from "@/lib/db/team-ranks";
 import { cn } from "@/lib/utils";
 
 export default async function MatchPage({
@@ -34,8 +35,13 @@ export default async function MatchPage({
   ]);
   if (!match) notFound();
 
-  const a = matchTeam(match, "a");
-  const b = matchTeam(match, "b");
+  // Overlaid once here so every place that renders a/b — and there are three
+  // of them further down — picks up the live Valve rank automatically.
+  const ranks = await getWorldRanks();
+  const withRank = (t: ReturnType<typeof matchTeam>) =>
+    ranks[t.slug] ? { ...t, worldRank: ranks[t.slug] } : t;
+  const a = withRank(matchTeam(match, "a"));
+  const b = withRank(matchTeam(match, "b"));
   const tour = getTournament(match.tournamentSlug);
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const veto = match.veto ?? [];

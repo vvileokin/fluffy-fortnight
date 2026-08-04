@@ -37,10 +37,13 @@ export function TournamentView({
   tournament: t,
   matches,
   leaderboard,
+  ranks = {},
 }: {
   tournament: Tournament;
   matches: Match[];
   leaderboard: LeaderRow[];
+  /** Live world ranks by slug, from Valve's standings. */
+  ranks?: Record<string, number>;
 }) {
   const tabs: {
     id: Tab;
@@ -177,7 +180,7 @@ export function TournamentView({
               <MetaRow icon={Swords} label="Формат" value={t.format} />
             </dl>
           </section>
-          <TeamsGrid slugs={t.teamSlugs} compact />
+          <TeamsGrid slugs={t.teamSlugs} ranks={ranks} compact />
           {matches.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
@@ -189,7 +192,7 @@ export function TournamentView({
         </div>
       )}
 
-      {tab === "teams" && <TeamsGrid slugs={t.teamSlugs} />}
+      {tab === "teams" && <TeamsGrid slugs={t.teamSlugs} ranks={ranks} />}
 
       {tab === "results" && (
         <div className="space-y-3">
@@ -229,7 +232,15 @@ export function TournamentView({
   );
 }
 
-function TeamsGrid({ slugs, compact }: { slugs: string[]; compact?: boolean }) {
+function TeamsGrid({
+  slugs,
+  ranks = {},
+  compact,
+}: {
+  slugs: string[];
+  ranks?: Record<string, number>;
+  compact?: boolean;
+}) {
   const [expanded, setExpanded] = React.useState(false);
   // On the overview, collapse to two rows (8 on desktop); full list on Teams tab.
   const collapsible = compact && slugs.length > 8;
@@ -248,6 +259,7 @@ function TeamsGrid({ slugs, compact }: { slugs: string[]; compact?: boolean }) {
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
         {shown.map((slug) => {
           const team = getTeam(slug);
+          const rank = ranks[slug] ?? team.worldRank;
           return (
             <div
               key={slug}
@@ -256,7 +268,7 @@ function TeamsGrid({ slugs, compact }: { slugs: string[]; compact?: boolean }) {
               <TeamLogo team={team} size="md" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-ink">{team.name}</p>
-                <p className="text-xs text-ink-subtle">#{team.worldRank} у світі</p>
+                {rank > 0 && <p className="text-xs text-ink-subtle">#{rank} у світі</p>}
               </div>
             </div>
           );
