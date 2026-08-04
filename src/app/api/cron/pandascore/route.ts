@@ -3,7 +3,9 @@ import { timingSafeEqual, createHash } from "node:crypto";
 import { runPandaScoreSync } from "@/lib/pandascore-sync";
 
 /**
- * Hourly PandaScore sync, run by Vercel Cron (see vercel.json).
+ * Daily PandaScore sync, run by Vercel Cron (see vercel.json). Vercel's Hobby
+ * plan only allows a cron to fire once a day — the admin's "Синхронізувати"
+ * button in the panel still refreshes on demand any time in between.
  *
  * Vercel sends `Authorization: Bearer $CRON_SECRET`. Without that secret this
  * endpoint would be an open button for anyone to burn the API quota, so it is

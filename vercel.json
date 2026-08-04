@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/pandascore",
-      "schedule": "5 * * * *"
+      "schedule": "0 4 * * *"
     }
   ]
 }
