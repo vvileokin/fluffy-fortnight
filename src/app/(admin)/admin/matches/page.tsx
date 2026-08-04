@@ -331,7 +331,7 @@ export default function MatchesAdmin() {
           never buried under the ones you don't. */}
       <div className="no-scrollbar mb-4 flex gap-1 overflow-x-auto rounded-lg border border-border bg-surface p-1">
         {statusTabs.map((tb) => {
-          const count = (rows ?? []).filter((r) => r.status === tb.id).length;
+          const count = withStatus.filter((r) => r.status === tb.id).length;
           const on = tb.id === statusTab;
           return (
             <button

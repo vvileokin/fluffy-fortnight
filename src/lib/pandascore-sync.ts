@@ -29,8 +29,24 @@ export type SyncResult = {
  */
 export async function runPandaScoreSync(): Promise<SyncResult> {
   const fetched = await matchesTodayAndTomorrow();
-  const byId = new Map(fetched.map((m) => [m.id, m]));
   const admin = createAdminClient();
+
+  // A bracket slot without both sides decided yet (TBD vs TBD, or TBD vs a
+  // real team) isn't reviewable — there's nothing to bind to our catalog. Skip
+  // it; it'll show up once PandaScore fills the pairing in.
+  const decided = fetched.filter((m) => {
+    const [a, b] = sidesOf(m);
+    return !!a && !!b;
+  });
+  const byId = new Map(decided.map((m) => [m.id, m]));
+
+  // Pending rows synced before this filter existed (still TBD) don't belong
+  // in the queue either — drop them now instead of waiting for them to age out.
+  await admin
+    .from("ps_matches")
+    .delete()
+    .eq("review", "pending")
+    .or("team_a_name.is.null,team_b_name.is.null");
 
   if (byId.size === 0) {
     return { total: 0, added: 0, rescheduled: 0, quotaLeft: rateLimitRemaining() };

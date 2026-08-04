@@ -110,19 +110,29 @@ export async function matchesTodayAndTomorrow(): Promise<PsMatch[]> {
   return list.filter((m) => m.status !== "canceled");
 }
 
+/** Kyiv's current UTC offset, in minutes (handles the EET/EEST switch). */
+function kyivOffsetMinutes(at: Date): number {
+  const asUTC = new Date(at.toLocaleString("en-US", { timeZone: "UTC" }));
+  const asKyiv = new Date(at.toLocaleString("en-US", { timeZone: "Europe/Kyiv" }));
+  return (asKyiv.getTime() - asUTC.getTime()) / 60000;
+}
+
 /**
  * Start of the Kyiv day, `offset` days from today, as an ISO instant.
  * Kyiv is the schedule everything on the site is pinned to.
  */
 export function kyivDayStart(offset: number): string {
   const now = new Date();
-  // What "today" is in Kyiv, regardless of where the server runs.
-  const kyiv = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Kyiv" }));
-  kyiv.setHours(0, 0, 0, 0);
-  kyiv.setDate(kyiv.getDate() + offset);
-  // Re-anchor to a real instant: the local clock above has no offset of its own.
-  const drift = now.getTime() - new Date(now.toLocaleString("en-US", { timeZone: "Europe/Kyiv" })).getTime();
-  return new Date(kyiv.getTime() + drift).toISOString();
+  const offsetMin = kyivOffsetMinutes(now);
+  // "Now", shifted so its UTC calendar fields read as Kyiv's wall clock.
+  const kyivNow = new Date(now.getTime() + offsetMin * 60000);
+  const kyivMidnightUTC = Date.UTC(
+    kyivNow.getUTCFullYear(),
+    kyivNow.getUTCMonth(),
+    kyivNow.getUTCDate() + offset,
+  );
+  // Shift back to the real instant that Kyiv midnight corresponds to.
+  return new Date(kyivMidnightUTC - offsetMin * 60000).toISOString();
 }
 
 /** BO3 / BO5 / BO1 from PandaScore's game count. */

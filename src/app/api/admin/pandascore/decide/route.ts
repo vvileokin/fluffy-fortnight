@@ -94,14 +94,21 @@ export async function POST(request: Request) {
     );
   }
 
-  // matches.tournament_slug is NOT NULL — a match has to belong somewhere.
-  const tournamentSlug = body?.tournament_slug ? String(body.tournament_slug) : "";
-  if (!tournamentSlug) {
+  // The competition travels with the match as plain name + logo, not a real
+  // tournament page — the admin creates those separately, on purpose, when a
+  // competition is worth its own listing on the site.
+  const tournamentName = String(body?.tournament_name ?? "").trim();
+  if (!tournamentName) {
     return NextResponse.json(
-      { ok: false, error: "Обери турнір, до якого віднести матч" },
+      { ok: false, error: "Вкажи назву турніру" },
       { status: 400 },
     );
   }
+  const tournamentIcon = body?.tournament_icon ? String(body.tournament_icon) : null;
+  // matches.tournament_slug is NOT NULL but doesn't need to resolve to
+  // anything public — "ps-" keeps it out of the way of real tournament slugs,
+  // so /tournaments/<this> 404s instead of accidentally matching one.
+  const tournamentSlug = `ps-${slugify(tournamentName) || psId}`;
 
   const nameOf = (slug: string) => teams[slug]?.name ?? custom.get(slug)?.name ?? slug;
   const id = await buildMatchId(admin, `${slugify(slugA)}-vs-${slugify(slugB)}`);
@@ -135,7 +142,8 @@ export async function POST(request: Request) {
     score_b: 0,
     maps: [],
     veto: [],
-    tournament_name: row.competition ?? row.serie_name ?? row.league_name ?? null,
+    tournament_name: tournamentName,
+    tournament_icon: tournamentIcon,
     ...sideFields(slugA, "a"),
     ...sideFields(slugB, "b"),
     updated_at: new Date().toISOString(),

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { teams, tournaments } from "@/lib/data";
+import { teams } from "@/lib/data";
 import { kyivDayStart, PandaScoreError } from "@/lib/pandascore";
 import { runPandaScoreSync } from "@/lib/pandascore-sync";
 
@@ -64,13 +64,11 @@ export async function GET(request: Request) {
     query = query.gte("begin_at", kyivDayStart(0)).lt("begin_at", kyivDayStart(2));
   }
 
-  const [{ data: rows, error }, { data: mappings }, catalog, { data: customTours }] =
-    await Promise.all([
-      query,
-      admin.from("ps_teams").select("ps_team_id, slug"),
-      fullCatalog(admin),
-      admin.from("custom_tournaments").select("slug, name").order("start_at", { ascending: false }),
-    ]);
+  const [{ data: rows, error }, { data: mappings }, catalog] = await Promise.all([
+    query,
+    admin.from("ps_teams").select("ps_team_id, slug"),
+    fullCatalog(admin),
+  ]);
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
@@ -94,13 +92,7 @@ export async function GET(request: Request) {
     suggested_b: resolve(r.team_b_ps_id, r.team_b_name, r.team_b_acronym),
   }));
 
-  // Our own events plus every competition created from an earlier import.
-  const tours = [
-    ...tournaments.map((t) => ({ slug: t.slug, name: t.name })),
-    ...(customTours ?? []).map((t) => ({ slug: t.slug as string, name: t.name as string })),
-  ];
-
-  return NextResponse.json({ ok: true, items, catalog, tournaments: tours });
+  return NextResponse.json({ ok: true, items, catalog });
 }
 
 /** Pull the latest CS2 fixtures into the inbox. Decisions already made stand. */

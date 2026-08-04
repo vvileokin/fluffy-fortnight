@@ -5,8 +5,6 @@ import { RefreshCw, Check, X, Loader2, DatabaseZap, ExternalLink, Plus } from "l
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { TeamCombobox, type CatalogTeam } from "@/components/admin/TeamCombobox";
 import { CreateTeamForm } from "@/components/admin/CreateTeamForm";
-import { Combobox } from "@/components/admin/Combobox";
-import { CreateTournamentForm, type NewTournament } from "@/components/admin/CreateTournamentForm";
 import { cn } from "@/lib/utils";
 
 type Review = "pending" | "approved" | "rejected";
@@ -54,19 +52,17 @@ function when(iso: string | null): string {
 }
 
 /** Per-match choices the admin can adjust before approving. */
-type Draft = { a: string; b: string; tournament: string; stage: string };
+type Draft = { a: string; b: string; tournamentName: string; tournamentIcon: string; stage: string };
 
 export default function ImportAdmin() {
   const [items, setItems] = React.useState<Item[]>([]);
   const [catalog, setCatalog] = React.useState<CatalogTeam[]>([]);
-  const [tourneys, setTourneys] = React.useState<{ slug: string; name: string }[]>([]);
   const [review, setReview] = React.useState<Review>("pending");
   const [drafts, setDrafts] = React.useState<Record<number, Draft>>({});
   const [loading, setLoading] = React.useState(true);
   const [syncing, setSyncing] = React.useState(false);
   const [busyId, setBusyId] = React.useState<number | null>(null);
   const [creating, setCreating] = React.useState<{ psId: number; side: "a" | "b" } | null>(null);
-  const [newTour, setNewTour] = React.useState<number | null>(null);
   const [note, setNote] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -82,7 +78,6 @@ export default function ImportAdmin() {
     const list = j.items as Item[];
     setItems(list);
     setCatalog(j.catalog as CatalogTeam[]);
-    setTourneys(j.tournaments as { slug: string; name: string }[]);
     // Keep what the admin already chose, but let a team that has just become
     // recognised fill a side that was still blank.
     setDrafts((prev) =>
@@ -92,7 +87,13 @@ export default function ImportAdmin() {
           {
             a: prev[it.ps_id]?.a || it.suggested_a || "",
             b: prev[it.ps_id]?.b || it.suggested_b || "",
-            tournament: prev[it.ps_id]?.tournament ?? "",
+            tournamentName:
+              prev[it.ps_id]?.tournamentName ??
+              it.competition ??
+              it.serie_name ??
+              it.league_name ??
+              "",
+            tournamentIcon: prev[it.ps_id]?.tournamentIcon ?? "",
             stage: prev[it.ps_id]?.stage ?? it.stage_name ?? "",
           },
         ]),
@@ -134,7 +135,8 @@ export default function ImportAdmin() {
         decision,
         slug_a: d?.a,
         slug_b: d?.b,
-        tournament_slug: d?.tournament || null,
+        tournament_name: d?.tournamentName || null,
+        tournament_icon: d?.tournamentIcon || null,
         is_event: false,
         stage: d?.stage || null,
       }),
@@ -151,11 +153,21 @@ export default function ImportAdmin() {
   const setDraft = (id: number, patch: Partial<Draft>) =>
     setDrafts((p) => ({ ...p, [id]: { ...p[id], ...patch } }));
 
-  /** A tournament created here becomes the pick for the match it was made for. */
-  function onTournamentCreated(psId: number, t: NewTournament) {
-    setTourneys((prev) => [{ slug: t.slug, name: t.name }, ...prev]);
-    setDraft(psId, { tournament: t.slug });
-    setNewTour(null);
+  /** Upload a tournament logo for one match, straight into its draft. */
+  async function pickTournamentIcon(psId: number, file: File) {
+    setBusyId(psId);
+    setError(null);
+    const body = new FormData();
+    body.append("file", file);
+    body.append("folder", "tournaments");
+    const res = await fetch("/api/admin/upload", { method: "POST", body }).catch(() => null);
+    const j = await res?.json().catch(() => ({}));
+    setBusyId(null);
+    if (!res?.ok) {
+      setError(j?.error || "Не вдалося завантажити лого.");
+      return;
+    }
+    setDraft(psId, { tournamentIcon: j.url as string });
   }
 
   /** A team just created here becomes the pick for the side it was made for. */
@@ -222,9 +234,8 @@ export default function ImportAdmin() {
         ) : (
           <ul className="divide-y divide-border">
             {items.map((it) => {
-              const d = drafts[it.ps_id] ?? { a: "", b: "", tournament: "", stage: "" };
-              // A match has to land in a tournament — the column is NOT NULL.
-              const ready = !!d.a && !!d.b && d.a !== d.b && !!d.tournament;
+              const d = drafts[it.ps_id] ?? { a: "", b: "", tournamentName: "", tournamentIcon: "", stage: "" };
+              const ready = !!d.a && !!d.b && d.a !== d.b && !!d.tournamentName.trim();
               const busy = busyId === it.ps_id;
               return (
                 <li key={it.ps_id} className="space-y-3 px-4 py-4">
@@ -285,46 +296,54 @@ export default function ImportAdmin() {
                         />
                       )}
 
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-[0.625rem] uppercase tracking-wide text-ink-subtle">
-                              Турнір на сайті
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setNewTour(it.ps_id)}
-                              className="inline-flex shrink-0 items-center gap-1 text-[0.6875rem] font-semibold text-accent hover:underline"
-                            >
-                              <Plus className="size-3" />
-                              Створити
-                            </button>
-                          </div>
-                          <Combobox
-                            options={tourneys.map((t) => ({ value: t.slug, label: t.name }))}
-                            value={d.tournament}
-                            placeholder="Обери турнір"
-                            emptyText="Немає такого — створи його"
-                            onChange={(v) => setDraft(it.ps_id, { tournament: v })}
+                      {/* Just a name and an optional logo for the match card —
+                          not a tournament page. Create one separately on the
+                          Content page if this competition deserves its own listing. */}
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-2"
+                          title="Лого турніру"
+                        >
+                          {d.tournamentIcon ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={d.tournamentIcon} alt="" className="size-6 object-contain" />
+                          ) : (
+                            <DatabaseZap className="size-4 text-ink-faint" />
+                          )}
+                        </span>
+                        <input
+                          value={d.tournamentName}
+                          onChange={(e) => setDraft(it.ps_id, { tournamentName: e.target.value })}
+                          placeholder="Назва турніру"
+                          aria-label="Назва турніру"
+                          className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-surface-2 px-2.5 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
+                        />
+                        <label
+                          className={cn(
+                            "inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink",
+                            busy && "pointer-events-none opacity-50",
+                          )}
+                        >
+                          Лого
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) void pickTournamentIcon(it.ps_id, f);
+                              e.target.value = "";
+                            }}
                           />
-                        </div>
+                        </label>
                         <input
                           value={d.stage}
                           onChange={(e) => setDraft(it.ps_id, { stage: e.target.value })}
-                          placeholder="Стадія (Півфінал, Stage 2…)"
+                          placeholder="Стадія"
                           aria-label="Стадія"
-                          className="h-9 rounded-lg border border-border bg-surface-2 px-2.5 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
+                          className="h-9 w-32 shrink-0 rounded-lg border border-border bg-surface-2 px-2.5 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
                         />
                       </div>
-
-                      {newTour === it.ps_id && (
-                        <CreateTournamentForm
-                          defaultName={it.competition ?? it.serie_name ?? it.league_name ?? ""}
-                          defaultStart={it.begin_at}
-                          onCreated={(t) => onTournamentCreated(it.ps_id, t)}
-                          onCancel={() => setNewTour(null)}
-                        />
-                      )}
 
                       <div className="flex flex-wrap items-center gap-2">
                         <button
@@ -353,7 +372,7 @@ export default function ImportAdmin() {
                               ? "Обери обидві команди"
                               : d.a === d.b
                                 ? "Це має бути дві різні команди"
-                                : "Обери турнір"}
+                                : "Вкажи назву турніру"}
                             , щоб додати
                           </span>
                         )}
