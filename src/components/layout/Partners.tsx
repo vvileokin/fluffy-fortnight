@@ -12,6 +12,11 @@ const partners = [
     row: "h-2.5",
     strip: "h-3",
     offset: "",
+    // Solid red artwork: greyscale turns it a muddy mid-grey that reads far
+    // dimmer than Hellcase's white wordmark, so it's forced white instead and
+    // drops back to its own red on hover.
+    idle: "brightness-0 invert",
+    hover: "group-hover:brightness-100 group-hover:invert-0",
   },
   {
     name: "Hellcase",
@@ -20,6 +25,9 @@ const partners = [
     row: "h-[17px]",
     strip: "h-[22px]",
     offset: "-translate-y-[2px]",
+    // Its wordmark is already white; only the gradient mark needs desaturating.
+    idle: "grayscale",
+    hover: "group-hover:grayscale-0",
   },
 ];
 
@@ -57,7 +65,9 @@ export function Partners({
             src={p.logo}
             alt={p.name}
             className={cn(
-              "w-auto grayscale transition-[filter] duration-300 group-hover:grayscale-0",
+              "w-auto transition-[filter] duration-300",
+              p.idle,
+              p.hover,
               layout === "strip" ? p.strip : p.row,
               p.offset,
             )}
