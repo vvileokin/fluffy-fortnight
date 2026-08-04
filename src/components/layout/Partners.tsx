@@ -1,14 +1,16 @@
 import { cn } from "@/lib/utils";
 
-// Per-partner heights tuned so the marks read at the same visual size
-// (BetKing's wordmark fills its box, so it's set a touch smaller than Hellcase).
+// Per-partner heights tuned so the marks read at the same visual size.
+// BetKing's lockup is much wider than it is tall (mark + wordmark, ~8:1), so
+// matching Hellcase on height would make it dominate the row — it's matched on
+// width instead.
 const partners = [
   {
     name: "BetKing",
     logo: "/brand/partner-betking.svg",
     url: "https://betking.com.ua/sports-book/?refcode=LAGpC3ROEguNo&register=true#/overview",
-    row: "h-3.5",
-    strip: "h-4",
+    row: "h-2.5",
+    strip: "h-3",
     offset: "",
   },
   {
