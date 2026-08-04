@@ -97,20 +97,41 @@ export async function runPandaScoreSync(): Promise<SyncResult> {
   const { error } = await admin.from("ps_matches").upsert(rows, { onConflict: "ps_id" });
   if (error) throw new Error(error.message);
 
-  // A match that gets moved in PandaScore moves on the site too.
+  // A match that gets moved in PandaScore moves on the site too — but only if
+  // it actually moved, and only while it's still ahead of us.
+  //
+  // Writing unconditionally was wrong twice over: `updated_at` doubles as "when
+  // this finished" (the home feed shows a result for 10 minutes after), so
+  // touching a row that hadn't changed made finished matches resurface on the
+  // home page after every sync. And rewriting the kick-off of a match that has
+  // already been played is meaningless anyway.
+  const linked = rows.filter((r) => r.review === "approved" && r.match_id);
   let rescheduled = 0;
-  for (const row of rows) {
-    if (row.review !== "approved" || !row.match_id) continue;
-    const psMatch = byId.get(Number(row.ps_id))!;
-    const { error: upErr } = await admin
+
+  if (linked.length > 0) {
+    const { data: current } = await admin
       .from("matches")
-      .update({
-        start_at: row.begin_at,
-        format: formatOf(psMatch),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", row.match_id);
-    if (!upErr) rescheduled++;
+      .select("id, start_at, format, status")
+      .in("id", linked.map((r) => r.match_id as string));
+    const byMatchId = new Map((current ?? []).map((m) => [m.id as string, m]));
+
+    for (const row of linked) {
+      const match = byMatchId.get(row.match_id as string);
+      if (!match || match.status === "finished") continue;
+
+      const format = formatOf(byId.get(Number(row.ps_id))!);
+      const sameStart =
+        (match.start_at ?? null) === null && row.begin_at === null
+          ? true
+          : new Date(match.start_at ?? 0).getTime() === new Date(row.begin_at ?? 0).getTime();
+      if (sameStart && match.format === format) continue;
+
+      const { error: upErr } = await admin
+        .from("matches")
+        .update({ start_at: row.begin_at, format, updated_at: new Date().toISOString() })
+        .eq("id", row.match_id as string);
+      if (!upErr) rescheduled++;
+    }
   }
 
   return {

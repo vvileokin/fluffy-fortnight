@@ -24,7 +24,8 @@ export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
         .limit(limit),
     ]);
     if (error || !data) return [];
-    return rankByPoints(
+
+    const rows: LeaderRow[] = rankByPoints(
       data.map((p) => ({
         handle: p.handle,
         points: p.points,
@@ -34,9 +35,50 @@ export async function getLeaderboard(limit = 50): Promise<LeaderRow[]> {
         isYou: user?.id === p.id,
       })),
     );
+
+    // Rank far below the slice? Append your own row so the board can still show
+    // where you stand — otherwise you simply vanish from every collapsed board.
+    if (user && !rows.some((r) => r.isYou)) {
+      const mine = await ownRow(sb, user.id);
+      if (mine) rows.push(mine);
+    }
+    return rows;
   } catch {
     return [];
   }
+}
+
+type SB = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * The signed-in user's own row with its true season rank. The rank can't come
+ * from the fetched slice — it's counted across every profile, the same way the
+ * profile page does it, including the tie span ("100–101").
+ */
+async function ownRow(sb: SB, userId: string): Promise<LeaderRow | null> {
+  const { data: me } = await sb
+    .from("profiles")
+    .select("handle, avatar_url, points, correct, streak")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!me) return null;
+
+  const [{ count: above }, { count: same }] = await Promise.all([
+    sb.from("profiles").select("id", { count: "exact", head: true }).gt("points", me.points),
+    sb.from("profiles").select("id", { count: "exact", head: true }).eq("points", me.points),
+  ]);
+  const rank = (above ?? 0) + 1;
+
+  return {
+    rank,
+    rankEnd: rank + Math.max(0, (same ?? 1) - 1),
+    handle: me.handle,
+    points: me.points,
+    correct: me.correct,
+    streak: me.streak,
+    avatarUrl: me.avatar_url ?? undefined,
+    isYou: true,
+  };
 }
 
 type BountyRow = {

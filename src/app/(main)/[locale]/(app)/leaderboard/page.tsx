@@ -24,7 +24,7 @@ export default async function LeaderboardPage() {
       <PageIntro
         icon={Crown}
         title="Сезонний лідерборд"
-        subtitle="Сезон 3 · 16 липня – 13 грудня. Рейтинг оновлюється після кожного розрахунку."
+        subtitle="Сезон 1 · 16 липня – 13 грудня. Рейтинг оновлюється після кожного розрахунку."
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

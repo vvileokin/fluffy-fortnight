@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { RefreshCw, Check, X, Loader2, DatabaseZap, ExternalLink, Plus } from "lucide-react";
+import { RefreshCw, Check, X, Loader2, DatabaseZap, ExternalLink, Plus, Trophy } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { TeamCombobox, type CatalogTeam } from "@/components/admin/TeamCombobox";
 import { CreateTeamForm } from "@/components/admin/CreateTeamForm";
@@ -61,6 +61,7 @@ export default function ImportAdmin() {
   const [drafts, setDrafts] = React.useState<Record<number, Draft>>({});
   const [loading, setLoading] = React.useState(true);
   const [syncing, setSyncing] = React.useState(false);
+  const [ranking, setRanking] = React.useState(false);
   const [busyId, setBusyId] = React.useState<number | null>(null);
   const [creating, setCreating] = React.useState<{ psId: number; side: "a" | "b" } | null>(null);
   const [note, setNote] = React.useState<string | null>(null);
@@ -177,6 +178,23 @@ export default function ImportAdmin() {
     setCreating(null);
   }
 
+  /** Refresh world ranks from Valve's Regional Standings. */
+  async function syncRanks() {
+    setRanking(true);
+    setError(null);
+    setNote(null);
+    const res = await fetch("/api/admin/valve-standings", { method: "POST" }).catch(() => null);
+    const j = await res?.json().catch(() => ({}));
+    setRanking(false);
+    if (!res?.ok) {
+      setError(j?.error || "Не вдалося оновити рейтинг.");
+      return;
+    }
+    setNote(
+      `Рейтинг Valve оновлено · впізнано ${j.globalMatched} з ${j.globalTotal} команд світового рейтингу`,
+    );
+  }
+
   return (
     <>
       <AdminHead title="Імпорт з PandaScore" />
@@ -189,6 +207,15 @@ export default function ImportAdmin() {
         >
           {syncing ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Синхронізувати
+        </button>
+        <button
+          onClick={syncRanks}
+          disabled={ranking}
+          title="Оновити світовий рейтинг команд із Valve Regional Standings"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60"
+        >
+          {ranking ? <Loader2 className="size-4 animate-spin" /> : <Trophy className="size-4" />}
+          Оновити рейтинг
         </button>
         <div className="flex gap-1 rounded-lg border border-border bg-surface p-1">
           {(["pending", "approved", "rejected"] as Review[]).map((r) => (
