@@ -17,6 +17,42 @@ function sidePart(slug: string, customName?: string | null): string {
   return slugify(customName || slug) || "team";
 }
 
+type MapScore = { name?: string; a?: number; b?: number };
+
+/** Maps to win the series: 1 for BO1, 2 for BO3, 3 for BO5. */
+function winsNeeded(format: string): number {
+  return format === "BO5" ? 3 : format === "BO1" ? 1 : 2;
+}
+
+/**
+ * Series score and status straight from the maps, so neither has to be kept in
+ * step by hand: a side that reaches the maps it needs has won, and the match is
+ * finished the moment that happens. The site already worked this out when
+ * reading, but the stored status stayed whatever the form said — which is what
+ * everything else (admin tabs, filters, queries) goes by.
+ */
+function deriveFromMaps(
+  maps: MapScore[],
+  format: string,
+  fallback: { status: string; a: number; b: number },
+): { status: string; score_a: number; score_b: number } {
+  const played = maps.filter((m) => (Number(m.a) || 0) > 0 || (Number(m.b) || 0) > 0);
+  if (played.length === 0) {
+    return { status: fallback.status, score_a: fallback.a, score_b: fallback.b };
+  }
+
+  let a = 0;
+  let b = 0;
+  for (const m of played) {
+    if ((Number(m.a) || 0) > (Number(m.b) || 0)) a++;
+    else if ((Number(m.b) || 0) > (Number(m.a) || 0)) b++;
+  }
+
+  const need = winsNeeded(format);
+  const status = a >= need || b >= need ? "finished" : "live";
+  return { status, score_a: a, score_b: b };
+}
+
 /** "vitality-vs-spirit", suffixed when that id is already taken. */
 async function buildMatchId(
   admin: SupabaseClient,
@@ -52,19 +88,27 @@ export async function POST(request: Request) {
         `${sidePart(m.team_a, m.team_a_name)}-vs-${sidePart(m.team_b, m.team_b_name)}`,
       );
 
+  const format = String(m.format ?? "BO3");
+  const maps: MapScore[] = Array.isArray(m.maps) ? m.maps : [];
+  const derived = deriveFromMaps(maps, format, {
+    status: String(m.status ?? "upcoming"),
+    a: Number(m.score_a ?? 0),
+    b: Number(m.score_b ?? 0),
+  });
+
   const row = {
     id,
     tournament_slug: String(m.tournament_slug ?? "blast-bounty-s2"),
     is_event: Boolean(m.is_event),
     team_a: String(m.team_a),
     team_b: String(m.team_b),
-    status: String(m.status ?? "upcoming"),
-    format: String(m.format ?? "BO3"),
+    status: derived.status,
+    format,
     stage: m.stage ? String(m.stage) : null,
     time_label: m.time_label ? String(m.time_label) : null,
     start_at: m.start_at || null,
-    score_a: Number(m.score_a ?? 0),
-    score_b: Number(m.score_b ?? 0),
+    score_a: derived.score_a,
+    score_b: derived.score_b,
     live_map_label: m.live_map_label ? String(m.live_map_label) : null,
     live_round_a: Number(m.live_round_a ?? 0),
     live_round_b: Number(m.live_round_b ?? 0),

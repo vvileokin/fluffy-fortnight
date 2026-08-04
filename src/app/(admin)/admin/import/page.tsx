@@ -3,13 +3,12 @@
 import * as React from "react";
 import { RefreshCw, Check, X, Loader2, DatabaseZap, ExternalLink, Plus } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
-import { TeamLogo } from "@/components/ui/TeamLogo";
+import { TeamCombobox, type CatalogTeam } from "@/components/admin/TeamCombobox";
+import { CreateTeamForm } from "@/components/admin/CreateTeamForm";
 import { tournaments } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 type Review = "pending" | "approved" | "rejected";
-
-type CatalogTeam = { slug: string; name: string; tag: string; logo: string; brand: string };
 
 type Item = {
   ps_id: number;
@@ -66,6 +65,7 @@ export default function ImportAdmin() {
   const [loading, setLoading] = React.useState(true);
   const [syncing, setSyncing] = React.useState(false);
   const [busyId, setBusyId] = React.useState<number | null>(null);
+  const [creating, setCreating] = React.useState<{ psId: number; side: "a" | "b" } | null>(null);
   const [note, setNote] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -149,30 +149,11 @@ export default function ImportAdmin() {
   const setDraft = (id: number, patch: Partial<Draft>) =>
     setDrafts((p) => ({ ...p, [id]: { ...p[id], ...patch } }));
 
-  /** Add a team we don't have, using the name and logo PandaScore already gave us. */
-  async function createTeam(item: Item, side: "a" | "b") {
-    const name = side === "a" ? item.team_a_name : item.team_b_name;
-    if (!name) return;
-    setBusyId(item.ps_id);
-    setError(null);
-    const res = await fetch("/api/admin/pandascore/team", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        name,
-        logo: side === "a" ? item.team_a_logo : item.team_b_logo,
-        ps_team_id: side === "a" ? item.team_a_ps_id : item.team_b_ps_id,
-      }),
-    }).catch(() => null);
-    const j = await res?.json().catch(() => ({}));
-    setBusyId(null);
-    if (!res?.ok) {
-      setError(j?.error || "Не вдалося створити команду.");
-      return;
-    }
-    const team = j.team as CatalogTeam;
+  /** A team just created here becomes the pick for the side it was made for. */
+  function onTeamCreated(psId: number, side: "a" | "b", team: CatalogTeam) {
     setCatalog((prev) => [...prev, team].sort((a, b) => a.name.localeCompare(b.name)));
-    setDraft(item.ps_id, side === "a" ? { a: team.slug } : { b: team.slug });
+    setDraft(psId, side === "a" ? { a: team.slug } : { b: team.slug });
+    setCreating(null);
   }
 
   return (
@@ -267,33 +248,42 @@ export default function ImportAdmin() {
                     <>
                       {/* Which of our teams these are */}
                       <div className="grid gap-2 sm:grid-cols-2">
-                        <TeamPick
+                        <TeamSide
                           label={it.team_a_name ?? "Сторона A"}
-                          logo={it.team_a_logo}
                           value={d.a}
                           catalog={catalog}
                           guessed={!!it.suggested_a && it.suggested_a === d.a}
-                          busy={busy}
                           onChange={(v) => setDraft(it.ps_id, { a: v })}
-                          onCreate={() => createTeam(it, "a")}
+                          onCreate={() => setCreating({ psId: it.ps_id, side: "a" })}
                         />
-                        <TeamPick
+                        <TeamSide
                           label={it.team_b_name ?? "Сторона B"}
-                          logo={it.team_b_logo}
                           value={d.b}
                           catalog={catalog}
                           guessed={!!it.suggested_b && it.suggested_b === d.b}
-                          busy={busy}
                           onChange={(v) => setDraft(it.ps_id, { b: v })}
-                          onCreate={() => createTeam(it, "b")}
+                          onCreate={() => setCreating({ psId: it.ps_id, side: "b" })}
                         />
                       </div>
+
+                      {creating?.psId === it.ps_id && (
+                        <CreateTeamForm
+                          defaultName={
+                            (creating.side === "a" ? it.team_a_name : it.team_b_name) ?? ""
+                          }
+                          psTeamId={
+                            creating.side === "a" ? it.team_a_ps_id : it.team_b_ps_id
+                          }
+                          onCreated={(team) => onTeamCreated(it.ps_id, creating.side, team)}
+                          onCancel={() => setCreating(null)}
+                        />
+                      )}
 
                       <div className="grid gap-2 sm:grid-cols-2">
                         <select
                           value={d.tournament}
                           onChange={(e) => setDraft(it.ps_id, { tournament: e.target.value })}
-                          className="h-9 rounded-lg border border-border bg-surface-2 px-2 text-sm text-ink focus:border-accent focus:outline-none"
+                          className="h-9 rounded-lg border border-border bg-surface-2 px-2 text-sm text-ink focus:border-accent focus:outline-none [&>option]:bg-surface [&>option]:text-ink"
                         >
                           <option value="">Турнір на сайті — обов’язково</option>
                           {tourneys.map((t) => (
@@ -333,7 +323,12 @@ export default function ImportAdmin() {
                         </button>
                         {!ready && (
                           <span className="text-xs text-ink-subtle">
-                            Обери обидві команди, щоб додати
+                            {!d.a || !d.b
+                              ? "Обери обидві команди"
+                              : d.a === d.b
+                                ? "Це має бути дві різні команди"
+                                : "Обери турнір"}
+                            , щоб додати
                           </span>
                         )}
                       </div>
@@ -359,76 +354,41 @@ export default function ImportAdmin() {
   );
 }
 
-/**
- * One side: which of our teams PandaScore's team is. Unknown teams can be
- * created on the spot from the name and logo PandaScore already sent, after
- * which they're recognised on their own.
- */
-function TeamPick({
+/** One side of the match: which of our teams it is, or a way to add it. */
+function TeamSide({
   label,
-  logo,
   value,
   catalog,
   guessed,
-  busy,
   onChange,
   onCreate,
 }: {
   label: string;
-  logo: string | null;
   value: string;
   catalog: CatalogTeam[];
   guessed: boolean;
-  busy: boolean;
   onChange: (v: string) => void;
   onCreate: () => void;
 }) {
-  const chosen = catalog.find((t) => t.slug === value);
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-2/50 p-2">
-      {chosen ? (
-        <TeamLogo
-          team={{ ...chosen, ink: "white", region: "EU", worldRank: 0 }}
-          size="xs"
-        />
-      ) : logo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={logo} alt="" width={20} height={20} className="size-5 shrink-0 object-contain" />
-      ) : (
-        <span className="grid size-5 shrink-0 place-items-center rounded bg-surface-3 text-[0.625rem] font-bold text-ink-faint">
-          ?
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[0.625rem] uppercase tracking-wide text-ink-subtle">
+    <div className="space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-[0.625rem] uppercase tracking-wide text-ink-subtle">
           {label}
           {guessed && value && <span className="ml-1 text-success">впізнано</span>}
-        </div>
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-transparent text-sm font-semibold text-ink focus:outline-none"
-        >
-          <option value="">— обери команду —</option>
-          {catalog.map((t) => (
-            <option key={t.slug} value={t.slug}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+        </span>
+        {!value && (
+          <button
+            type="button"
+            onClick={onCreate}
+            className="inline-flex shrink-0 items-center gap-1 text-[0.6875rem] font-semibold text-accent hover:underline"
+          >
+            <Plus className="size-3" />
+            Створити
+          </button>
+        )}
       </div>
-      {!value && (
-        <button
-          type="button"
-          onClick={onCreate}
-          disabled={busy}
-          title="Створити команду з назвою та лого з PandaScore"
-          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-border px-2 text-[0.6875rem] font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
-        >
-          <Plus className="size-3.5" />
-          Створити
-        </button>
-      )}
+      <TeamCombobox teams={catalog} value={value} onChange={onChange} />
     </div>
   );
 }

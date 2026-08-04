@@ -113,6 +113,8 @@ type Row = {
   is_event: boolean;
   tournament_slug: string;
   stage: string | null;
+  format: string | null;
+  maps: { name?: string; a?: number; b?: number }[] | null;
   score_a: number;
   score_b: number;
   team_a_name: string | null;
@@ -143,6 +145,28 @@ function rowTeam(name: string | null, logo: string | null, color: string | null,
 
 type MatchStatus = "live" | "upcoming" | "finished";
 
+/**
+ * Where a match actually stands, read from its maps: a side that has won the
+ * maps its format needs (1 / 2 / 3) has taken the series, and anything with a
+ * map result but no winner yet is still being played.
+ */
+function effectiveStatus(r: {
+  status: string;
+  format?: string | null;
+  maps?: { a?: number; b?: number }[] | null;
+}): string {
+  const played = (r.maps ?? []).filter((m) => (m.a ?? 0) > 0 || (m.b ?? 0) > 0);
+  if (played.length === 0) return r.status;
+  let a = 0;
+  let b = 0;
+  for (const m of played) {
+    if ((m.a ?? 0) > (m.b ?? 0)) a++;
+    else if ((m.b ?? 0) > (m.a ?? 0)) b++;
+  }
+  const need = r.format === "BO5" ? 3 : r.format === "BO1" ? 1 : 2;
+  return a >= need || b >= need ? "finished" : "live";
+}
+
 const statusTabs: { id: MatchStatus; label: string }[] = [
   { id: "live", label: "Йдуть зараз" },
   { id: "upcoming", label: "Майбутні" },
@@ -157,17 +181,25 @@ export default function MatchesAdmin() {
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Rows saved before the status started being derived still carry whatever the
+  // form said, so work it out from the maps here too — otherwise a finished
+  // match would sit under "Майбутні" until someone re-saved it.
+  const withStatus = React.useMemo(
+    () => (rows ?? []).map((r) => ({ ...r, status: effectiveStatus(r) })),
+    [rows],
+  );
+
   // Finished matches read best newest-first; the other two soonest-first.
   const visibleRows = React.useMemo(() => {
-    const list = (rows ?? []).filter((r) => r.status === statusTab);
-    return statusTab === "finished" ? list.reverse() : list;
-  }, [rows, statusTab]);
+    const list = withStatus.filter((r) => r.status === statusTab);
+    return statusTab === "finished" ? [...list].reverse() : list;
+  }, [withStatus, statusTab]);
 
   const load = React.useCallback(async () => {
     const { data, error } = await createClient()
       .from("matches")
       .select(
-        "id, team_a, team_b, status, is_event, tournament_slug, stage, score_a, score_b, team_a_name, team_a_logo, team_a_color, team_b_name, team_b_logo, team_b_color",
+        "id, team_a, team_b, status, is_event, tournament_slug, stage, format, maps, score_a, score_b, team_a_name, team_a_logo, team_a_color, team_b_name, team_b_logo, team_b_color",
       )
       .order("start_at", { ascending: true, nullsFirst: false });
     if (error) {
