@@ -2,19 +2,9 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { teams } from "@/lib/data";
-import {
-  matchesTodayAndTomorrow,
-  formatOf,
-  sidesOf,
-  scoreFor,
-  competitionOf,
-  stageOf,
-  kyivDayStart,
-  rateLimitRemaining,
-  PandaScoreError,
-  type PsMatch,
-} from "@/lib/pandascore";
+import { teams, tournaments } from "@/lib/data";
+import { kyivDayStart, PandaScoreError } from "@/lib/pandascore";
+import { runPandaScoreSync } from "@/lib/pandascore-sync";
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -67,15 +57,20 @@ export async function GET(request: Request) {
     .eq("review", review)
     .order("begin_at", { ascending: false })
     .limit(200);
-  // The queue is only ever about today and tomorrow, so rows left pending from
-  // earlier syncs drop out of view instead of piling up.
-  if (review === "pending") query = query.gte("begin_at", kyivDayStart(0));
+  // The queue is only ever about today and tomorrow: rows left pending from
+  // earlier syncs drop out of view instead of piling up, and nothing further
+  // ahead shows up either.
+  if (review === "pending") {
+    query = query.gte("begin_at", kyivDayStart(0)).lt("begin_at", kyivDayStart(2));
+  }
 
-  const [{ data: rows, error }, { data: mappings }, catalog] = await Promise.all([
-    query,
-    admin.from("ps_teams").select("ps_team_id, slug"),
-    fullCatalog(admin),
-  ]);
+  const [{ data: rows, error }, { data: mappings }, catalog, { data: customTours }] =
+    await Promise.all([
+      query,
+      admin.from("ps_teams").select("ps_team_id, slug"),
+      fullCatalog(admin),
+      admin.from("custom_tournaments").select("slug, name").order("start_at", { ascending: false }),
+    ]);
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
@@ -99,7 +94,13 @@ export async function GET(request: Request) {
     suggested_b: resolve(r.team_b_ps_id, r.team_b_name, r.team_b_acronym),
   }));
 
-  return NextResponse.json({ ok: true, items, catalog });
+  // Our own events plus every competition created from an earlier import.
+  const tours = [
+    ...tournaments.map((t) => ({ slug: t.slug, name: t.name })),
+    ...(customTours ?? []).map((t) => ({ slug: t.slug as string, name: t.name as string })),
+  ];
+
+  return NextResponse.json({ ok: true, items, catalog, tournaments: tours });
 }
 
 /** Pull the latest CS2 fixtures into the inbox. Decisions already made stand. */
@@ -107,98 +108,20 @@ export async function POST() {
   if (!(await isAdmin())) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
-
-  let fetched: PsMatch[];
   try {
-    fetched = await matchesTodayAndTomorrow();
+    const r = await runPandaScoreSync();
+    await logAdmin(
+      "import",
+      `Синхронізував PandaScore: ${r.total} матчів, нових ${r.added}, оновлено час у ${r.rescheduled}`,
+    );
+    return NextResponse.json({ ok: true, ...r });
   } catch (e) {
     const err = e as PandaScoreError;
     return NextResponse.json(
-      { ok: false, error: err.message },
+      { ok: false, error: err.message || "Помилка синхронізації" },
       { status: err.status === 429 ? 429 : 502 },
     );
   }
-
-  const byId = new Map(fetched.map((m) => [m.id, m]));
-  const admin = createAdminClient();
-
-  const { data: existing } = await admin
-    .from("ps_matches")
-    .select("ps_id, review, match_id, decided_at, decided_by")
-    .in("ps_id", [...byId.keys()]);
-  const prior = new Map((existing ?? []).map((r) => [Number(r.ps_id), r]));
-
-  const rows = [...byId.values()].map((m) => {
-    const [a, b] = sidesOf(m);
-    const was = prior.get(m.id);
-    return {
-      ps_id: m.id,
-      name: m.name,
-      ps_status: m.status,
-      begin_at: m.begin_at ?? m.scheduled_at,
-      number_of_games: m.number_of_games,
-      match_type: m.match_type,
-      league_name: m.league?.name ?? null,
-      serie_name: m.serie?.full_name ?? m.serie?.name ?? null,
-      tournament_name: m.tournament?.name ?? null,
-      competition: competitionOf(m) || null,
-      stage_name: stageOf(m) || null,
-      team_a_ps_id: a?.id ?? null,
-      team_a_name: a?.name ?? null,
-      team_a_acronym: a?.acronym ?? null,
-      team_a_logo: a?.image_url ?? null,
-      team_b_ps_id: b?.id ?? null,
-      team_b_name: b?.name ?? null,
-      team_b_acronym: b?.acronym ?? null,
-      team_b_logo: b?.image_url ?? null,
-      score_a: scoreFor(m, a?.id),
-      score_b: scoreFor(m, b?.id),
-      raw: m,
-      synced_at: new Date().toISOString(),
-      // Carry the decision over — an upsert replaces the whole row, and without
-      // this a re-sync would drop rejected matches back into the queue.
-      review: was?.review ?? "pending",
-      match_id: was?.match_id ?? null,
-      decided_at: was?.decided_at ?? null,
-      decided_by: was?.decided_by ?? null,
-    };
-  });
-
-  const { error } = await admin.from("ps_matches").upsert(rows, { onConflict: "ps_id" });
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
-  }
-
-  // PandaScore owns the calendar, so keep approved matches' time and best-of in
-  // step with it. Maps, veto and scores are ours and are never touched here.
-  let rescheduled = 0;
-  for (const row of rows) {
-    if (row.review !== "approved" || !row.match_id) continue;
-    const psMatch = byId.get(Number(row.ps_id))!;
-    const { error: upErr } = await admin
-      .from("matches")
-      .update({
-        start_at: row.begin_at,
-        format: formatOf(psMatch),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", row.match_id);
-    if (!upErr) rescheduled++;
-  }
-
-  const added = rows.filter((r) => !prior.has(Number(r.ps_id))).length;
-  await logAdmin(
-    "import",
-    `Синхронізував PandaScore: ${rows.length} матчів, нових ${added}, оновлено час у ${rescheduled}`,
-  );
-
-  return NextResponse.json({
-    ok: true,
-    total: rows.length,
-    added,
-    rescheduled,
-    quotaLeft: rateLimitRemaining(),
-  });
 }
 
 export const dynamic = "force-dynamic";

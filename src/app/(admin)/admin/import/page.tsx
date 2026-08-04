@@ -5,7 +5,8 @@ import { RefreshCw, Check, X, Loader2, DatabaseZap, ExternalLink, Plus } from "l
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { TeamCombobox, type CatalogTeam } from "@/components/admin/TeamCombobox";
 import { CreateTeamForm } from "@/components/admin/CreateTeamForm";
-import { tournaments } from "@/lib/data";
+import { Combobox } from "@/components/admin/Combobox";
+import { CreateTournamentForm, type NewTournament } from "@/components/admin/CreateTournamentForm";
 import { cn } from "@/lib/utils";
 
 type Review = "pending" | "approved" | "rejected";
@@ -31,8 +32,6 @@ type Item = {
   suggested_a: string | null;
   suggested_b: string | null;
 };
-
-const tourneys = tournaments.map((t) => ({ slug: t.slug, name: t.name }));
 
 const statusLabel: Record<string, string> = {
   not_started: "Ще не почався",
@@ -60,12 +59,14 @@ type Draft = { a: string; b: string; tournament: string; stage: string };
 export default function ImportAdmin() {
   const [items, setItems] = React.useState<Item[]>([]);
   const [catalog, setCatalog] = React.useState<CatalogTeam[]>([]);
+  const [tourneys, setTourneys] = React.useState<{ slug: string; name: string }[]>([]);
   const [review, setReview] = React.useState<Review>("pending");
   const [drafts, setDrafts] = React.useState<Record<number, Draft>>({});
   const [loading, setLoading] = React.useState(true);
   const [syncing, setSyncing] = React.useState(false);
   const [busyId, setBusyId] = React.useState<number | null>(null);
   const [creating, setCreating] = React.useState<{ psId: number; side: "a" | "b" } | null>(null);
+  const [newTour, setNewTour] = React.useState<number | null>(null);
   const [note, setNote] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -81,6 +82,7 @@ export default function ImportAdmin() {
     const list = j.items as Item[];
     setItems(list);
     setCatalog(j.catalog as CatalogTeam[]);
+    setTourneys(j.tournaments as { slug: string; name: string }[]);
     // Keep what the admin already chose, but let a team that has just become
     // recognised fill a side that was still blank.
     setDrafts((prev) =>
@@ -149,6 +151,13 @@ export default function ImportAdmin() {
   const setDraft = (id: number, patch: Partial<Draft>) =>
     setDrafts((p) => ({ ...p, [id]: { ...p[id], ...patch } }));
 
+  /** A tournament created here becomes the pick for the match it was made for. */
+  function onTournamentCreated(psId: number, t: NewTournament) {
+    setTourneys((prev) => [{ slug: t.slug, name: t.name }, ...prev]);
+    setDraft(psId, { tournament: t.slug });
+    setNewTour(null);
+  }
+
   /** A team just created here becomes the pick for the side it was made for. */
   function onTeamCreated(psId: number, side: "a" | "b", team: CatalogTeam) {
     setCatalog((prev) => [...prev, team].sort((a, b) => a.name.localeCompare(b.name)));
@@ -158,10 +167,7 @@ export default function ImportAdmin() {
 
   return (
     <>
-      <AdminHead
-        title="Імпорт з PandaScore"
-        subtitle="PandaScore дає календар — хто з ким і коли. Нічого не потрапляє на сайт саме собою: матч чекає тут, доки ти його не схвалиш. Карти, вето й питання лишаються за тобою."
-      />
+      <AdminHead title="Імпорт з PandaScore" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <button
@@ -280,25 +286,45 @@ export default function ImportAdmin() {
                       )}
 
                       <div className="grid gap-2 sm:grid-cols-2">
-                        <select
-                          value={d.tournament}
-                          onChange={(e) => setDraft(it.ps_id, { tournament: e.target.value })}
-                          className="h-9 rounded-lg border border-border bg-surface-2 px-2 text-sm text-ink focus:border-accent focus:outline-none [&>option]:bg-surface [&>option]:text-ink"
-                        >
-                          <option value="">Турнір на сайті — обов’язково</option>
-                          {tourneys.map((t) => (
-                            <option key={t.slug} value={t.slug}>
-                              {t.name}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[0.625rem] uppercase tracking-wide text-ink-subtle">
+                              Турнір на сайті
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setNewTour(it.ps_id)}
+                              className="inline-flex shrink-0 items-center gap-1 text-[0.6875rem] font-semibold text-accent hover:underline"
+                            >
+                              <Plus className="size-3" />
+                              Створити
+                            </button>
+                          </div>
+                          <Combobox
+                            options={tourneys.map((t) => ({ value: t.slug, label: t.name }))}
+                            value={d.tournament}
+                            placeholder="Обери турнір"
+                            emptyText="Немає такого — створи його"
+                            onChange={(v) => setDraft(it.ps_id, { tournament: v })}
+                          />
+                        </div>
                         <input
                           value={d.stage}
                           onChange={(e) => setDraft(it.ps_id, { stage: e.target.value })}
                           placeholder="Стадія (Півфінал, Stage 2…)"
+                          aria-label="Стадія"
                           className="h-9 rounded-lg border border-border bg-surface-2 px-2.5 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
                         />
                       </div>
+
+                      {newTour === it.ps_id && (
+                        <CreateTournamentForm
+                          defaultName={it.competition ?? it.serie_name ?? it.league_name ?? ""}
+                          defaultStart={it.begin_at}
+                          onCreated={(t) => onTournamentCreated(it.ps_id, t)}
+                          onCancel={() => setNewTour(null)}
+                        />
+                      )}
 
                       <div className="flex flex-wrap items-center gap-2">
                         <button

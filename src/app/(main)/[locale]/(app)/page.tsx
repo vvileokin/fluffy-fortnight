@@ -7,7 +7,8 @@ import { MatchCard } from "@/components/cards/MatchCard";
 import { GiveawayCard } from "@/components/cards/GiveawayCard";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
-import { tournaments, minutesSinceFinished, questionMaxReward, type Match } from "@/lib/data";
+import { minutesSinceFinished, questionMaxReward, type Match } from "@/lib/data";
+import { listTournaments } from "@/lib/db/tournaments";
 import { getMatches } from "@/lib/db/matches";
 import { getLeaderboard } from "@/lib/db/leaderboard";
 import { getGiveaways } from "@/lib/db/giveaways";
@@ -36,7 +37,7 @@ export default async function HomePage() {
     ]);
   const matchById = new Map(matches.map((m) => [m.id, m]));
   const currentTournaments = applyCovers(
-    tournaments.filter((t) => t.status !== "finished").slice(0, 3),
+    (await listTournaments()).filter((t) => t.status !== "finished").slice(0, 3),
     covers,
   );
   // Event matches lead; live before upcoming; a finished result lingers 10 min.
@@ -53,15 +54,17 @@ export default async function HomePage() {
     <div className="space-y-10 sm:space-y-12">
       <Hero />
 
-      {/* Current tournaments */}
-      <section className="space-y-4">
-        <SectionHeader icon={Trophy} title={t("currentTournaments")} href="/tournaments" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {currentTournaments.map((t) => (
-            <TournamentCard key={t.slug} t={t} />
-          ))}
-        </div>
-      </section>
+      {/* Current tournaments — nothing running means no empty heading. */}
+      {currentTournaments.length > 0 && (
+        <section className="space-y-4">
+          <SectionHeader icon={Trophy} title={t("currentTournaments")} href="/tournaments" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {currentTournaments.map((t) => (
+              <TournamentCard key={t.slug} t={t} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Hot predictions (only when there are open questions) */}
       {hotQuestions.length > 0 && (

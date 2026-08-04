@@ -15,6 +15,7 @@ import {
   Swords,
 } from "lucide-react";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
+import { BlastMark } from "@/components/ui/BlastMark";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
@@ -70,15 +71,32 @@ export function TournamentView({
       </Link>
 
       {/* Header */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-surface">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(135deg, color-mix(in oklch, ${t.accent} 20%, var(--surface)) 0%, var(--surface) 60%)`,
-          }}
-        />
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-xl border",
+          t.isEvent ? "event-aura border-white/10" : "border-border bg-surface",
+        )}
+      >
+        {!t.isEvent && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, color-mix(in oklch, ${t.accent} 20%, var(--surface)) 0%, var(--surface) 60%)`,
+            }}
+          />
+        )}
+        {/* Readability scrim over the neon so the title and meta stay legible.
+            Phones keep it dark all the way down — that's where the facts sit. */}
+        {t.isEvent && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/65 to-black/60 sm:from-black/60 sm:via-black/30 sm:to-transparent" />
+        )}
         <div className="relative p-5 sm:p-7">
           <div className="flex flex-wrap items-center gap-1.5">
+            {t.isEvent && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                <BlastMark className="size-3" /> Event
+              </span>
+            )}
             {t.status === "live" ? (
               <LiveBadge />
             ) : t.status === "upcoming" ? (

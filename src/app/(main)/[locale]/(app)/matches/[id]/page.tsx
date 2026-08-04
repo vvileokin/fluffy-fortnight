@@ -37,6 +37,7 @@ export default async function MatchPage({
   const a = matchTeam(match, "a");
   const b = matchTeam(match, "b");
   const tour = getTournament(match.tournamentSlug);
+  const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const veto = match.veto ?? [];
   const maps = playedMaps(match);
   // Which team picked each map (for the map score-strip hover).
@@ -59,8 +60,15 @@ export default async function MatchPage({
       </Link>
 
       {/* Match header */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-surface">
-        <div className="aura-accent pointer-events-none absolute inset-0 opacity-60" />
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-xl border",
+          isEvent ? "event-aura border-white/10" : "border-border bg-surface",
+        )}
+      >
+        {!isEvent && (
+          <div className="aura-accent pointer-events-none absolute inset-0 opacity-60" />
+        )}
         <div className="relative px-4 py-5 sm:px-8 sm:py-7">
           <div className="flex items-center justify-between gap-2 text-xs text-ink-muted">
             {tour ? (
@@ -108,7 +116,7 @@ export default async function MatchPage({
           {/* sm+: big logos at the edges, names inside, score centered */}
           <div className="mt-6 hidden items-center gap-4 sm:flex lg:gap-6">
             <div className="flex flex-1 items-center gap-4">
-              <LogoFrame framed={false}>
+              <LogoFrame framed={isEvent}>
                 <TeamLogo team={a} size="xl" />
               </LogoFrame>
               <div className="min-w-0">
@@ -162,7 +170,7 @@ export default async function MatchPage({
                   <p className="text-xs text-ink-subtle">#{b.worldRank} у світі</p>
                 )}
               </div>
-              <LogoFrame framed={false}>
+              <LogoFrame framed={isEvent}>
                 <TeamLogo team={b} size="xl" />
               </LogoFrame>
             </div>

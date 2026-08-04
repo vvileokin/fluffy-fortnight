@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { tournaments, getTournament } from "@/lib/data";
+import { tournaments } from "@/lib/data";
+import { findTournament } from "@/lib/db/tournaments";
 import { getSiteSettings } from "@/lib/db/settings";
 import { getMatches } from "@/lib/db/matches";
 import { getLeaderboard, getBountyLeaderboard } from "@/lib/db/leaderboard";
@@ -16,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const t = getTournament(slug);
+  const t = await findTournament(slug);
   return { title: t?.name ?? "Турнір" };
 }
 
@@ -26,7 +27,7 @@ export default async function TournamentPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const t = getTournament(slug);
+  const t = await findTournament(slug);
   if (!t) notFound();
 
   const { covers } = await getSiteSettings();
