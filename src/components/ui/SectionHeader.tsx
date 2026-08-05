@@ -40,7 +40,7 @@ export function SectionHeader({
       {href && (
         <Link
           href={href}
-          className="group inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-ink-muted transition-colors hover:text-accent"
+          className="group -mr-2 inline-flex h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-accent"
         >
           {seeAll}
           <ArrowRight className="size-4 transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0.5" />

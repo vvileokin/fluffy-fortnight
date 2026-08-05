@@ -55,6 +55,8 @@ export function TeamLogo({
         <img
           src={team.logo}
           alt={team.name}
+          loading="lazy"
+          decoding="async"
           width={inner}
           height={inner}
           style={{ width: inner, height: inner, objectFit: "contain", filter }}

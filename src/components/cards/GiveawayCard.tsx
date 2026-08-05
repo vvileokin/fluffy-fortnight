@@ -9,7 +9,7 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
   return (
     <Link
       href={`/giveaways/${g.slug}`}
-      className="group card-interactive relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+      className="group lift surface-1 relative flex flex-col overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
     >
       <div
         className="relative flex h-24 items-center justify-center"
@@ -50,7 +50,7 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
         </h3>
         <p className="text-xs text-ink-subtle">{g.sponsor}</p>
 
-        <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
+        <div className="mt-auto flex items-center justify-between pt-3 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]">
           <span className="flex items-center gap-1.5 text-xs text-ink-muted">
             <Users className="size-3.5 text-ink-subtle" />
             <span className="tnum font-semibold">{formatInt(g.entrants)}</span>

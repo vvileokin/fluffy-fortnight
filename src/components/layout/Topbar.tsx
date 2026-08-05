@@ -106,7 +106,7 @@ export function Topbar() {
       {user === null && (
         <Link
           href="/login"
-          className="flex h-9 items-center gap-2 rounded-full bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
+          className="flex h-11 items-center gap-2 rounded-full bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
         >
           <LogIn className="size-4" strokeWidth={2.5} />
           {t("signIn")}

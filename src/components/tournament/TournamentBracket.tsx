@@ -332,7 +332,7 @@ function TbdLine() {
       <span className="grid size-5 shrink-0 place-items-center rounded bg-surface-2 text-[0.625rem] font-bold text-ink-faint">
         ?
       </span>
-      <span className="text-xs font-semibold text-ink-faint">TBD</span>
+      <span className="text-xs font-semibold text-ink-dim">TBD</span>
     </div>
   );
 }

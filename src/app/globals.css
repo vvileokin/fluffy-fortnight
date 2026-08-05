@@ -21,7 +21,10 @@
   --ink: oklch(0.968 0.008 240);         /* primary text */
   --ink-muted: oklch(0.75 0.017 244);    /* secondary text (AA on surface) */
   --ink-subtle: oklch(0.63 0.021 244);   /* tertiary / labels */
-  --ink-faint: oklch(0.47 0.022 244);    /* disabled, decorative only */
+  /* Quietest step that still clears AA (4.5:1) on surface-2 — for small text
+     that carries meaning: "TBD", an unplayed map name, a section label. */
+  --ink-dim: oklch(0.58 0.021 244);
+  --ink-faint: oklch(0.47 0.022 244);    /* disabled + pure decoration only */
 
   /* --- Brand accent (yellow) --- */
   --accent: oklch(0.902 0.183 103.5);    /* #FAE305 */
@@ -65,6 +68,7 @@
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-ink-subtle: var(--ink-subtle);
+  --color-ink-dim: var(--ink-dim);
   --color-ink-faint: var(--ink-faint);
 
   --color-accent: var(--accent);
@@ -173,6 +177,87 @@ body {
 
 .glow-accent {
   box-shadow: 0 6px 30px -10px color-mix(in oklch, var(--accent) 55%, transparent);
+}
+
+/* =========================================================================
+   Depth
+   On a light UI a card lifts with a soft grey drop shadow. On near-black that
+   reads as nothing — there's no lighter ground for the shadow to darken. Depth
+   here is built the way it works on dark surfaces:
+     1. a hairline of light along the top edge (the lit edge of a raised plane)
+     2. a hairline ring instead of a full 1px border, so edges stop competing
+     3. a wide, very soft shadow that separates the plane from the canvas
+   Together these replace `border border-border` on card-like surfaces.
+   ========================================================================= */
+
+.surface-1,
+.surface-2 {
+  position: relative;
+  background-color: var(--surface);
+}
+
+.surface-1 {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--ink) 6%, transparent),
+    0 1px 0 0 color-mix(in oklch, var(--ink) 7%, transparent) inset,
+    0 2px 6px -2px oklch(0 0 0 / 0.5),
+    0 12px 28px -18px oklch(0 0 0 / 0.9);
+}
+
+.surface-2 {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--ink) 8%, transparent),
+    0 1px 0 0 color-mix(in oklch, var(--ink) 9%, transparent) inset,
+    0 4px 12px -4px oklch(0 0 0 / 0.55),
+    0 24px 48px -28px oklch(0 0 0 / 0.95);
+}
+
+/* Lift on hover. Pairs with .surface-1 / .surface-2 on interactive cards. */
+.lift {
+  transition:
+    transform var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out);
+}
+@media (hover: hover) {
+  .lift:hover {
+    transform: translateY(-2px);
+    background-color: var(--surface-2);
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--ink) 12%, transparent),
+      0 1px 0 0 color-mix(in oklch, var(--ink) 12%, transparent) inset,
+      0 8px 20px -6px oklch(0 0 0 / 0.6),
+      0 32px 56px -30px oklch(0 0 0 / 1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lift:hover {
+    transform: none;
+  }
+}
+
+/* Ambient colour bloom behind a surface. The colour is the caller's — set
+   --bloom on the element. Sits behind content, never intercepts pointers. */
+.bloom::before {
+  content: "";
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 80%;
+  border-radius: 999px;
+  background: var(--bloom, color-mix(in oklch, var(--accent) 30%, transparent));
+  filter: blur(48px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+.bloom > * {
+  position: relative;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bloom::before {
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
 }
 
 /* Interactive card: tactile lift + depth on hover. Border/bg utilities from

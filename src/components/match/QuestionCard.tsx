@@ -64,11 +64,11 @@ export function QuestionCard({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface">
+    <div className="surface-1 rounded-xl">
       {match && (
         <Link
           href={`/matches/${match.id}`}
-          className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs text-ink-muted transition-colors hover:text-ink"
+          className="flex min-h-11 items-center gap-2 px-4 py-2 text-xs text-ink-muted shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] transition-colors hover:text-ink"
         >
           <TeamLogo team={matchTeam(match, "a")} size="xs" />
           <span className="truncate font-semibold">{matchTeam(match, "a").name}</span>
@@ -105,7 +105,7 @@ export function QuestionCard({
                 disabled={locked || upcoming}
                 aria-pressed={selected}
                 className={cn(
-                  "group/opt relative flex items-center gap-2 rounded-md border px-3 py-2.5 text-left transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  "group/opt relative flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "disabled:cursor-not-allowed",
                   selected
                     ? "border-accent bg-[color-mix(in_oklch,var(--accent)_12%,transparent)]"

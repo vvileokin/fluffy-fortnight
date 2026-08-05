@@ -64,6 +64,8 @@ export function Partners({
           <img
             src={p.logo}
             alt={p.name}
+            loading="lazy"
+            decoding="async"
             className={cn(
               "w-auto transition-[filter] duration-300",
               p.idle,

@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
@@ -21,6 +22,24 @@ import { getMatchById } from "@/lib/db/matches";
 import { getQuestionsForMatch } from "@/lib/db/questions";
 import { getWorldRanks } from "@/lib/db/team-ranks";
 import { cn } from "@/lib/utils";
+
+/** Every other dynamic route names itself in the tab; this one didn't. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const match = await getMatchById(id);
+  if (!match) return { title: "Матч" };
+  const a = matchTeam(match, "a").name;
+  const b = matchTeam(match, "b").name;
+  const where = match.tournamentName ?? getTournament(match.tournamentSlug)?.name;
+  return {
+    title: `${a} vs ${b}`,
+    description: where ? `${a} vs ${b} — ${where}` : `${a} vs ${b}`,
+  };
+}
 
 export default async function MatchPage({
   params,
@@ -76,6 +95,12 @@ export default async function MatchPage({
           <div className="aura-accent pointer-events-none absolute inset-0 opacity-60" />
         )}
         <div className="relative px-4 py-5 sm:px-8 sm:py-7">
+          {/* The scoreboard says this visually; the page still needs one real
+              heading, and duplicating the names on screen would be noise. */}
+          <h1 className="sr-only">
+            {a.name} vs {b.name}
+            {match.stage ? ` — ${match.stage}` : ""}
+          </h1>
           <div className="flex items-center justify-between gap-2 text-xs text-ink-muted">
             {tour ? (
               <Link
@@ -324,8 +349,8 @@ function MapScoreStrip({
                 : m.status === "finished"
                   ? "bg-surface-2 text-ink"
                   : m.status === "skipped"
-                    ? "bg-surface-2 text-ink-faint line-through decoration-ink-faint/70"
-                    : "bg-surface-2 text-ink-faint",
+                    ? "bg-surface-2 text-ink-dim line-through decoration-ink-dim/70"
+                    : "bg-surface-2 text-ink-dim",
             )}
             label={
               m.status === "skipped"

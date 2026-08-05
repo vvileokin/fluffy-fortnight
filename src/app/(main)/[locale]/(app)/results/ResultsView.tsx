@@ -34,7 +34,8 @@ export function ResultsView({
         <PageIntro icon={History} title="Результати" />
         <Link
           href="/matches"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          aria-label="Матчі"
+          className="surface-1 inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
         >
           <Swords className="size-4" />
           <span className="hidden sm:inline">Матчі</span>

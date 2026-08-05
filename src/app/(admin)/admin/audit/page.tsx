@@ -110,7 +110,7 @@ export default function AuditPage() {
                       )}
                     </p>
                   </div>
-                  <span className="shrink-0 whitespace-nowrap text-xs text-ink-faint">
+                  <span className="shrink-0 whitespace-nowrap text-xs text-ink-dim">
                     {when(e.created_at)}
                   </span>
                 </li>

@@ -76,7 +76,7 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
       <div className="px-3 pb-4">
         {/* Partners — dim and unobtrusive (sign-in lives in the topbar) */}
         <div className="border-t border-border px-1 pt-3">
-          <p className="mb-2 text-[0.625rem] font-semibold uppercase tracking-wide text-ink-faint">
+          <p className="mb-2 text-[0.625rem] font-semibold uppercase tracking-wide text-ink-dim">
             {t("partners")}
           </p>
           <Partners />

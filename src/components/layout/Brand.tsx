@@ -16,7 +16,7 @@ export function Brand({
     <Link
       href="/"
       aria-label="CS2 UA — головна"
-      className={cn("inline-flex items-center", className)}
+      className={cn("inline-flex min-h-11 items-center", className)}
     >
       <Image
         src="/brand/logo-cs2.png"

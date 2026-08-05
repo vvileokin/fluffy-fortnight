@@ -15,13 +15,14 @@ export function TournamentCard({ t }: { t: Tournament }) {
   return (
     <Link
       href={`/tournaments/${t.slug}`}
-      className="group card-interactive relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+      className="group lift surface-1 relative flex flex-col overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
     >
-      {/* Cover */}
+      {/* Cover — the tournament's own accent bled through the top of the card,
+          so each one is tinted by its identity rather than a uniform grey. */}
       <div
         className="relative h-24 overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, color-mix(in oklch, ${t.accent} 22%, var(--surface)) 0%, var(--surface) 70%)`,
+          background: `radial-gradient(120% 140% at 15% 0%, color-mix(in oklch, ${t.accent} 38%, var(--surface)) 0%, color-mix(in oklch, ${t.accent} 12%, var(--surface)) 45%, var(--surface) 100%)`,
         }}
       >
         {t.coverImage && (
@@ -63,7 +64,7 @@ export function TournamentCard({ t }: { t: Tournament }) {
           </div>
         </dl>
 
-        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]">
           <div className="flex items-center">
             <div className="flex -space-x-1.5">
               {shown.map((slug) => (
@@ -90,8 +91,7 @@ export function TournamentCardWide({ t }: { t: Tournament }) {
     <Link
       href={`/tournaments/${t.slug}`}
       className={cn(
-        "group card-interactive flex items-center gap-4 rounded-lg border border-border bg-surface p-3 pr-4",
-        "hover:border-border-strong hover:bg-surface-2",
+        "group lift surface-1 flex items-center gap-4 rounded-xl p-3 pr-4",
       )}
     >
       <div

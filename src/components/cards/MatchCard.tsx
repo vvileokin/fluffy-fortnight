@@ -67,10 +67,8 @@ export function MatchCard({ match }: { match: Match }) {
     <Link
       href={`/matches/${match.id}`}
       className={cn(
-        "group card-interactive flex h-full flex-col rounded-lg border hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
-        isEvent
-          ? "event-aura-soft border-white/10"
-          : "border-border bg-surface hover:bg-surface-2",
+        "group lift flex h-full flex-col rounded-xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+        isEvent ? "event-aura-soft ring-1 ring-white/10" : "surface-1",
       )}
     >
       <div className="flex items-center justify-between gap-2 px-4 pt-3">
@@ -111,7 +109,7 @@ export function MatchCard({ match }: { match: Match }) {
       </div>
 
       {/* Context strip — always present so every state has equal height */}
-      <div className="mx-4 mb-3 flex items-center justify-between gap-2 rounded-md bg-surface-2 px-2.5 py-1.5 text-xs">
+      <div className="mx-4 mb-3 flex items-center justify-between gap-2 rounded-lg bg-[color-mix(in_oklch,var(--ink)_5%,transparent)] px-2.5 py-1.5 text-xs">
         <span className="text-ink-subtle">{match.format}</span>
         {isLive ? (
           <span className="shrink-0 font-semibold text-live">У прямому ефірі</span>
@@ -124,7 +122,8 @@ export function MatchCard({ match }: { match: Match }) {
         )}
       </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-border px-4 py-2.5">
+      {/* Hairline of light instead of a hard divider — reads as a seam, not a rule. */}
+      <div className="mt-auto flex items-center justify-between px-4 py-2.5 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]">
         {hasQuestions ? (
           <>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">

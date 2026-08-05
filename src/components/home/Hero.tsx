@@ -5,13 +5,23 @@ import { Button } from "@/components/ui/Button";
 export function Hero() {
   const t = useTranslations("home");
   return (
-    <section className="relative overflow-hidden rounded-xl border border-border bg-surface">
+    <section className="surface-2 relative overflow-hidden rounded-2xl">
       <div className="pointer-events-none absolute inset-0 aura-accent" />
+      {/* Two ambient blooms in the brand's own two colours — the warm signal
+          top-right, the UA azure low-left. Far apart and low opacity, so they
+          read as light in the room rather than a gradient panel. */}
       <div
-        className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full opacity-40 blur-3xl"
+        className="pointer-events-none absolute -right-24 -top-28 size-80 rounded-full opacity-50 blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, color-mix(in oklch, var(--accent) 18%, transparent), transparent 70%)",
+            "radial-gradient(circle, color-mix(in oklch, var(--accent) 22%, transparent), transparent 70%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-32 -left-20 size-72 rounded-full opacity-40 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in oklch, var(--info) 20%, transparent), transparent 70%)",
         }}
       />
 

@@ -922,11 +922,23 @@ export type LeaderRow = {
 export function rankByPoints<T extends { points: number }>(
   rows: T[],
 ): (T & { rank: number; rankEnd: number })[] {
-  const higher = (pts: number) => rows.filter((r) => r.points > pts).length;
-  const same = (pts: number) => rows.filter((r) => r.points === pts).length;
+  // Tally each score once instead of re-scanning the list per row: the old
+  // version was two full passes inside a map, so a 200-player board cost ~80k
+  // comparisons per render and grew quadratically.
+  const counts = new Map<number, number>();
+  for (const r of rows) counts.set(r.points, (counts.get(r.points) ?? 0) + 1);
+
+  const scores = [...counts.keys()].sort((a, b) => b - a);
+  const startOf = new Map<number, number>(); // score -> how many rank above it
+  let above = 0;
+  for (const s of scores) {
+    startOf.set(s, above);
+    above += counts.get(s)!;
+  }
+
   return rows.map((r) => {
-    const x = higher(r.points);
-    return { ...r, rank: x + 1, rankEnd: x + same(r.points) };
+    const x = startOf.get(r.points)!;
+    return { ...r, rank: x + 1, rankEnd: x + counts.get(r.points)! };
   });
 }
 

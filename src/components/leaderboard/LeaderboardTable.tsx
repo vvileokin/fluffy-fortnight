@@ -162,7 +162,7 @@ export function LeaderboardTable({
   return (
     <div
       className={cn(
-        "divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface",
+        "surface-1 divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-xl",
         className,
       )}
     >

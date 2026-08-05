@@ -13,7 +13,8 @@ function ResultsLink() {
   return (
     <Link
       href="/results"
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+      aria-label="Результати"
+      className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink surface-1"
     >
       <History className="size-4" />
       <span className="hidden sm:inline">Результати</span>

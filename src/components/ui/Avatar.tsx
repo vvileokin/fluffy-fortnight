@@ -32,7 +32,7 @@ export function Avatar({
     return (
       <span className={cn(base, "bg-surface-3")}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={name} className="size-full object-cover" />
+        <img src={src} alt={name} loading="lazy" decoding="async" className="size-full object-cover" />
       </span>
     );
   }
