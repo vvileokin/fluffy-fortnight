@@ -23,7 +23,7 @@ export function FilterTabs({
       role="tablist"
       aria-label="Фільтр"
       className={cn(
-        "no-scrollbar flex items-center gap-1 overflow-x-auto rounded-lg border border-border bg-surface p-1",
+        "no-scrollbar flex items-center gap-1 overflow-x-auto rounded-lg surface-1 p-1",
         className,
       )}
     >

@@ -24,7 +24,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
   const activeStep = stage === "idle" ? -1 : stage === "pending" ? 1 : 2;
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-5">
+    <div className="rounded-xl surface-1 p-5">
       <div className="flex items-baseline justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
           Завершується

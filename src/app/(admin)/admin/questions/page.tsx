@@ -174,7 +174,7 @@ export default function QuestionsAdmin() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[680px] text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-subtle">
+              <tr className="shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] text-left text-xs uppercase tracking-wide text-ink-subtle">
                 <th className="px-4 py-3 font-semibold">Питання</th>
                 <th className="px-4 py-3 font-semibold">Матч</th>
                 <th className="px-4 py-3 font-semibold">Нагорода</th>
@@ -182,7 +182,7 @@ export default function QuestionsAdmin() {
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
               {rows.map((r) => (
                 <tr key={r.id} className="transition-colors hover:bg-surface-2">
                   <td className="px-4 py-3 font-semibold text-ink">{r.title}</td>

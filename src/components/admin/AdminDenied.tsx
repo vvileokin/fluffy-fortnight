@@ -27,7 +27,7 @@ export function AdminDenied({ signedIn }: { signedIn: boolean }) {
           </p>
         </div>
 
-        <div className="space-y-3 rounded-xl border border-border bg-surface p-5">
+        <div className="space-y-3 rounded-xl surface-1 p-5">
           {signedIn ? (
             <>
               <p className="text-center text-xs text-ink-subtle">

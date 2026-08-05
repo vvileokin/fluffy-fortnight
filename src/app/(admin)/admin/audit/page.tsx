@@ -91,7 +91,7 @@ export default function AuditPage() {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
             {entries.map((e) => {
               const Icon = areaIcon[e.area] ?? ScrollText;
               return (

@@ -36,7 +36,7 @@ export default async function LeaderboardPage() {
               <p className="mt-0.5 text-xs text-ink-subtle">{s.label}</p>
             </>
           );
-          const base = "block rounded-lg border border-border bg-surface p-3.5";
+          const base = "block rounded-lg surface-1 p-3.5";
           return s.hint ? (
             <Tooltip key={s.label} as="div" label={s.hint} className={cn(base, "cursor-help")}>
               {card}

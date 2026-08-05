@@ -43,7 +43,7 @@ export function StatTile({
     danger: "text-danger",
   }[tone];
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-lg surface-1 p-4">
       <Icon className={cn("size-4", toneCls)} />
       <p className={cn("tnum mt-2 font-mono text-2xl font-bold", toneCls)}>
         {value}
@@ -72,7 +72,7 @@ export function Panel({
       )}
     >
       {title && (
-        <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="flex items-center justify-between gap-2 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-4 py-3">
           <h2 className="text-sm font-bold text-ink">{title}</h2>
           {action}
         </div>

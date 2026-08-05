@@ -30,14 +30,14 @@ export default async function GiveawayPage({
     <div className="space-y-6">
       <Link
         href="/giveaways"
-        className="inline-flex items-center gap-1 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
+        className="-ml-2 inline-flex h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
       >
         <ChevronLeft className="size-4" />
         Усі розіграші
       </Link>
 
       {/* Prize hero */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="relative overflow-hidden rounded-xl surface-1">
         <div
           className="flex items-center gap-5 p-5 sm:p-7"
           style={{
@@ -79,7 +79,7 @@ export default async function GiveawayPage({
               <ListChecks className="size-4 text-ink-subtle" />
               Умови участі
             </h2>
-            <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+            <ul className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-lg surface-1">
               {g.conditions.map((c) => (
                 <li key={c} className="flex items-center gap-3 px-4 py-3">
                   <span className="grid size-5 shrink-0 place-items-center rounded-full bg-success/15 text-success">

@@ -96,7 +96,7 @@ export function Topbar() {
   const points = profile?.points ?? 0;
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-border bg-[color-mix(in_oklch,var(--surface)_78%,transparent)] px-4 backdrop-blur-xl sm:px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-[color-mix(in_oklch,var(--surface)_78%,transparent)] px-4 backdrop-blur-xl sm:px-6">
       <div className="flex items-center gap-2 lg:hidden">
         <Brand compact />
       </div>
@@ -121,7 +121,7 @@ export function Topbar() {
         <Link
           href="/profile"
           aria-label={`${handle}: ${points} ${t("points")}`}
-          className="flex items-center gap-2.5 rounded-full border border-border bg-surface py-1 pl-3 pr-1.5 transition-colors hover:border-border-strong"
+          className="flex items-center gap-2.5 rounded-full surface-1 py-1 pl-3 pr-1.5 transition-colors"
         >
           <span className="flex items-center gap-1.5 text-xs">
             <span className="tnum font-mono font-semibold text-accent">
@@ -143,7 +143,7 @@ export function Topbar() {
               "relative grid size-9 place-items-center rounded-full border transition-colors",
               open
                 ? "border-border-strong bg-surface-2 text-ink"
-                : "border-border bg-surface text-ink-muted hover:border-border-strong hover:text-ink",
+                : "border-border bg-surface text-ink-muted hover:text-ink",
             )}
           >
             <Bell className="size-4" />
@@ -158,9 +158,9 @@ export function Topbar() {
               <div
                 role="dialog"
                 aria-label={t("notifications")}
-                className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]"
+                className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl surface-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]"
               >
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div className="flex items-center justify-between shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-4 py-3">
                   <span className="text-sm font-bold text-ink">{t("notifications")}</span>
                   {unread > 0 && (
                     <button
@@ -172,7 +172,7 @@ export function Topbar() {
                     </button>
                   )}
                 </div>
-                <ul className="max-h-56 divide-y divide-border overflow-y-auto">
+                <ul className="max-h-56 divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-y-auto">
                   {items.length === 0 && (
                     <li className="px-4 py-10 text-center text-sm text-ink-subtle">
                       Сповіщень поки немає

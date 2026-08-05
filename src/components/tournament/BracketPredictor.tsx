@@ -102,7 +102,7 @@ export function BracketPredictor({ teamSlugs }: { teamSlugs: string[] }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-border pt-4">
+      <div className="flex items-center justify-between shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] pt-4">
         <span className="text-xs text-ink-subtle">
           {complete
             ? "Симуляцію заповнено"
@@ -156,10 +156,10 @@ function BracketMatch({
         disabled && "opacity-50",
       )}
     >
-      <div className="border-b border-border px-3 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">
+      <div className="shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-3 py-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-subtle">
         {label}
       </div>
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
         {teams.map((team, i) => {
           const isPicked = team && picked?.slug === team.slug;
           return (

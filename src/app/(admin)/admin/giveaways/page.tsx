@@ -139,7 +139,7 @@ export default function GiveawaysAdmin() {
 
       {/* Giveaway selector */}
       {list.length === 0 ? (
-        <div className="mb-4 rounded-lg border border-dashed border-border bg-surface px-4 py-8 text-center text-sm text-ink-subtle">
+        <div className="mb-4 rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-4 py-8 text-center text-sm text-ink-subtle">
           Розіграшів ще немає. Створи перший — він одразу з’явиться на сайті.
         </div>
       ) : (
@@ -188,7 +188,7 @@ export default function GiveawaysAdmin() {
             </span>
           }
         >
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
             {applicants.map((a) => (
               <li
                 key={a.handle}
@@ -236,7 +236,7 @@ export default function GiveawaysAdmin() {
                   </div>
                 </div>
               ) : (
-                <div className="mb-3 grid place-items-center rounded-lg border border-dashed border-border bg-surface-2 py-6 text-center">
+                <div className="mb-3 grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface-2 py-6 text-center">
                   <Trophy className="size-6 text-ink-faint" />
                   <p className="mt-2 text-xs text-ink-subtle">
                     Переможця ще не обрано

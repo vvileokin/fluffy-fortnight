@@ -15,7 +15,7 @@ export function BottomNav() {
   const t = useTranslations("nav");
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-[color-mix(in_oklch,var(--surface)_86%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-[color-mix(in_oklch,var(--surface)_86%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
       <div className="grid grid-cols-5">
         {bottomNav.map((item) => {
           const Icon = item.icon;

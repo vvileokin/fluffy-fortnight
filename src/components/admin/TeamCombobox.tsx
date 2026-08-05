@@ -81,7 +81,7 @@ export function TeamCombobox({
 
       {open && (
         <div className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-border-strong bg-surface shadow-[0_16px_40px_-12px_rgba(0,0,0,0.9)]">
-          <div className="relative border-b border-border">
+          <div className="relative shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-ink-subtle" />
             <input
               autoFocus

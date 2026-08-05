@@ -18,7 +18,7 @@ export function PredictionHistory({ items }: { items: HistoryItem[] }) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
+      <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
         Тут зʼявляться твої прогнози та нараховані поінти.
       </div>
     );
@@ -26,7 +26,7 @@ export function PredictionHistory({ items }: { items: HistoryItem[] }) {
 
   return (
     <div>
-      <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+      <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-lg surface-1">
         {shown.map((h) => (
           <div key={h.id} className="flex items-center gap-3 px-4 py-3">
             <ResultDot r={h.result} />
@@ -52,7 +52,7 @@ export function PredictionHistory({ items }: { items: HistoryItem[] }) {
       {collapsible && (
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg surface-1 py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
         >
           {expanded ? "Згорнути" : `Показати всі ${items.length}`}
           <ChevronDown

@@ -217,7 +217,7 @@ export default function ImportAdmin() {
           {ranking ? <Loader2 className="size-4 animate-spin" /> : <Trophy className="size-4" />}
           Оновити рейтинг
         </button>
-        <div className="flex gap-1 rounded-lg border border-border bg-surface p-1">
+        <div className="flex gap-1 rounded-lg surface-1 p-1">
           {(["pending", "approved", "rejected"] as Review[]).map((r) => (
             <button
               key={r}
@@ -259,7 +259,7 @@ export default function ImportAdmin() {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
             {items.map((it) => {
               const d = drafts[it.ps_id] ?? { a: "", b: "", tournamentName: "", tournamentIcon: "", stage: "" };
               const ready = !!d.a && !!d.b && d.a !== d.b && !!d.tournamentName.trim();

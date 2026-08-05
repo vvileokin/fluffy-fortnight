@@ -54,9 +54,9 @@ export function ImageField({
   return (
     <label className="block">
       <span className="mb-1.5 block text-xs font-semibold text-ink-muted">{label}</span>
-      <div className="flex items-center gap-3 rounded-lg border border-dashed border-border bg-surface-2 p-2.5">
+      <div className="flex items-center gap-3 rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface-2 p-2.5">
         <span
-          className="relative grid shrink-0 place-items-center overflow-hidden rounded-md border border-border bg-surface"
+          className="relative grid shrink-0 place-items-center overflow-hidden rounded-md surface-1"
           style={{ width: thumbW, height: thumbH }}
         >
           {shown ? (

@@ -123,7 +123,7 @@ export default function ResolveAdmin() {
           );
         })}
         {questions.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center text-sm text-ink-subtle">
+          <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-12 text-center text-sm text-ink-subtle">
             Питань для розрахунку немає. Створи їх у розділі «Питання».
           </div>
         )}

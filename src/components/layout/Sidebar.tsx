@@ -19,7 +19,7 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
   const t = useTranslations("nav");
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-border bg-surface lg:flex">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-surface shadow-[1px_0_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] lg:flex">
       <div className="flex h-16 items-center px-5">
         <Brand />
       </div>
@@ -75,7 +75,7 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
 
       <div className="px-3 pb-4">
         {/* Partners — dim and unobtrusive (sign-in lives in the topbar) */}
-        <div className="border-t border-border px-1 pt-3">
+        <div className="shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-1 pt-3">
           <p className="mb-2 text-[0.625rem] font-semibold uppercase tracking-wide text-ink-dim">
             {t("partners")}
           </p>

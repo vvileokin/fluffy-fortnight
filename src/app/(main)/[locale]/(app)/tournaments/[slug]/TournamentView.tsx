@@ -67,7 +67,7 @@ export function TournamentView({
     <div className="space-y-6">
       <Link
         href="/tournaments"
-        className="inline-flex items-center gap-1 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
+        className="-ml-2 inline-flex h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
       >
         <ChevronLeft className="size-4" />
         Усі турніри
@@ -76,8 +76,8 @@ export function TournamentView({
       {/* Header */}
       <div
         className={cn(
-          "relative overflow-hidden rounded-xl border",
-          t.isEvent ? "event-aura border-white/10" : "border-border bg-surface",
+          "relative overflow-hidden rounded-2xl",
+          t.isEvent ? "event-aura border border-white/10" : "surface-2",
         )}
       >
         {!t.isEvent && (
@@ -141,7 +141,7 @@ export function TournamentView({
       </div>
 
       {/* Tabs */}
-      <div className="no-scrollbar flex gap-1 overflow-x-auto overflow-y-hidden border-b border-border">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto overflow-y-hidden shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]">
         {tabs.map((tb) => {
           const active = tb.id === tab;
           return (
@@ -172,7 +172,7 @@ export function TournamentView({
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
               Про турнір
             </h2>
-            <dl className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
+            <dl className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-xl surface-1">
               <MetaRow icon={Calendar} label="Дати" value={t.dateLabel} />
               <MetaRow icon={t.online ? Wifi : MapPin} label="Локація" value={t.location} />
               <MetaRow icon={Users} label="Команди" value={`${teams.length}`} />
@@ -205,7 +205,7 @@ export function TournamentView({
       )}
 
       {tab === "predictor" && (
-        <div className="rounded-xl border border-border bg-surface p-5">
+        <div className="rounded-xl surface-1 p-5">
           <h2 className="text-base font-bold text-ink">Прогнозатор плейоф</h2>
           <p className="mt-1 text-sm text-ink-subtle">
             Версія прогнозу зберігається та блокується після дедлайну стадії.
@@ -263,7 +263,7 @@ function TeamsGrid({
           return (
             <div
               key={slug}
-              className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3 transition-colors hover:border-border-strong"
+              className="flex items-center gap-3 rounded-lg surface-1 p-3 transition-colors"
             >
               <TeamLogo team={team} size="md" />
               <div className="min-w-0">
@@ -277,7 +277,7 @@ function TeamsGrid({
       {collapsible && (
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg surface-1 py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
         >
           {expanded ? "Згорнути" : `Показати всі ${slugs.length}`}
           <ChevronDown
@@ -323,7 +323,7 @@ function MetaRow({
 
 function EmptyPanel({ text }: { text: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center text-sm text-ink-subtle">
+    <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-12 text-center text-sm text-ink-subtle">
       {text}
     </div>
   );

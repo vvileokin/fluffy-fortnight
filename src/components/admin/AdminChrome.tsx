@@ -58,7 +58,7 @@ export function AdminChrome({
   return (
     <div className="min-h-dvh">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-border bg-surface lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-surface shadow-[1px_0_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] lg:flex">
         <div className="flex h-16 items-center gap-2 px-5">
           <Brand compact />
           <span className="rounded-md bg-danger/15 px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-danger">
@@ -118,7 +118,7 @@ export function AdminChrome({
       {/* Content */}
       <div className="lg:pl-[248px]">
         {/* Mobile admin bar */}
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-surface px-4 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-surface px-4 lg:hidden">
           <div className="flex items-center gap-2">
             <Brand compact />
             <span className="rounded-md bg-danger/15 px-1.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-danger">
@@ -131,7 +131,7 @@ export function AdminChrome({
         </header>
 
         {/* Mobile section tabs */}
-        <div className="no-scrollbar sticky top-14 z-10 flex gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-2 lg:hidden">
+        <div className="no-scrollbar sticky top-14 z-10 flex gap-1 overflow-x-auto shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-surface px-3 py-2 lg:hidden">
           {visibleNav.map((item) => {
             const active =
               item.href === "/admin"

@@ -91,7 +91,7 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface p-5 sm:flex-row sm:items-center sm:p-6">
+      <div className="flex flex-col gap-4 rounded-xl surface-1 p-5 sm:flex-row sm:items-center sm:p-6">
         <Avatar name={handle} src={profile?.avatar_url} size="lg" ring />
         <div className="flex-1">
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">{handle}</h1>
@@ -114,7 +114,7 @@ export default async function ProfilePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-lg border border-border bg-surface p-4">
+          <div key={s.label} className="rounded-lg surface-1 p-4">
             <s.icon className="size-4 text-accent" />
             <p className="tnum mt-2 font-mono text-2xl font-bold text-ink">{s.value}</p>
             <p className="mt-0.5 text-xs text-ink-subtle">{s.label}</p>

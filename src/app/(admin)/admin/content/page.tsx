@@ -224,7 +224,7 @@ export default function ContentAdmin() {
         </Panel>
 
         <Panel title="Обкладинки турнірів">
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
             {tournaments.map((t) => (
               <li key={t.slug} className="p-4">
                 <ImageField

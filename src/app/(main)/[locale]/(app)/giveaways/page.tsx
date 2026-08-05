@@ -19,7 +19,7 @@ export default async function GiveawaysPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-border bg-surface px-6 py-16 text-center">
+        <div className="rounded-xl border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-16 text-center">
           <Gift className="mx-auto size-8 text-ink-faint" />
           <p className="mt-3 text-sm font-semibold text-ink">Зараз активних розіграшів немає</p>
           <p className="mt-1 text-sm text-ink-subtle">

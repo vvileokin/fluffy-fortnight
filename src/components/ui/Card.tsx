@@ -11,10 +11,10 @@ type CardProps = {
 };
 
 const shell =
-  "relative rounded-lg border border-border bg-surface";
+  "relative rounded-lg surface-1";
 
 const interactiveShell =
-  "card-interactive hover:border-border-strong hover:bg-surface-2 " +
+  "card-interactive hover:bg-surface-2 " +
   "focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2";
 
 export function Card({

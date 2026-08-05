@@ -201,7 +201,7 @@ export default function BountyAdmin() {
           return (
             <Panel key={meta.id}>
               {/* Stage header */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-4 py-3">
                 <div className="flex items-center gap-2.5">
                   <span className="grid size-8 place-items-center rounded-md bg-surface-2 text-accent">
                     <BlastMark className="size-4" />
@@ -301,7 +301,7 @@ export default function BountyAdmin() {
                             : "# — сід (1–8 вищі, 9–16 нижчі) · замок закриває пару окремо"}
                       </span>
                     </div>
-                    <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+                    <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-lg border border-border">
                       {s.teams.map((slug) => {
                         const t = getTeam(slug);
                         const low = s.lowSeeds.includes(slug);

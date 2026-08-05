@@ -78,7 +78,7 @@ export default async function MatchPage({
     <div className="space-y-8">
       <Link
         href="/matches"
-        className="inline-flex items-center gap-1 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
+        className="-ml-2 inline-flex h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
       >
         <ChevronLeft className="size-4" />
         Усі матчі
@@ -87,8 +87,8 @@ export default async function MatchPage({
       {/* Match header */}
       <div
         className={cn(
-          "relative overflow-hidden rounded-xl border",
-          isEvent ? "event-aura border-white/10" : "border-border bg-surface",
+          "relative overflow-hidden rounded-2xl",
+          isEvent ? "event-aura border border-white/10" : "surface-2",
         )}
       >
         {!isEvent && (
@@ -105,7 +105,7 @@ export default async function MatchPage({
             {tour ? (
               <Link
                 href={`/tournaments/${tour.slug}`}
-                className="truncate font-semibold hover:text-ink"
+                className="-my-2 inline-flex min-h-11 items-center truncate rounded-lg py-2 pr-2 font-semibold transition-colors hover:text-ink"
               >
                 {tour.name}
               </Link>
@@ -227,7 +227,7 @@ export default async function MatchPage({
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
+          <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
             Для цього матчу прогнози вже закриті.
           </div>
         )}
@@ -241,7 +241,7 @@ export default async function MatchPage({
             <Swords className="size-4 text-ink-subtle" />
             Map veto
           </h3>
-          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+          <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-lg surface-1">
             {veto.map((v, i) => {
               const team = v.team === "a" ? a : v.team === "b" ? b : null;
               const isPick = v.action === "pick";
@@ -282,7 +282,7 @@ export default async function MatchPage({
             Історія зустрічей
           </h3>
           {match.h2h && (match.h2h.a > 0 || match.h2h.b > 0) ? (
-            <div className="rounded-lg border border-border bg-surface p-4">
+            <div className="rounded-lg surface-1 p-4">
               <div className="flex items-center justify-between">
                 <TeamMini team={a} />
                 <div className="text-center">
@@ -300,7 +300,7 @@ export default async function MatchPage({
                 <TeamMini team={b} align="right" />
               </div>
               {match.h2h.series && match.h2h.series.length > 0 && (
-                <div className="mt-4 space-y-2 border-t border-border pt-3">
+                <div className="mt-4 space-y-2 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] pt-3">
                   {match.h2h.series.map((r, i) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span className="text-ink-subtle">{r.event}</span>
@@ -318,7 +318,7 @@ export default async function MatchPage({
               )}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-border bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
+            <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
               Команди не грали між собою раніше.
             </div>
           )}

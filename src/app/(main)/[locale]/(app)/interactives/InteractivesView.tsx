@@ -55,7 +55,7 @@ export function InteractivesView({
           ))}
         </div>
       ) : (
-        <div className="grid place-items-center rounded-lg border border-dashed border-border bg-surface px-6 py-16 text-center">
+        <div className="grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-16 text-center">
           <Target className="size-8 text-ink-faint" />
           <p className="mt-3 text-sm font-semibold text-ink">Тут поки порожньо</p>
           <p className="mt-1 text-xs text-ink-subtle">

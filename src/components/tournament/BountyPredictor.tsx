@@ -253,7 +253,7 @@ export function BountyPredictor() {
                   );
                   const availableHighs = highs.filter((h) => !takenByOthers.has(h));
                   return (
-                    <div key={low} className="flex items-center gap-3 rounded-lg border border-border bg-surface p-2.5">
+                    <div key={low} className="flex items-center gap-3 rounded-lg surface-1 p-2.5">
                       <TeamLogo team={lowTeam} size="md" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-ink">{lowTeam.name}</p>
@@ -295,7 +295,7 @@ export function BountyPredictor() {
           </div>
 
           {!locked && (
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] pt-4">
               <span className="text-xs text-ink-subtle">
                 Обрано <span className="tnum font-semibold text-ink">{made}</span> / {lows.length}
               </span>
@@ -339,7 +339,7 @@ export function BountyPredictor() {
 function DraftLoginGate() {
   return (
     <div className="absolute inset-0 grid place-items-center p-4">
-      <div className="w-full max-w-xs rounded-xl border border-border bg-surface/90 p-5 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)] backdrop-blur-sm">
+      <div className="w-full max-w-xs rounded-xl surface-1/90 p-5 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)] backdrop-blur-sm">
         <div className="mx-auto grid size-11 place-items-center rounded-full bg-[color-mix(in_oklch,var(--accent)_14%,transparent)] text-accent">
           <Lock className="size-5" />
         </div>
@@ -424,7 +424,7 @@ function HighPicker({
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
             className={cn(
-              "absolute right-0 z-40 max-h-56 w-52 overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]",
+              "absolute right-0 z-40 max-h-56 w-52 overflow-y-auto rounded-lg surface-1 p-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]",
               dropUp ? "bottom-[calc(100%+0.25rem)]" : "top-[calc(100%+0.25rem)]",
             )}
           >
@@ -461,7 +461,7 @@ function HighPicker({
 
 function StagePlaceholder() {
   return (
-    <div className="grid place-items-center rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center">
+    <div className="grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-12 text-center">
       <Lock className="size-7 text-ink-faint" />
       <p className="mt-3 text-sm font-semibold text-ink">Стадію ще не налаштовано</p>
       <p className="mt-1 text-xs text-ink-subtle">Команди з’являться, щойно адмін відкриє стадію.</p>

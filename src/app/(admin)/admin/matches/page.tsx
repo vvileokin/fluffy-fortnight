@@ -329,7 +329,7 @@ export default function MatchesAdmin() {
 
       {/* Matches split by where they are in their life, so the list you need is
           never buried under the ones you don't. */}
-      <div className="no-scrollbar mb-4 flex gap-1 overflow-x-auto rounded-lg border border-border bg-surface p-1">
+      <div className="no-scrollbar mb-4 flex gap-1 overflow-x-auto rounded-lg surface-1 p-1">
         {statusTabs.map((tb) => {
           const count = withStatus.filter((r) => r.status === tb.id).length;
           const on = tb.id === statusTab;
@@ -360,7 +360,7 @@ export default function MatchesAdmin() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-subtle">
+              <tr className="shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] text-left text-xs uppercase tracking-wide text-ink-subtle">
                 <th className="px-4 py-3 font-semibold">Матч</th>
                 <th className="px-4 py-3 font-semibold">Тип</th>
                 <th className="px-4 py-3 font-semibold">Статус</th>
@@ -368,7 +368,7 @@ export default function MatchesAdmin() {
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
               {visibleRows.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-10 text-center text-sm text-ink-subtle">

@@ -89,7 +89,7 @@ export default function UsersAdmin() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Пошук за ніком"
-          className="h-10 w-full rounded-lg border border-border bg-surface pl-10 pr-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
+          className="h-10 w-full rounded-lg surface-1 pl-10 pr-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
         />
       </div>
 
@@ -140,14 +140,14 @@ function UserTable({
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
-          <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-ink-subtle">
+          <tr className="shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] text-left text-xs uppercase tracking-wide text-ink-subtle">
             <th className="px-4 py-3 font-semibold">Користувач</th>
             <th className="px-4 py-3 font-semibold">Поінти</th>
             <th className="px-4 py-3 font-semibold">Реєстрація</th>
             <th className="px-4 py-3 font-semibold">Доступ</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border">
+        <tbody className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
           {users.map((u) => (
             <tr key={u.id} className="transition-colors hover:bg-surface-2">
               <td className="px-4 py-2.5">

@@ -160,7 +160,7 @@ function StageSection({
 }) {
   const [open, setOpen] = React.useState(false);
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+    <div className="overflow-hidden rounded-xl surface-1">
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-3 bg-surface px-4 py-3 text-left transition-colors hover:bg-surface-2"
@@ -223,8 +223,8 @@ function RealMatch({ match }: { match: Match }) {
     <Link
       href={`/matches/${match.id}`}
       className={cn(
-        "block overflow-hidden rounded-lg border transition-colors hover:border-border-strong",
-        isLive ? "border-live/40 bg-surface" : "border-border bg-surface",
+        "block overflow-hidden rounded-lg border transition-colors",
+        isLive ? "border border-live/40 bg-surface" : "surface-1",
       )}
     >
       <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
@@ -284,7 +284,7 @@ function TeamLine({
 
 function TbdMatch({ slot }: { slot: BracketSlot }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-dashed border-border bg-surface/50">
+    <div className="overflow-hidden rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface/50">
       <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{slot.format}</span>
         <span className="font-semibold text-ink-subtle">
@@ -304,7 +304,7 @@ function PairMatch({ low, high, format }: { low: string; high: string; format: s
   const b = getTeam(low);
   if (!a || !b) return <TbdMatch slot={{ format: format as BracketSlot["format"] }} />;
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-surface">
+    <div className="overflow-hidden rounded-lg surface-1">
       <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{format}</span>
         <span className="font-semibold text-ink-subtle">TBD</span>

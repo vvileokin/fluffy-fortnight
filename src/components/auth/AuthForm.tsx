@@ -125,7 +125,7 @@ export function AuthForm({
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-surface p-5">
+    <div className="space-y-3 rounded-xl surface-1 p-5">
       <div className="grid grid-cols-1 gap-2">
         <button
           type="button"
