@@ -53,7 +53,7 @@ export function TournamentCard({ t }: { t: Tournament }) {
               alt=""
               fill
               sizes="(max-width:640px) 100vw, 380px"
-              className="object-cover"
+              className="object-cover transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out-soft)] will-change-transform group-hover:scale-[1.04] motion-reduce:transform-none"
             />
             {/* Just enough to seat the Tier/LIVE chips; the artwork stays visible. */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />

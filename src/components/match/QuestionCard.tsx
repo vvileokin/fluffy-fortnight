@@ -204,7 +204,7 @@ export function QuestionCard({
                       selected ? "text-accent" : "text-accent/80",
                     )}
                   >
-                    <BrandIcon name="points" className="size-3.5" />
+                    <BrandIcon name={match?.tournamentSlug === "ewc-2026" ? "points-ewc" : "points"} className="size-3.5" />
                     +{opt.reward}
                   </span>
                 </span>

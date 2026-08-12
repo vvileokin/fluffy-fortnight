@@ -149,9 +149,10 @@ export function Topbar() {
 
         {/* Event currency. It links to the event's own board rather than the
             profile, because the only question a player has when they look at
-            this number is "where does that put me at EWC". Hidden at zero so
-            the bar doesn't carry a dead stat outside the event. */}
-        {eventPoints > 0 && (
+            this number is "where does that put me at EWC". Shown even at zero
+            while the event runs — it's a route into the event, not just a
+            readout, and hiding it at zero meant nobody ever saw it. */}
+        {(
           <Link
             href="/tournaments/ewc-2026"
             aria-label={`${formatInt(eventPoints)} EWC`}

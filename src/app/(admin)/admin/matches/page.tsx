@@ -393,7 +393,9 @@ export default function MatchesAdmin() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {r.is_event ? (
+                    {r.tournament_slug === "ewc-2026" ? (
+                      <Badge tone="accent">EWC</Badge>
+                    ) : r.is_event ? (
                       <Badge tone="accent">Event</Badge>
                     ) : (
                       <Badge tone="neutral">Звичайний</Badge>
@@ -514,7 +516,25 @@ export default function MatchesAdmin() {
                 )}
               </div>
               <Field label="Дизайн">
-                <select className={inputCls} value={editing.is_event ? "event" : "regular"} onChange={(e) => up({ is_event: e.target.value === "event" })}>
+                {/* The dress follows the tournament — a match in ewc-2026 wears
+                    the EWC skin automatically — so picking EWC here also sets
+                    the tournament, otherwise the two could disagree. */}
+                <select
+                  className={inputCls}
+                  value={
+                    editing.tournament_slug === "ewc-2026"
+                      ? "ewc"
+                      : editing.is_event
+                        ? "event"
+                        : "regular"
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "ewc") up({ is_event: true, tournament_slug: "ewc-2026" });
+                    else up({ is_event: v === "event" });
+                  }}
+                >
+                  <option value="ewc">EWC 2026 (вогонь)</option>
                   <option value="event">BLAST (неон)</option>
                   <option value="regular">Звичайний</option>
                 </select>

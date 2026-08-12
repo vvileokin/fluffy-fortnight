@@ -195,7 +195,7 @@ export function MatchCard({ match }: { match: Match }) {
             <span className="flex items-center gap-1 text-xs">
               <span className="text-ink-subtle">{t("upTo")}</span>
               <span className="tnum flex items-center gap-1 font-mono font-bold leading-none text-accent">
-                <BrandIcon name="points" className="size-3.5" />
+                <BrandIcon name={skin === "ewc" ? "points-ewc" : "points"} className="size-3.5" />
                 +{match.maxReward}
               </span>
               <ChevronRight className="size-4 text-ink-subtle transition-transform duration-200 group-hover:translate-x-0.5" />

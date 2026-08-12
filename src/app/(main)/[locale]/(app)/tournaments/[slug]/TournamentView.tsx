@@ -24,11 +24,13 @@ import {
   ResultsGlyph,
 } from "@/components/layout/NavGlyphs";
 import { BlastMark } from "@/components/ui/BlastMark";
+import { EwcMark } from "@/components/ui/EwcMark";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { BracketPredictor } from "@/components/tournament/BracketPredictor";
 import { TournamentBracket } from "@/components/tournament/TournamentBracket";
+import { EwcBracket } from "@/components/tournament/EwcBracket";
 import type { CSSProperties } from "react";
 import {
   getTeam,
@@ -41,7 +43,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Tab = "overview" | "teams" | "results" | "predictor" | "leaderboard";
+type Tab = "overview" | "teams" | "matches" | "results" | "predictor" | "leaderboard";
 
 export function TournamentView({
   tournament: t,
@@ -62,6 +64,7 @@ export function TournamentView({
   }[] = [
     { id: "overview", label: "Огляд", icon: TrophyGlyph },
     { id: "teams", label: "Команди", icon: TeamGlyph },
+    { id: "matches" as Tab, label: "Матчі", icon: SwordsGlyph },
     { id: "results", label: "Результати", icon: ResultsGlyph },
     ...(t.isEvent
       ? []
@@ -72,6 +75,7 @@ export function TournamentView({
   const [tab, setTab] = React.useState<Tab>("overview");
   const teams = t.teamSlugs.map(getTeam);
   const finishedMatches = matches.filter((m) => m.status === "finished");
+  const upcomingMatches = matches.filter((m) => m.status !== "finished");
 
   return (
     <div className="space-y-6">
@@ -123,16 +127,22 @@ export function TournamentView({
           <div className="flex flex-wrap items-center gap-1.5">
             {/* Impeccable: Crafted Event Chip — same 22px height as every other
                 status, with the mark scaled to the cap height beside it. */}
+            {/* This was a hand-rolled span, which is why it never lined up with
+                the LIVE chip beside it — two implementations of the same object.
+                It's the real Badge now, so the 22px box, the padding and the
+                baseline are shared; only the skin-over-artwork colours differ. */}
             {t.skin && (
-              <span className="inline-flex h-[1.375rem] shrink-0 items-center gap-1.5 rounded-md border border-white/20 bg-black/30 px-2 text-[0.6875rem] font-bold uppercase leading-none tracking-wide text-white backdrop-blur-sm">
+              <Badge
+                tone="neutral"
+                className="border-white/20 bg-black/40 text-white backdrop-blur-sm"
+              >
                 {t.skin === "blast" ? (
-                  <>
-                    <BlastMark className="size-[0.6875rem]" /> Event
-                  </>
+                  <BlastMark className="size-[0.6875rem]" />
                 ) : (
-                  "Event"
+                  <EwcMark className="h-[0.4375rem] w-auto" />
                 )}
-              </span>
+                Event
+              </Badge>
             )}
             {t.status === "live" ? (
               <LiveBadge />
@@ -165,7 +175,7 @@ export function TournamentView({
             </div>
             <Dot />
             <div className="flex items-center gap-1.5">
-              <TeamGlyph className="size-3.5 shrink-0 text-ink-subtle" />
+              <TeamGlyph className="size-4 shrink-0 text-ink-subtle" />
               {teams.length} команд
             </div>
             <Dot />
@@ -218,15 +228,32 @@ export function TournamentView({
             <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
               Про турнір
             </h2>
-            <dl className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-xl surface-1">
-              <MetaRow icon={Calendar} label="Дати" value={t.dateLabel} />
-              <MetaRow icon={t.online ? Wifi : MapPin} label="Локація" value={t.location} />
-              <MetaRow icon={Users} label="Команди" value={`${teams.length}`} />
-              <MetaRow icon={Trophy} label="Призовий" value={formatPrize(t.prizeUSD)} accent />
-              <MetaRow icon={Swords} label="Формат" value={t.format} />
+            {/* Same glyph set the desktop banner uses — the phone was still on
+                the old lucide icons, so the two read as different products. */}
+            <dl
+              className={cn(
+                "divide-y divide-white/[0.06] overflow-hidden rounded-xl",
+                t.skin === "ewc" ? "ewc-aura-card" : "surface-1",
+              )}
+            >
+              <MetaRow icon={DateGlyph} label="Дати" value={t.dateLabel} />
+              <MetaRow icon={t.online ? Wifi : GeoGlyph} label="Локація" value={t.location} />
+              <MetaRow icon={TrophyGlyph} label="Призовий" value={formatPrize(t.prizeUSD)} accent />
+              <MetaRow icon={SwordsGlyph} label="Формат" value={t.format} />
             </dl>
           </section>
           <TeamsGrid slugs={t.teamSlugs} ranks={ranks} skin={t.skin} compact />
+          {/* The event's ladder, below the field it's drawn from. It's a view of
+              the admin's matches — see EwcBracket — not a second copy of them. */}
+          {t.skin === "ewc" && (
+            <section className="space-y-3">
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
+                <EwcMark className="ml-1 h-2 w-auto text-accent" />
+                Сітка турніру
+              </h2>
+              <EwcBracket matches={matches} />
+            </section>
+          )}
           {matches.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
@@ -239,6 +266,17 @@ export function TournamentView({
       )}
 
       {tab === "teams" && <TeamsGrid slugs={t.teamSlugs} ranks={ranks} skin={t.skin} />}
+
+      {/* Everything not yet played — the counterpart to Результати. */}
+      {tab === "matches" && (
+        <div className="space-y-3">
+          {upcomingMatches.length > 0 ? (
+            <MatchDayGroups matches={upcomingMatches} />
+          ) : (
+            <EmptyPanel text="Найближчих матчів цього турніру поки немає." />
+          )}
+        </div>
+      )}
 
       {tab === "results" && (
         <div className="space-y-3">
