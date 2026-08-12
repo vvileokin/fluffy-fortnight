@@ -1021,7 +1021,9 @@ export type Giveaway = {
   minPoints: number;
   status: "open" | "ending" | "finished";
   cover: string; // oklch tint (fallback when no image)
-  image?: string; // optional prize photo, recommended 640×400
+  image?: string; // optional prize photo, recommended 1200×400 (3:1)
+  /** Dress the card in an event's colours. Undefined = the standard card. */
+  skin?: EventSkin;
   description: string;
   conditions: string[];
   /** How many winners the draw picks. */

@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { CSSProperties } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { Clock, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { getMatch, matchTeam, teamByLabel, type Question, type Match } from "@/lib/data";
@@ -91,7 +91,12 @@ export function QuestionCard({
        label over its own payout, and picking one lights the whole segment.
        Same control language as the filter tabs and tournament switch, so the
        page has one way of saying "this one is selected". */
-    <div className="surface-1 overflow-hidden rounded-2xl">
+    <div
+      className={cn(
+        "overflow-hidden rounded-2xl",
+        isEwc ? "ewc-match" : "surface-1",
+      )}
+    >
       {/* The "which match is this" row belongs to feeds that mix matches
           together. `withMatch` is what asks for it — the match page passes
           `match` purely so the options can resolve their crests, and would
@@ -111,28 +116,12 @@ export function QuestionCard({
       )}
 
       <div className="p-4">
-        {/* Title rail: the question on the left, its clock on the right, on one
-            baseline. The deadline used to sit at the very bottom of the card,
-            four rows away from the thing it constrains. */}
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="min-w-0 text-sm font-bold leading-snug text-ink text-balance">
-            {question.title}
-          </h3>
-          {/* Nothing here once the question is locked. A "Закрито" chip was
-              stating the obvious twice over — the options are already dead to
-              the touch and the result is on the card — and it put a grey label
-              in the loudest corner of the rail. */}
-          {!locked && (
-            <span
-              className={cn(
-                "flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-semibold",
-                upcoming ? "text-info" : "text-ink-muted",
-              )}
-            >
-              <Clock className="size-3.5 shrink-0" /> {question.deadlineLabel}
-            </span>
-          )}
-        </div>
+        {/* Just the question. The deadline chip that used to sit here read
+            "до старту матчу" — a restatement of the rule every question follows,
+            not a time — so it cost a rail and told nobody anything. */}
+        <h3 className="text-sm font-bold leading-snug text-ink text-balance">
+          {question.title}
+        </h3>
 
         {/* Impeccable: Crafted Choice Row — the options wear the teams. Each
             one is raked with that side's real brand colour, the same light the
@@ -166,11 +155,16 @@ export function QuestionCard({
                   "group/opt relative flex h-14 min-w-0 items-center gap-2.5 overflow-hidden rounded-xl px-3 text-left",
                   "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
+                  // On the event the option plate is a well cut into the ember
+                  // floor, not a navy chip sitting on top of it.
+                  isEwc ? "bg-black/35" : "bg-surface-2",
                   selected
                     ? isEwc
-                      ? "bg-surface-2 shadow-[0_0_0_1px_rgb(255_122_44/0.7),0_4px_18px_-14px_rgb(255_122_44/0.6)]"
-                      : "bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_65%,transparent),0_4px_16px_-14px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
-                    : "bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_18%,transparent)]",
+                      ? "shadow-[0_0_0_1px_rgb(255_122_44/0.7),0_4px_18px_-14px_rgb(255_122_44/0.6)]"
+                      : "shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_65%,transparent),0_4px_16px_-14px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
+                    : isEwc
+                      ? "shadow-[0_0_0_1px_rgb(255_120_50/0.18)] hover:shadow-[0_0_0_1px_rgb(255_120_50/0.4)]"
+                      : "shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_18%,transparent)]",
                   (locked || upcoming) && !selected && "opacity-55",
                 )}
               >
@@ -246,9 +240,7 @@ export function QuestionCard({
             <span className="text-ink-subtle">Можна змінити до дедлайну</span>
           ) : upcoming ? (
             <span className="text-ink-subtle">Відкриється перед матчем</span>
-          ) : (
-            <span className="text-ink-subtle">Обери варіант</span>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

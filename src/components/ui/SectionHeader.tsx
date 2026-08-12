@@ -45,13 +45,13 @@ export function SectionHeader({
         {Icon && (
           <Icon
             className={cn(
-              "size-5 shrink-0 self-center",
+              "size-4 shrink-0 self-center sm:size-5",
               iconTone === "muted" ? "text-ink-subtle" : "text-accent",
             )}
           />
         )}
         <div className="min-w-0">
-          <h2 className="text-lg font-bold leading-tight tracking-tight text-ink sm:text-xl">
+          <h2 className="text-base font-bold leading-tight tracking-tight text-ink sm:text-xl">
             {title}
           </h2>
           {hint && <p className="truncate text-xs text-ink-subtle">{hint}</p>}

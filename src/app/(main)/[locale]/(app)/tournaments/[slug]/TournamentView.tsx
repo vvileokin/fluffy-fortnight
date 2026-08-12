@@ -173,7 +173,7 @@ export function TournamentView({
             </div>
             <Dot />
             <div className="flex items-center gap-1.5">
-              <TeamGlyph className="size-[1.125rem] shrink-0 text-ink-subtle" />
+              <TeamGlyph className="size-3.5 shrink-0 text-ink-subtle" />
               {teams.length} команд
             </div>
             <Dot />
@@ -311,6 +311,7 @@ export function TournamentView({
               blastPoints={t.skin === "blast"}
               pointsIcon={t.skin === "ewc" ? "points-ewc" : "points"}
               showStreak={t.skin !== "ewc"}
+              ewc={t.skin === "ewc"}
               topN={10}
               expandable
               podium

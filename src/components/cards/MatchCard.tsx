@@ -189,7 +189,14 @@ export function MatchCard({ match }: { match: Match }) {
         ) : isFinished ? (
           <span className="shrink-0 font-semibold text-ink-subtle">{t("finishedLabel")}</span>
         ) : hasQuestions ? (
-          <span className="shrink-0 font-semibold text-info">{t("predictionsOpen")}</span>
+          <span
+            className={cn(
+              "shrink-0 font-semibold",
+              skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-info",
+            )}
+          >
+            {t("predictionsOpen")}
+          </span>
         ) : null}
       </div>
 

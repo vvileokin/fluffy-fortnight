@@ -32,6 +32,8 @@ export async function POST(request: Request) {
     status: String(g.status ?? "open"),
     cover: String(g.cover ?? "oklch(0.64 0.235 24)"),
     image: g.image || null,
+    // Only the two skins the card knows how to draw; anything else is no skin.
+    skin: g.skin === "ewc" || g.skin === "blast" ? g.skin : null,
     description: g.description ? String(g.description) : null,
     conditions: Array.isArray(g.conditions) ? g.conditions : [],
     updated_at: new Date().toISOString(),

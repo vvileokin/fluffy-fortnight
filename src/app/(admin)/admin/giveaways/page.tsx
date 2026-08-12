@@ -33,6 +33,7 @@ const emptyForm = {
   endLabel: "",
   conditions: "",
   image: "",
+  skin: "",
 };
 
 export default function GiveawaysAdmin() {
@@ -160,6 +161,7 @@ export default function GiveawaysAdmin() {
         min_points: Number(form.minPoints) || 0,
         end_label: form.endLabel,
         image: form.image || null,
+        skin: form.skin || null,
         description: `${form.prize.trim()} від ${form.sponsor || "CS2 UA"}.`,
         conditions: form.conditions.split("\n").map((s) => s.trim()).filter(Boolean),
         status: "open",
@@ -387,14 +389,25 @@ export default function GiveawaysAdmin() {
       >
         <div className="space-y-3">
           <ImageField
-            label="Фото призу"
-            hint="Рекомендовано 640×400 px · PNG/WebP з прозорістю"
+            label="Банер розіграшу"
+            hint="1200×400 px (3:1) · JPG/WebP — картка обрізає по центру"
             folder="giveaways"
             value={form.image || undefined}
             onChange={(url) => setForm({ ...form, image: url })}
-            thumbW={80}
-            thumbH={50}
+            thumbW={90}
+            thumbH={30}
           />
+          <GField label="Стиль картки">
+            <select
+              className={inputCls}
+              value={form.skin}
+              onChange={(e) => setForm({ ...form, skin: e.target.value })}
+            >
+              <option value="">Звичайний</option>
+              <option value="ewc">Esports World Cup</option>
+              <option value="blast">BLAST</option>
+            </select>
+          </GField>
           <GField label="Приз">
             <input
               className={inputCls}

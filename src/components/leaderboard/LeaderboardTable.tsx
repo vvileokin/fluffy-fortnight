@@ -66,16 +66,21 @@ function Delta({ delta }: { delta?: number }) {
   );
 }
 
+/** Ember stand-in for the brand yellow, used on every accent cue at the event. */
+const EWC_INK = "text-[rgb(255_154_64)]";
+
 function Row({
   row,
   blastPoints,
   pointsIcon,
   showStreak,
+  ewc = false,
 }: {
   row: LeaderRow;
   blastPoints: boolean;
   pointsIcon: BrandIconName;
   showStreak: boolean;
+  ewc?: boolean;
 }) {
   return (
     /* Impeccable: Crafted Board Row — each place is its own rounded slab with
@@ -85,17 +90,25 @@ function Row({
     <div
       className={cn(
         "flex items-center gap-2 rounded-xl px-2.5 py-2 transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] sm:gap-3",
-        row.isYou
-          ? "bg-[color-mix(in_oklch,var(--accent)_8%,transparent)] shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_24%,transparent)]"
-          : "bg-surface hover:bg-surface-2",
+        ewc
+          ? row.isYou
+            ? "ewc-row-you"
+            : "ewc-row"
+          : row.isYou
+            ? "bg-[color-mix(in_oklch,var(--accent)_8%,transparent)] shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_24%,transparent)]"
+            : "bg-surface hover:bg-surface-2",
       )}
     >
       <span
         className={cn(
           "flex h-7 shrink-0 items-center gap-1 rounded-lg pl-2 pr-2",
           row.isYou
-            ? "bg-accent text-accent-ink"
-            : "bg-fill-2",
+            ? ewc
+              ? "bg-[rgb(255_122_44)] text-black"
+              : "bg-accent text-accent-ink"
+            : ewc
+              ? "bg-white/[0.07]"
+              : "bg-fill-2",
         )}
       >
         <RankMedal rank={row.rank} rankEnd={row.rankEnd} inPill={row.isYou} />
@@ -105,7 +118,7 @@ function Row({
       <span
         className={cn(
           "min-w-0 flex-1 truncate text-sm font-semibold",
-          row.isYou ? "text-accent" : "text-ink",
+          row.isYou ? (ewc ? EWC_INK : "text-accent") : "text-ink",
         )}
       >
         {row.handle}
@@ -144,7 +157,12 @@ function Row({
       {/* The "N правильних" column is gone. It was the widest thing on the row
           and the least looked-at: points already encode accuracy, and the
           space it held is what pushed the streak off phones. */}
-      <span className="tnum flex w-[5.25rem] shrink-0 items-center justify-end gap-1.5 font-mono text-sm font-bold text-accent sm:w-24">
+      <span
+        className={cn(
+          "tnum flex w-[5.25rem] shrink-0 items-center justify-end gap-1.5 font-mono text-sm font-bold sm:w-24",
+          ewc ? EWC_INK : "text-accent",
+        )}
+      >
         {blastPoints && <BlastMark className="size-3.5 text-accent" />}
         <BrandIcon name={pointsIcon} className="size-4" />
         {formatInt(row.points)}
@@ -179,20 +197,37 @@ function Podium({
   blastPoints,
   pointsIcon,
   showStreak,
+  ewc = false,
 }: {
   rows: LeaderRow[];
   blastPoints: boolean;
   pointsIcon: BrandIconName;
   showStreak: boolean;
+  ewc?: boolean;
 }) {
   // Visual order puts 2 – 1 – 3 across, while the DOM keeps 1 – 2 – 3 so screen
   // readers and keyboard order still get the real ranking.
   const order = ["order-2", "order-1", "order-3"];
+  // At the event the podium's rank light is the ember, not the brand yellow.
+  const ringOf = (i: number) =>
+    ewc
+      ? ["rgb(255 122 44)", "rgb(255 122 44 / 0.55)", "rgb(255 122 44 / 0.38)"][i]
+      : PODIUM_TONE[i].ring;
   return (
-    <div className="relative isolate rounded-2xl bg-surface px-3 pb-5 pt-7 sm:px-6">
+    <div
+      className={cn(
+        "relative isolate rounded-2xl px-3 pb-5 pt-7 sm:px-6",
+        ewc ? "ewc-aura-card" : "bg-surface",
+      )}
+    >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(52%_62%_at_50%_34%,color-mix(in_oklch,var(--accent)_8%,transparent),transparent_70%)]"
+        className={cn(
+          "pointer-events-none absolute inset-0 -z-10 rounded-2xl",
+          ewc
+            ? "bg-[radial-gradient(52%_62%_at_50%_34%,rgb(255_96_20/0.12),transparent_70%)]"
+            : "bg-[radial-gradient(52%_62%_at_50%_34%,color-mix(in_oklch,var(--accent)_8%,transparent),transparent_70%)]",
+        )}
       />
       <ol className="relative flex items-end justify-center gap-2 sm:gap-6">
         {rows.map((row, i) => {
@@ -213,8 +248,8 @@ function Podium({
                   // Only the winner is lit. Second and third get the ring alone,
                   // so the glow reads as a rank signal rather than decoration.
                   boxShadow: first
-                    ? `0 0 0 2px ${tone.ring}, 0 8px 30px -14px color-mix(in oklch, var(--accent) 75%, transparent)`
-                    : `0 0 0 1.5px ${tone.ring}`,
+                    ? `0 0 0 2px ${ringOf(i)}, 0 8px 30px -14px ${ewc ? "rgb(255 122 44 / 0.75)" : "color-mix(in oklch, var(--accent) 75%, transparent)"}`
+                    : `0 0 0 1.5px ${ringOf(i)}`,
                 }}
               >
                 <Avatar name={row.handle} src={row.avatarUrl} size={first ? "xl" : "lg"} />
@@ -222,8 +257,12 @@ function Podium({
                   className={cn(
                     "tnum absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-md px-1.5 text-[0.625rem] font-extrabold leading-4",
                     first
-                      ? "bg-accent text-accent-ink"
-                      : "bg-surface-3 text-accent",
+                      ? ewc
+                        ? "bg-[rgb(255_122_44)] text-black"
+                        : "bg-accent text-accent-ink"
+                      : ewc
+                        ? `bg-black/45 ${EWC_INK}`
+                        : "bg-surface-3 text-accent",
                   )}
                 >
                   {row.rank}
@@ -264,7 +303,8 @@ function Podium({
               </span>
               <span
                 className={cn(
-                  "tnum flex items-center gap-1.5 font-mono font-extrabold text-accent",
+                  "tnum flex items-center gap-1.5 font-mono font-extrabold",
+                  ewc ? EWC_INK : "text-accent",
                   first ? "text-sm" : "text-xs",
                 )}
               >
@@ -286,6 +326,7 @@ export function LeaderboardTable({
   blastPoints = false,
   pointsIcon = "points",
   showStreak = true,
+  ewc = false,
   expandable = false,
   podium = false,
   className,
@@ -299,6 +340,8 @@ export function LeaderboardTable({
   pointsIcon?: BrandIconName;
   /** EWC keeps no event streak, so its board hides the column entirely. */
   showStreak?: boolean;
+  /** Dress the whole board in the event's ember instead of the brand yellow. */
+  ewc?: boolean;
   /** Let the "· · ·" gap expand the board to the full list. */
   expandable?: boolean;
   /** Lift the top three onto a podium above the list (season board). */
@@ -339,15 +382,15 @@ export function LeaderboardTable({
          sitting 12px off the list, which read as a stray gap rather than a
          group break. */
       <div className={cn("space-y-1.5", className)}>
-        <Podium rows={onPodium} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} />
+        <Podium rows={onPodium} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
         <div className="flex flex-col gap-1.5">
           {inline.map((row, i) => (
-            <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} />
+            <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
           ))}
           {youBelow && you && (
             <>
               <Dots onClick={expandable && hasMore ? () => setExpanded(true) : undefined} />
-              <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} />
+              <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
             </>
           )}
           {collapsed && !youBelow && expandable && hasMore && (
@@ -377,14 +420,14 @@ export function LeaderboardTable({
       {/* Handles aren't unique (two players can share a display name), so the
           key has to include the position. */}
       {inline.map((row, i) => (
-        <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} />
+        <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
       ))}
 
       {/* You rank below the visible top — dots, then your highlighted row. */}
       {youBelow && you && (
         <>
           <Dots onClick={expandable && hasMore ? () => setExpanded(true) : undefined} />
-          <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} />
+          <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
         </>
       )}
 

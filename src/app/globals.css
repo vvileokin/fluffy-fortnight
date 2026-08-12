@@ -685,6 +685,22 @@ body {
   box-shadow: 0 0 0 1px rgb(var(--ewc-ring) / 0.18);
 }
 
+/* Leaderboard row at the event. Deliberately the quietest member of the set:
+   ten of these stack, so it's the floor colour and a hairline rather than
+   another lit plate. Your own row is the one that gets the ember. */
+.ewc-row {
+  background-color: color-mix(in oklch, var(--ewc-base) 80%, transparent);
+  box-shadow: 0 0 0 1px rgb(var(--ewc-ring) / 0.10);
+}
+.ewc-row:hover {
+  background-color: var(--ewc-base);
+}
+.ewc-row-you {
+  background-color: var(--ewc-base);
+  background-image: linear-gradient(100deg, rgb(var(--ewc-ember) / 0.22), transparent 62%);
+  box-shadow: 0 0 0 1px rgb(var(--ewc-ring) / 0.42);
+}
+
 .ewc-aura-soft {
   background-color: var(--ewc-base);
   background-image:

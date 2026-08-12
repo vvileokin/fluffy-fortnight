@@ -420,7 +420,7 @@ function SectionLabel({
   const Tag = level;
   return (
     <Tag className="flex items-center gap-2.5 pl-1 text-[0.8125rem] font-bold uppercase tracking-wide text-ink-muted">
-      <Icon className="size-[1.125rem] shrink-0 text-ink-subtle" />
+      <Icon className="size-4 shrink-0 text-ink-subtle" />
       {children}
     </Tag>
   );

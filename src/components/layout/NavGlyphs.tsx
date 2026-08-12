@@ -26,7 +26,7 @@ export function HomeGlyph({ className }: GlyphProps) {
 export function TargetGlyph({ className }: GlyphProps) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="4.5 4.5 91 91"
       fill="none"
       stroke="currentColor"
       aria-hidden
@@ -72,14 +72,16 @@ export function TrophyGlyph({ className }: GlyphProps) {
 }
 
 /* --- Supplied metadata glyphs -----------------------------------------
-   Replacements for the lucide icons that sat beside tournament facts. They're
-   authored on their own viewBoxes (16 and 24), so each keeps its own rather
-   than being re-fitted — `currentColor` and a square size class are all the
-   call sites need. */
+   Every viewBox here is cropped to the artwork's real bounds. Authored as
+   drawn, they had wildly different amounts of padding baked in — the team mark
+   covered 58% of its box's height where the trophy and swords covered 100% — so
+   one `size-4` produced marks that looked a third apart. Cropping to the ink
+   means the size class is the optical size, and a row of mixed glyphs lines up
+   without per-icon fudging. */
 
 export function DateGlyph({ className }: GlyphProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+    <svg viewBox="2 2 20 20" fill="none" aria-hidden className={className}>
       <path
         d="M2 9C2 7.114 2 6.172 2.586 5.586C3.172 5 4.114 5 6 5H18C19.886 5 20.828 5 21.414 5.586C22 6.172 22 7.114 22 9C22 9.471 22 9.707 21.854 9.854C21.707 10 21.47 10 21 10H3C2.529 10 2.293 10 2.146 9.854C2 9.707 2 9.47 2 9ZM2 18C2 19.886 2 20.828 2.586 21.414C3.172 22 4.114 22 6 22H18C19.886 22 20.828 22 21.414 21.414C22 20.828 22 19.886 22 18V13C22 12.529 22 12.293 21.854 12.146C21.707 12 21.47 12 21 12H3C2.529 12 2.293 12 2.146 12.146C2 12.293 2 12.53 2 13V18Z"
         fill="currentColor"
@@ -91,7 +93,7 @@ export function DateGlyph({ className }: GlyphProps) {
 
 export function GeoGlyph({ className }: GlyphProps) {
   return (
-    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden className={className}>
+    <svg viewBox="2 0 12 16" fill="currentColor" aria-hidden className={className}>
       <path d="M8 16C8 16 14 10.314 14 6C14 4.4087 13.3679 2.88258 12.2426 1.75736C11.1174 0.632141 9.5913 0 8 0C6.4087 0 4.88258 0.632141 3.75736 1.75736C2.63214 2.88258 2 4.4087 2 6C2 10.314 8 16 8 16ZM8 9C7.20435 9 6.44129 8.68393 5.87868 8.12132C5.31607 7.55871 5 6.79565 5 6C5 5.20435 5.31607 4.44129 5.87868 3.87868C6.44129 3.31607 7.20435 3 8 3C8.79565 3 9.55871 3.31607 10.1213 3.87868C10.6839 4.44129 11 5.20435 11 6C11 6.79565 10.6839 7.55871 10.1213 8.12132C9.55871 8.68393 8.79565 9 8 9Z" />
     </svg>
   );
@@ -99,7 +101,7 @@ export function GeoGlyph({ className }: GlyphProps) {
 
 export function TeamGlyph({ className }: GlyphProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+    <svg viewBox="2 5 20 14" fill="currentColor" aria-hidden className={className}>
       <path d="M12 5C11.2044 5 10.4413 5.31607 9.87868 5.87868C9.31607 6.44129 9 7.20435 9 8C9 8.79565 9.31607 9.55871 9.87868 10.1213C10.4413 10.6839 11.2044 11 12 11C12.7956 11 13.5587 10.6839 14.1213 10.1213C14.6839 9.55871 15 8.79565 15 8C15 7.20435 14.6839 6.44129 14.1213 5.87868C13.5587 5.31607 12.7956 5 12 5ZM13 12H11C8.24 12 6 14.24 6 17V17.5C6 18.33 6.67 19 7.5 19H16.5C17.33 19 18 18.33 18 17.5V17C18 14.24 15.76 12 13 12ZM6.5 11C6.97 11 7.4 10.88 7.77 10.67C7.3506 10.0022 7.09406 9.24523 7.02111 8.46007C6.94815 7.67491 7.06081 6.8836 7.35 6.15C7.09 6.06 6.8 6 6.5 6C5.06 6 4 7.06 4 8.5C4 9.94 5.06 11 6.5 11ZM6.11 12H5.5C3.57 12 2 13.57 2 15.5V16.5C2 16.78 2.22 17 2.5 17H4C4 15.04 4.81 13.27 6.11 12ZM17.5 11C18.94 11 20 9.94 20 8.5C20 7.06 18.94 6 17.5 6C17.19 6 16.91 6.06 16.65 6.15C16.9392 6.8836 17.0519 7.67491 16.9789 8.46007C16.9059 9.24523 16.6494 10.0022 16.23 10.67C16.6 10.88 17.02 11 17.5 11ZM18.5 12H17.89C18.5582 12.65 19.0892 13.4274 19.4516 14.2862C19.814 15.145 20.0005 16.0678 20 17H21.5C21.78 17 22 16.78 22 16.5V15.5C22 13.57 20.43 12 18.5 12Z" />
     </svg>
   );
@@ -107,7 +109,7 @@ export function TeamGlyph({ className }: GlyphProps) {
 
 export function ResultsGlyph({ className }: GlyphProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden className={className}>
+    <svg viewBox="2 2 20 20" fill="currentColor" aria-hidden className={className}>
       <path d="M12 2C10.6868 2 9.38642 2.25866 8.17317 2.7612C6.95991 3.26375 5.85752 4.00035 4.92893 4.92893C3.05357 6.8043 2 9.34784 2 12C2 14.6522 3.05357 17.1957 4.92893 19.0711C5.85752 19.9997 6.95991 20.7362 8.17317 21.2388C9.38642 21.7413 10.6868 22 12 22C14.6522 22 17.1957 20.9464 19.0711 19.0711C20.9464 17.1957 22 14.6522 22 12C22 10.6868 21.7413 9.38642 21.2388 8.17317C20.7362 6.95991 19.9997 5.85752 19.0711 4.92893C18.1425 4.00035 17.0401 3.26375 15.8268 2.7612C14.6136 2.25866 13.3132 2 12 2ZM16.2 16.2L11 13V7H12.5V12.2L17 14.9L16.2 16.2Z" />
     </svg>
   );

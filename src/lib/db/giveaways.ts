@@ -19,6 +19,7 @@ type Row = {
   conditions: string[] | null;
   winners_count: number | null;
   drawn_at: string | null;
+  skin: Giveaway["skin"] | null;
 };
 
 function toGiveaway(r: Row): Giveaway {
@@ -34,6 +35,8 @@ function toGiveaway(r: Row): Giveaway {
     status: r.status,
     cover: r.cover,
     image: r.image ?? undefined,
+    // Absent until migration 0034; a giveaway with no skin is the normal case.
+    skin: r.skin ?? undefined,
     description: r.description ?? "",
     conditions: r.conditions ?? [],
     // `?? 1` rather than `?? 0`: these columns are absent until migration 0032

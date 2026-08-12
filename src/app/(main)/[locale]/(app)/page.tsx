@@ -17,11 +17,19 @@ import { getOpenQuestions } from "@/lib/db/questions";
 import { getSiteSettings, applyCovers } from "@/lib/db/settings";
 import { cn } from "@/lib/utils";
 
-// Event matches first, then live → upcoming → finished within each group.
+// Live → upcoming → finished, and inside each state, by kickoff.
+//
+// This used to float `isEvent` matches to the front of the feed. That flag is
+// set per match and is not the same thing as the tournament's skin, so a card
+// could look like the event without carrying it — and the feed then came out as
+// two separately-sorted time sequences interleaved, which reads as random. What
+// a reader expects from a list of fixtures is the clock, so that's all it is.
 function feedRank(m: Match): number {
-  const group = m.isEvent ? 0 : 10;
-  const state = m.status === "live" ? 0 : m.status === "finished" ? 2 : 1;
-  return group + state;
+  return m.status === "live" ? 0 : m.status === "finished" ? 2 : 1;
+}
+
+function feedOrder(a: Match, b: Match): number {
+  return feedRank(a) - feedRank(b) || (a.startISO || "").localeCompare(b.startISO || "");
 }
 
 export default async function HomePage() {
@@ -44,7 +52,7 @@ export default async function HomePage() {
   // Event matches lead; live before upcoming; a finished result lingers 10 min.
   const feedMatches = [...matches]
     .filter((m) => m.status !== "finished" || minutesSinceFinished(m) < 10)
-    .sort((a, b) => feedRank(a) - feedRank(b))
+    .sort(feedOrder)
     .slice(0, 6);
   // The two biggest payouts on offer — that's what earns a spot on the home page.
   const hotQuestions = [...openQuestions]
