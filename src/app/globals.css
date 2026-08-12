@@ -604,32 +604,31 @@ body {
 }
 
 /* --- Esports World Cup 2026: fire -------------------------------------
-   Where BLAST is two hard neon corners, EWC is one drifting body of heat —
-   embers low, a hot diagonal streak across the upper left, and near-black
-   everywhere the fire isn't. The real artwork rides on top as `.ewc-fire`;
-   these gradients are what it sits in, and what stands in for it on surfaces
-   too small to carry a photograph.
-
-   The tokens are the event's own, declared here rather than in :root: they
-   belong to one tournament, not to the product. */
-.ewc-aura {
-  --ewc-ember: 255 88 16;
-  --ewc-core: 255 168 32;
-  --ewc-deep: 158 26 4;
-
-  background-color: #14060a;
-  background-image:
-    /* the hot streak, upper-left to centre */
-    linear-gradient(101deg, transparent 6%, rgb(var(--ewc-core) / 0.20) 20%, rgb(var(--ewc-ember) / 0.10) 34%, transparent 58%),
-    radial-gradient(78% 120% at 12% 4%, rgb(var(--ewc-core) / 0.30), transparent 58%),
-    radial-gradient(96% 130% at 42% 116%, rgb(var(--ewc-ember) / 0.42), transparent 62%),
-    radial-gradient(120% 130% at 88% 92%, rgb(var(--ewc-deep) / 0.55), transparent 68%);
-  box-shadow: 0 1px 0 0 rgb(255 190 120 / 0.14) inset;
+   One palette, one base colour, three weights. The banner, the card and a
+   match plate were drifting far apart in saturation — the banner blazed while
+   the card was almost grey — so they now share `--ewc-base` and differ only in
+   how much light sits on top. Close enough to read as one event, different
+   enough that a full-width banner isn't as loud as a card in a grid.
+   ---------------------------------------------------------------------- */
+:root {
+  --ewc-base: #1a0a0d;
+  --ewc-ember: 255 96 20;
+  --ewc-deep: 172 32 8;
+  --ewc-ring: 255 122 44;
 }
 
-/* The artwork itself, laid over `.ewc-aura` on surfaces big enough for it.
-   `soft-light` keeps the photo's darks from flattening the gradient under it,
-   so the two read as one lit room rather than a picture on a wall. */
+/* Banner. The artwork rides on top via `.ewc-fire`, so the gradients here only
+   have to give it a floor to sit on. */
+.ewc-aura {
+  background-color: var(--ewc-base);
+  background-image:
+    linear-gradient(101deg, transparent 30%, rgb(255 168 32 / 0.10) 47%, transparent 70%),
+    radial-gradient(86% 128% at -2% 104%, rgb(var(--ewc-ember) / 0.24), transparent 64%),
+    radial-gradient(86% 128% at 102% 104%, rgb(var(--ewc-deep) / 0.26), transparent 64%),
+    radial-gradient(140% 120% at 50% -30%, rgb(126 148 188 / 0.06), transparent 72%);
+  box-shadow: 0 1px 0 0 rgb(255 190 120 / 0.12) inset;
+}
+
 .ewc-fire::before {
   content: "";
   position: absolute;
@@ -637,51 +636,60 @@ body {
   background-image: url("/brand/ewc-fire.webp");
   background-size: cover;
   background-position: 50% 42%;
-  opacity: 0.55;
+  opacity: 0.4;
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
 
-/* Roster tile at the event.
-   The team's own colour still rakes in from the left — a 26-team wall has to
-   stay readable as identities, not as 26 identical embers — but it sits on the
-   event's fire instead of the neutral plate. `--team` is the crest colour, set
-   per tile by the component. */
-.ewc-tile {
-  background-color: #150609;
-  background-image:
-    linear-gradient(100deg, color-mix(in oklch, var(--team, transparent) 20%, transparent), transparent 54%),
-    radial-gradient(88% 150% at 6% 130%, rgb(255 88 16 / 0.26), transparent 62%),
-    radial-gradient(100% 150% at 104% -20%, rgb(158 26 4 / 0.40), transparent 66%);
-}
-
-/* Tournament card at the event. Far quieter than the banner: a card sits in a
-   grid with others, so the fire is a suggestion at the edges rather than the
-   subject. Roughly a third of `.ewc-aura`'s intensity. */
+/* Card. Same base, one long diagonal sweep so the ramp has no visible edge,
+   and the ember ring that a match plate now shares. */
 .ewc-aura-card {
-  background-color: color-mix(in oklch, var(--surface) 80%, #21080b);
+  background-color: var(--ewc-base);
   background-image:
-    /* One long diagonal sweep instead of two hard corner pools — that abruptness
-       is what read as "not smooth". The stops are close in value so the ramp has
-       no visible edge, and the whole thing stays well under the banner's heat. */
     linear-gradient(112deg,
-      rgb(255 96 20 / 0.16) 0%,
-      rgb(200 44 10 / 0.10) 38%,
-      rgb(120 20 6 / 0.05) 68%,
+      rgb(var(--ewc-ember) / 0.20) 0%,
+      rgb(var(--ewc-deep) / 0.13) 38%,
+      rgb(var(--ewc-deep) / 0.06) 68%,
       transparent 100%),
-    radial-gradient(120% 150% at 100% 0%, rgb(255 110 28 / 0.13), transparent 62%);
+    radial-gradient(120% 150% at 100% 0%, rgb(var(--ewc-ember) / 0.16), transparent 62%);
   box-shadow:
-    0 0 0 1px color-mix(in oklch, rgb(255 120 40) 16%, transparent),
+    0 0 0 1px rgb(var(--ewc-ring) / 0.26),
     0 1px 0 0 rgb(255 180 120 / 0.07) inset,
     0 12px 34px -16px oklch(0 0 0 / 0.8);
 }
 
-/* Card-weight: same fire, dialled back so a grid of them stays calm. */
-.ewc-aura-soft {
-  background-color: color-mix(in oklch, var(--surface) 76%, #17070b);
+/* Match plate at the event. Keeps the two teams' brand pools in the top
+   corners — that's how any match card is read — over the event's own floor,
+   and wears the same ember ring as the tournament card so the two objects
+   belong together. */
+.ewc-match {
+  background-color: var(--ewc-base);
   background-image:
-    radial-gradient(64% 108% at 0% 118%, rgb(255 88 16 / 0.22), transparent 60%),
-    radial-gradient(64% 108% at 100% 118%, rgb(158 26 4 / 0.30), transparent 60%);
+    radial-gradient(58% 130% at 0% 0%, color-mix(in oklch, var(--team-a, transparent) 16%, transparent), transparent 72%),
+    radial-gradient(58% 130% at 100% 0%, color-mix(in oklch, var(--team-b, transparent) 16%, transparent), transparent 72%),
+    linear-gradient(112deg, rgb(var(--ewc-ember) / 0.18) 0%, rgb(var(--ewc-deep) / 0.12) 44%, transparent 100%),
+    radial-gradient(110% 150% at 100% 110%, rgb(var(--ewc-deep) / 0.22), transparent 64%);
+  box-shadow:
+    0 0 0 1px rgb(var(--ewc-ring) / 0.26),
+    0 1px 0 0 rgb(255 180 120 / 0.07) inset,
+    0 12px 34px -16px oklch(0 0 0 / 0.8);
+}
+
+/* Roster tile — the team's own colour still rakes in, over the event floor. */
+.ewc-tile {
+  background-color: var(--ewc-base);
+  background-image:
+    linear-gradient(100deg, color-mix(in oklch, var(--team, transparent) 22%, transparent), transparent 54%),
+    radial-gradient(88% 150% at 6% 130%, rgb(var(--ewc-ember) / 0.20), transparent 62%),
+    radial-gradient(100% 150% at 104% -20%, rgb(var(--ewc-deep) / 0.26), transparent 66%);
+  box-shadow: 0 0 0 1px rgb(var(--ewc-ring) / 0.18);
+}
+
+.ewc-aura-soft {
+  background-color: var(--ewc-base);
+  background-image:
+    radial-gradient(64% 108% at 0% 118%, rgb(var(--ewc-ember) / 0.20), transparent 60%),
+    radial-gradient(64% 108% at 100% 118%, rgb(var(--ewc-deep) / 0.26), transparent 60%);
 }
 
 @media (prefers-reduced-motion: reduce) {

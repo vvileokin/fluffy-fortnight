@@ -2,8 +2,8 @@ import type { CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { Calendar, MapPin, Wifi, ChevronRight } from "lucide-react";
-import { TrophyGlyph } from "@/components/layout/NavGlyphs";
+import { Wifi, ChevronRight } from "lucide-react";
+import { DateGlyph, GeoGlyph, TrophyGlyph } from "@/components/layout/NavGlyphs";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { getTeam, formatPrize, type Tournament } from "@/lib/data";
@@ -73,14 +73,14 @@ export function TournamentCard({ t }: { t: Tournament }) {
 
         <dl className="grid grid-cols-1 gap-1.5 text-xs text-ink-muted">
           <div className="flex items-center gap-2">
-            <Calendar className="size-3.5 shrink-0 text-ink-subtle" />
+            <DateGlyph className="size-3.5 shrink-0 text-ink-subtle" />
             <span>{t.dateLabel}</span>
           </div>
           <div className="flex items-center gap-2">
             {t.online ? (
               <Wifi className="size-3.5 shrink-0 text-ink-subtle" />
             ) : (
-              <MapPin className="size-3.5 shrink-0 text-ink-subtle" />
+              <GeoGlyph className="size-3.5 shrink-0 text-ink-subtle" />
             )}
             <span className="truncate">{t.location}</span>
           </div>

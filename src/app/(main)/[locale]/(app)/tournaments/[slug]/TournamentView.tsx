@@ -4,8 +4,6 @@ import * as React from "react";
 import { Link } from "@/i18n/navigation";
 import {
   ChevronLeft,
-  Calendar,
-  MapPin,
   Wifi,
   Trophy,
   Users,
@@ -175,7 +173,7 @@ export function TournamentView({
             </div>
             <Dot />
             <div className="flex items-center gap-1.5">
-              <TeamGlyph className="size-4 shrink-0 text-ink-subtle" />
+              <TeamGlyph className="size-[1.125rem] shrink-0 text-ink-subtle" />
               {teams.length} команд
             </div>
             <Dot />
@@ -248,13 +246,16 @@ export function TournamentView({
           {t.skin === "ewc" && (
             <section className="space-y-3">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-                <EwcMark className="ml-1 h-2 w-auto text-accent" />
+                <EwcMark className="h-2.5 w-auto shrink-0 translate-y-[0.5px] text-accent" />
                 Сітка турніру
               </h2>
               <EwcBracket matches={matches} />
             </section>
           )}
-          {matches.length > 0 && (
+          {/* The generic stage list is for tournaments with no bracket of their
+              own. The event draws its real one above, so showing both put two
+              things called "Сітка турніру" on one page. */}
+          {!t.skin && matches.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
                 Сітка турніру
@@ -401,7 +402,12 @@ function TeamsGrid({
       {collapsible && (
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg surface-1 py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          className={cn(
+            "mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition-colors",
+            skin === "ewc"
+              ? "ewc-aura-card text-white hover:brightness-110"
+              : "surface-1 text-ink-muted hover:bg-surface-2 hover:text-ink",
+          )}
         >
           {expanded ? "Згорнути" : `Показати всі ${slugs.length}`}
           <ChevronDown

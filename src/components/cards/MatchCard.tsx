@@ -8,6 +8,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { LiveBadge } from "@/components/ui/Badge";
 import { BlastMark } from "@/components/ui/BlastMark";
+import { EwcMark } from "@/components/ui/EwcMark";
 import {
   getTournament,
   matchSkin,
@@ -114,7 +115,8 @@ export function MatchCard({ match }: { match: Match }) {
         // like a different component — brighter, outlined, differently lit. The
         // event is already named twice in the header (icon + tournament name);
         // it doesn't also need its own chassis.
-        "group lift surface-1 match-plate relative flex h-full flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+        "group lift relative flex h-full flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+        skin === "ewc" ? "ewc-match" : "surface-1 match-plate",
         isLive && "rail-live",
       )}
     >
@@ -128,8 +130,10 @@ export function MatchCard({ match }: { match: Match }) {
               height={14}
               className="size-3.5 shrink-0 object-contain"
             />
+          ) : skin === "ewc" ? (
+            <EwcMark className="h-2 w-auto shrink-0 text-accent" />
           ) : (
-            isEvent && <BlastMark className="size-3.5 shrink-0 text-accent" />
+            skin === "blast" && <BlastMark className="size-3.5 shrink-0 text-accent" />
           )}
           {/* Full name, trimmed by CSS only when it genuinely doesn't fit. */}
           <span className="truncate font-medium">{tour?.name ?? match.tournamentName}</span>
@@ -147,7 +151,11 @@ export function MatchCard({ match }: { match: Match }) {
           <span
             className={cn(
               "hidden shrink-0 whitespace-nowrap text-xs font-semibold sm:inline",
-              isFinished ? "text-ink-subtle" : "text-info",
+              isFinished
+                ? "text-ink-subtle"
+                : skin === "ewc"
+                  ? "text-[rgb(255_154_64)]"
+                  : "text-info",
             )}
           >
             {matchTimeLabel(match)}
@@ -163,6 +171,9 @@ export function MatchCard({ match }: { match: Match }) {
       {/* Context strip — always present so every state has equal height */}
       {/* Impeccable: Crafted Context Rail — a recessed slot in the card face
           (inset shadow, no border) rather than another outlined box. */}
+      {/* The kickoff is already on this card once — in the header on desktop,
+          on the left of this rail on phones — so this slot never repeats it.
+          It carries a state word or nothing. */}
       <div className="relative mx-4 mb-3 flex items-center justify-between gap-2 rounded-lg bg-fill-1 px-2.5 py-1.5 text-xs shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_6%,transparent)_inset,0_-1px_0_0_oklch(0_0_0/0.35)_inset]">
         <span className="flex min-w-0 items-center gap-1.5 text-ink-subtle">
           {match.format}
@@ -179,9 +190,7 @@ export function MatchCard({ match }: { match: Match }) {
           <span className="shrink-0 font-semibold text-ink-subtle">{t("finishedLabel")}</span>
         ) : hasQuestions ? (
           <span className="shrink-0 font-semibold text-info">{t("predictionsOpen")}</span>
-        ) : (
-          <span className="shrink-0 font-semibold text-ink-subtle">{matchTimeLabel(match)}</span>
-        )}
+        ) : null}
       </div>
 
       {/* Hairline of light instead of a hard divider — reads as a seam, not a rule. */}

@@ -72,7 +72,7 @@ export const teams: Record<string, Team> = {
   // --- EWC 2026 field: the six that weren't in the catalog yet ---
   ninez: { slug: "ninez", name: "9z", tag: "9z", logo: "/teams/ninez.webp", brand: "#1B1B1F", ink: "white", region: "SA", worldRank: 31 },
   jijiehao: { slug: "jijiehao", name: "JiJieHao", tag: "JJH", logo: "/teams/jijiehao.svg", brand: "#8A1B1B", ink: "white", region: "Asia", worldRank: 58 },
-  k27: { slug: "k27", name: "K27", tag: "K27", logo: "/teams/k27.svg", brand: "#12303A", ink: "white", region: "EU", worldRank: 62 },
+  k27: { slug: "k27", name: "K27", tag: "K27", logo: "/teams/k27.webp", brand: "#12303A", ink: "white", region: "EU", worldRank: 62 },
   legacy: { slug: "legacy", name: "Legacy", tag: "LEG", logo: "/teams/legacy.webp", brand: "#0E6B3A", ink: "white", region: "SA", worldRank: 39 },
   luminosity: { slug: "luminosity", name: "Luminosity", tag: "LG", logo: "/teams/luminosity.svg", brand: "#0B3D8A", ink: "white", region: "NA", worldRank: 44 },
   parivision: { slug: "parivision", name: "PARIVISION", tag: "PARI", logo: "/teams/parivision.webp", brand: "#1E8F5A", ink: "white", region: "EU", worldRank: 20 },
@@ -577,11 +577,12 @@ export function groupMatchesByDay(matches: Match[], now: Date = new Date()): Mat
       key,
       label,
       live,
-      // Event matches lead; then chronological — most recent first once played.
-      items: items.sort(
-        (a, b) =>
-          (a.isEvent ? 0 : 1) - (b.isEvent ? 0 : 1) || (done ? byStart(b, a) : byStart(a, b)),
-      ),
+      // Chronological, and nothing else. This used to float event matches to
+      // the front of the day, which meant a day holding a mix of flagged and
+      // unflagged fixtures came out in two interleaved time sequences — it
+      // read as random. The bucket is already one day; inside it, the only
+      // order a reader expects is by clock. Played days run newest first.
+      items: items.sort((a, b) => (done ? byStart(b, a) : byStart(a, b))),
     }));
 }
 

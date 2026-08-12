@@ -29,6 +29,10 @@ export function QuestionCard({
   const upcoming = question.status === "upcoming";
   // Prefer the passed match (works for DB matches); fall back to the static catalog.
   const match = matchProp ?? (withMatch ? getMatch(question.matchId) : undefined);
+  // Questions wear their event. EWC swaps the brand yellow for the event's
+  // ember on every selected/‌payout cue, so a prediction on an EWC match
+  // doesn't look like it belongs to the season board.
+  const isEwc = match?.tournamentSlug === "ewc-2026";
 
   // Load this user's saved answer.
   React.useEffect(() => {
@@ -163,7 +167,9 @@ export function QuestionCard({
                   "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   selected
-                    ? "bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_65%,transparent),0_4px_16px_-14px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
+                    ? isEwc
+                      ? "bg-surface-2 shadow-[0_0_0_1px_rgb(255_122_44/0.7),0_4px_18px_-14px_rgb(255_122_44/0.6)]"
+                      : "bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_65%,transparent),0_4px_16px_-14px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
                     : "bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_18%,transparent)]",
                   (locked || upcoming) && !selected && "opacity-55",
                 )}
@@ -174,7 +180,11 @@ export function QuestionCard({
                   <span
                     className={cn(
                       "size-1.5 shrink-0 rounded-full transition-colors",
-                      selected ? "bg-accent" : "bg-[color-mix(in_oklch,var(--ink)_25%,transparent)]",
+                      selected
+                        ? isEwc
+                          ? "bg-[rgb(255_122_44)]"
+                          : "bg-accent"
+                        : "bg-[color-mix(in_oklch,var(--ink)_25%,transparent)]",
                     )}
                   />
                 )}
@@ -201,7 +211,13 @@ export function QuestionCard({
                   <span
                     className={cn(
                       "tnum flex items-center gap-1 font-mono text-[0.6875rem] font-extrabold leading-none",
-                      selected ? "text-accent" : "text-accent/80",
+                      isEwc
+                        ? selected
+                          ? "text-[rgb(255_154_64)]"
+                          : "text-[rgb(255_154_64)]/80"
+                        : selected
+                          ? "text-accent"
+                          : "text-accent/80",
                     )}
                   >
                     <BrandIcon name={match?.tournamentSlug === "ewc-2026" ? "points-ewc" : "points"} className="size-3.5" />
@@ -209,12 +225,6 @@ export function QuestionCard({
                   </span>
                 </span>
 
-                {/* The tick is the non-colour half of the selected state. */}
-                {selected && (
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
-                    <Check className="size-3" strokeWidth={3.5} />
-                  </span>
-                )}
               </button>
             );
           })}

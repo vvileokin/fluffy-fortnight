@@ -54,8 +54,8 @@ const lose = (of: string): SlotSource => ({ kind: "loser", of });
 const OPENING: Record<EwcGroupId, [string, string][]> = {
   a: [
     ["spirit", "jijiehao"],
-    ["aurora", "m80"],
-    ["g2", "big"],
+    ["m80", "g2"],
+    ["big", "aurora"],
     ["gamerlegion", "luminosity"],
   ],
   b: [
