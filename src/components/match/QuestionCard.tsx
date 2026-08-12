@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Check } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
-import { getMatch, matchTeam, teamByLabel, type Question, type Match } from "@/lib/data";
+import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -76,10 +76,17 @@ export function QuestionCard({
   const sides = match ? [matchTeam(match, "a"), matchTeam(match, "b")] : [];
   function resolveTeam(label: string) {
     const key = label.trim().toLowerCase();
-    return (
-      sides.find(
-        (t) => t.name.toLowerCase() === key || t.tag.toLowerCase() === key,
-      ) ?? teamByLabel(label)
+    // First check exact match in match sides
+    let t = sides.find(
+      (t) => t.name.toLowerCase() === key || t.tag.toLowerCase() === key,
+    );
+    if (t) return t;
+    // Then try catalog by exact match
+    t = teamByLabel(label);
+    if (t) return t;
+    // Finally, try partial match: "BetBoom" → "BetBoom Team"
+    return Object.values(teams).find(
+      (team) => team.name.toLowerCase().includes(key)
     );
   }
 
