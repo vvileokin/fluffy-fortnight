@@ -77,7 +77,7 @@ export default async function MatchPage({
   const showScore = isLive || match.status === "finished";
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-7 sm:space-y-10">
       {/* Impeccable: Crafted Return — plain text, no plate. It's a way back,
           not an action, and it sits close to what it belongs to. */}
       {/* Tailwind v4's `space-y-*` puts `margin-bottom` on the child, not

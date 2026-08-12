@@ -120,7 +120,7 @@ export function MatchCard({ match }: { match: Match }) {
         isLive && "rail-live",
       )}
     >
-      <div className="relative flex items-center justify-between gap-2 px-4 pt-3">
+      <div className="relative flex items-center justify-between gap-2 px-3.5 pt-2.5 sm:px-4 sm:pt-3">
         <span className="flex min-w-0 items-center gap-2 text-xs text-ink-subtle">
           {match.tournamentIcon ? (
             <Image
@@ -163,7 +163,7 @@ export function MatchCard({ match }: { match: Match }) {
         )}
       </div>
 
-      <div className="relative space-y-2 px-4 py-3">
+      <div className="relative space-y-2 px-3.5 py-2.5 sm:px-4 sm:py-3">
         <TeamRow team={matchTeam(match, "a")} score={match.scoreA} leading={aLead} dim={isFinished && bLead} showScore={showScore} />
         <TeamRow team={matchTeam(match, "b")} score={match.scoreB} leading={bLead} dim={isFinished && aLead} showScore={showScore} />
       </div>
@@ -174,7 +174,7 @@ export function MatchCard({ match }: { match: Match }) {
       {/* The kickoff is already on this card once — in the header on desktop,
           on the left of this rail on phones — so this slot never repeats it.
           It carries a state word or nothing. */}
-      <div className="relative mx-4 mb-3 flex items-center justify-between gap-2 rounded-lg bg-fill-1 px-2.5 py-1.5 text-xs shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_6%,transparent)_inset,0_-1px_0_0_oklch(0_0_0/0.35)_inset]">
+      <div className="relative mx-3.5 mb-2.5 sm:mx-4 sm:mb-3 flex items-center justify-between gap-2 rounded-lg bg-fill-1 px-2.5 py-1.5 text-xs shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_6%,transparent)_inset,0_-1px_0_0_oklch(0_0_0/0.35)_inset]">
         <span className="flex min-w-0 items-center gap-1.5 text-ink-subtle">
           {match.format}
           {!isLive && (
@@ -201,7 +201,7 @@ export function MatchCard({ match }: { match: Match }) {
       </div>
 
       {/* Hairline of light instead of a hard divider — reads as a seam, not a rule. */}
-      <div className="relative mt-auto flex items-center justify-between px-4 py-2.5 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]">
+      <div className="relative mt-auto flex items-center justify-between px-3.5 py-2 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] sm:px-4 sm:py-2.5">
         {hasQuestions ? (
           <>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">

@@ -60,7 +60,7 @@ export default async function HomePage() {
     .slice(0, 2);
 
   return (
-    <div className="space-y-10 sm:space-y-12">
+    <div className="space-y-7 sm:space-y-12">
       <Hero image={heroImage || undefined} href="/tournaments/ewc-2026" />
 
       {/* Current tournaments — nothing running means no empty heading. */}

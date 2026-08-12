@@ -17,7 +17,9 @@ export default async function AppLayout({
       <Sidebar promo={promo} />
       <div className="lg:pl-[248px]">
         <Topbar />
-        <main className="mx-auto w-full max-w-[1180px] px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:pb-12">
+        {/* Phones buy back a little width: 12px gutters instead of 16px, and a
+            shorter run-in above the first section. Desktop is unchanged. */}
+        <main className="mx-auto w-full max-w-[1180px] px-3 pb-28 pt-3 sm:px-6 sm:pt-6 lg:pb-12">
           {children}
         </main>
       </div>

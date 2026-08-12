@@ -74,7 +74,7 @@ export const teams: Record<string, Team> = {
   jijiehao: { slug: "jijiehao", name: "JiJieHao", tag: "JJH", logo: "/teams/jijiehao.svg", brand: "#8A1B1B", ink: "white", region: "Asia", worldRank: 58 },
   k27: { slug: "k27", name: "K27", tag: "K27", logo: "/teams/k27.webp", brand: "#12303A", ink: "white", region: "EU", worldRank: 62 },
   legacy: { slug: "legacy", name: "Legacy", tag: "LEG", logo: "/teams/legacy.webp", brand: "#0E6B3A", ink: "white", region: "SA", worldRank: 39 },
-  luminosity: { slug: "luminosity", name: "Luminosity", tag: "LG", logo: "/teams/luminosity.svg", brand: "#0B3D8A", ink: "white", region: "NA", worldRank: 44 },
+  luminosity: { slug: "luminosity", name: "LUMINOSITY", tag: "LG", logo: "/teams/luminosity.svg", brand: "#0B3D8A", ink: "white", region: "NA", worldRank: 44 },
   parivision: { slug: "parivision", name: "PARIVISION", tag: "PARI", logo: "/teams/parivision.webp", brand: "#1E8F5A", ink: "white", region: "EU", worldRank: 20 },
 };
 

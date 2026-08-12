@@ -104,7 +104,7 @@ export function Topbar() {
        ghosted through and the bar read as sliding rather than sitting still.
        z-40 stays: the bar is a stacking context, so the notifications panel can
        only clear the sidebar and bottom bar (both z-30) if the bar itself does. */
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-3 bg-bg px-4 sm:px-6">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 bg-bg px-3 sm:h-16 sm:px-6">
       <div className="flex items-center gap-2 lg:hidden">
         <Brand compact />
       </div>

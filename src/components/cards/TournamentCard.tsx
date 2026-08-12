@@ -66,7 +66,7 @@ export function TournamentCard({ t }: { t: Tournament }) {
         </div>
       </div>
 
-      <div className="relative flex flex-1 flex-col gap-3 p-4">
+      <div className="relative flex flex-1 flex-col gap-2.5 p-3.5 sm:gap-3 sm:p-4">
         <h3 className="text-base font-bold leading-snug tracking-tight text-ink text-balance">
           {t.name}
         </h3>
