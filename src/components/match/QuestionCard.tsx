@@ -118,7 +118,7 @@ export function QuestionCard({
       {withMatch && match && (
         <Link
           href={`/matches/${match.id}`}
-          className="flex min-h-11 items-center gap-2 px-4 py-2 text-xs text-ink-muted shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] transition-colors hover:text-ink"
+          className="flex min-h-9 items-center gap-2 px-3.5 py-1.5 text-xs text-ink-muted shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] transition-colors hover:text-ink"
         >
           <TeamLogo team={matchTeam(match, "a")} size="xs" />
           <span className="truncate font-semibold">{matchTeam(match, "a").name}</span>
@@ -129,7 +129,7 @@ export function QuestionCard({
         </Link>
       )}
 
-      <div className="p-4">
+      <div className="p-3.5">
         {/* Just the question. The deadline chip that used to sit here read
             "до старту матчу" — a restatement of the rule every question follows,
             not a time — so it cost a rail and told nobody anything. */}
@@ -145,7 +145,7 @@ export function QuestionCard({
             map counts) fall back to a neutral plate and still line up. */}
         <div
           className={cn(
-            "mt-3 grid gap-2",
+            "mt-2.5 grid gap-2",
             question.options.length > 2 ? "grid-cols-3" : "grid-cols-2",
           )}
         >
@@ -166,7 +166,7 @@ export function QuestionCard({
                     : undefined
                 }
                 className={cn(
-                  "group/opt relative flex h-14 min-w-0 items-center gap-2.5 overflow-hidden rounded-xl px-3 text-left",
+                  "group/opt relative flex h-[3.25rem] min-w-0 items-center gap-2.5 overflow-hidden rounded-xl px-2.5 text-left",
                   "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   // On the event the option plate is a well cut into the ember
@@ -206,7 +206,7 @@ export function QuestionCard({
                   <span className="flex min-w-0 max-w-full items-baseline gap-1.5">
                     <span
                       className={cn(
-                        "truncate text-sm font-bold uppercase leading-none",
+                        "truncate text-sm font-bold leading-none",
                         selected ? "text-ink" : "text-ink-muted group-hover/opt:text-ink",
                       )}
                     >
@@ -249,7 +249,7 @@ export function QuestionCard({
             every unanswered question. Cards in a grid already stretch to the
             tallest in their row, so nothing needs padding out by hand. */}
         {footer && (
-          <div className="mt-2.5 flex items-center justify-center text-xs">
+          <div className="mt-2 flex items-center justify-center text-xs">
             {footer}
           </div>
         )}

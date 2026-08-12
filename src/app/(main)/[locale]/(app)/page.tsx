@@ -60,7 +60,7 @@ export default async function HomePage() {
     .slice(0, 2);
 
   return (
-    <div className="space-y-5 sm:space-y-12">
+    <div className="space-y-6 sm:space-y-12">
       <Hero image={heroImage || undefined} href="/tournaments/ewc-2026" />
 
       {/* Current tournaments — nothing running means no empty heading. */}
@@ -104,7 +104,7 @@ export default async function HomePage() {
 
       {/* Giveaways + season leaderboard. Giveaways may be empty on some days,
           so the leaderboard takes the full width when there are none. */}
-      <div className="grid grid-cols-1 gap-5 sm:gap-8 lg:grid-cols-5 lg:gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-5 lg:gap-6">
         {giveaways.length > 0 && (
           <section className="space-y-2.5 sm:space-y-4 lg:col-span-2">
             <SectionHeader icon={GiftGlyph} title={t("giveaways")} href="/giveaways" />

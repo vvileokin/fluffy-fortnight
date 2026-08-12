@@ -23,10 +23,14 @@ export function HomeGlyph({ className }: GlyphProps) {
   );
 }
 
+/* Left on its full box on purpose. The outer ring is a *stroked* circle whose
+   edge lands exactly on the boundary (r 45.5 + half of a 9 stroke = 50), so the
+   box is already tight — cropping it to measured ink, the way the solid glyphs
+   below are, shaves the stroke and the circle comes out flattened. */
 export function TargetGlyph({ className }: GlyphProps) {
   return (
     <svg
-      viewBox="4.5 4.5 91 91"
+      viewBox="0 0 100 100"
       fill="none"
       stroke="currentColor"
       aria-hidden
