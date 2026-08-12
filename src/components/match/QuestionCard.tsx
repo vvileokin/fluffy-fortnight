@@ -118,7 +118,7 @@ export function QuestionCard({
       {withMatch && match && (
         <Link
           href={`/matches/${match.id}`}
-          className="flex min-h-9 items-center gap-2 px-3.5 py-1.5 text-xs text-ink-muted shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] transition-colors hover:text-ink"
+          className="flex min-h-8 items-center gap-2 px-3 py-1 text-xs text-ink-muted shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] transition-colors hover:text-ink"
         >
           <TeamLogo team={matchTeam(match, "a")} size="xs" />
           <span className="truncate font-semibold">{matchTeam(match, "a").name}</span>
@@ -129,7 +129,7 @@ export function QuestionCard({
         </Link>
       )}
 
-      <div className="p-3.5">
+      <div className="p-3">
         {/* Just the question. The deadline chip that used to sit here read
             "до старту матчу" — a restatement of the rule every question follows,
             not a time — so it cost a rail and told nobody anything. */}
@@ -145,7 +145,7 @@ export function QuestionCard({
             map counts) fall back to a neutral plate and still line up. */}
         <div
           className={cn(
-            "mt-2.5 grid gap-2",
+            "mt-2 grid gap-2",
             question.options.length > 2 ? "grid-cols-3" : "grid-cols-2",
           )}
         >
@@ -166,7 +166,7 @@ export function QuestionCard({
                     : undefined
                 }
                 className={cn(
-                  "group/opt relative flex h-[3.25rem] min-w-0 items-center gap-2.5 overflow-hidden rounded-xl px-2.5 text-left",
+                  "group/opt relative flex h-[2.75rem] min-w-0 items-center gap-2 overflow-hidden rounded-xl px-2.5 text-left",
                   "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   // On the event the option plate is a well cut into the ember
