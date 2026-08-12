@@ -19,7 +19,11 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
   const t = useTranslations("nav");
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-surface shadow-[1px_0_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] lg:flex">
+    /* Impeccable: Crafted Sidebar — no seam, and only one step of separation.
+       `surface-2` put the rail two steps above the canvas, which read as a
+       different panel bolted on; one step is enough to say "docked" while the
+       two planes still belong to the same room. */
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-surface lg:flex">
       <div className="flex h-16 items-center px-5">
         <Brand />
       </div>
@@ -50,22 +54,21 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
+              /* Impeccable: Crafted Nav Pill — the live section is a solid
+                 yellow lozenge with a filled glyph, the same selector the
+                 mobile bar uses. One selection language across the product. */
               className={cn(
-                "group relative flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                "group relative flex h-11 items-center gap-3 rounded-md px-3.5 text-[0.9375rem] font-extrabold tracking-tight transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 active
-                  ? "bg-surface-2 text-ink"
+                  ? "bg-accent text-accent-ink"
                   : "text-ink-muted hover:bg-surface-2 hover:text-ink",
               )}
             >
-              {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-accent" />
-              )}
               <Icon
                 className={cn(
                   "size-[18px] shrink-0",
-                  active ? "text-accent" : "text-ink-subtle group-hover:text-ink-muted",
+                  active ? "text-accent-ink" : "text-ink-subtle group-hover:text-ink-muted",
                 )}
-                strokeWidth={2.25}
               />
               {t(item.key)}
             </Link>

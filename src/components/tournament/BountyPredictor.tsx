@@ -461,7 +461,7 @@ function HighPicker({
 
 function StagePlaceholder() {
   return (
-    <div className="grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-12 text-center">
+    <div className="grid place-items-center rounded-2xl well px-6 py-12 text-center">
       <Lock className="size-7 text-ink-faint" />
       <p className="mt-3 text-sm font-semibold text-ink">Стадію ще не налаштовано</p>
       <p className="mt-1 text-xs text-ink-subtle">Команди з’являться, щойно адмін відкриє стадію.</p>

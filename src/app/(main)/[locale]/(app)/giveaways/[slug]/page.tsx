@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
-import { ChevronLeft, Gift, Check, ListChecks } from "lucide-react";
+import { ChevronLeft, Gift, Check, ListChecks, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { GiveawayEntry } from "@/components/giveaway/GiveawayEntry";
 import { formatPrize } from "@/lib/data";
@@ -52,7 +52,11 @@ export default async function GiveawayPage({
           </span>
           <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
-              {g.status === "ending" ? (
+              {g.winners.length > 0 || g.status === "finished" ? (
+                <Badge tone="neutral">
+                  <Trophy className="size-3" /> Розіграно
+                </Badge>
+              ) : g.status === "ending" ? (
                 <Badge tone="live">Завершується</Badge>
               ) : (
                 <Badge tone="success">Активний</Badge>

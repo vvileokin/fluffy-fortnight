@@ -30,18 +30,25 @@ export async function POST(request: Request) {
   const options: OptionRow[] = Array.isArray(q?.options) ? q!.options : [];
   const reward = options.find((o) => o.id === correct_option_id)?.reward ?? 0;
 
-  // Predictions on BLAST event matches also count toward bounty points.
+  // Event matches also count toward that event's own points column. Which
+  // column is decided by the tournament, not by the `is_event` flag alone:
+  // BLAST Bounty is finished and its table is a historical record, so EWC
+  // results must not land in `bounty_points` and quietly inflate it.
   // The match label also goes into the notification so it names the game,
   // not just the question.
   let isEvent = false;
+  let eventColumns: "bounty" | "ewc" | null = null;
   let matchLabel = "";
   if (q?.match_id) {
     const { data: match } = await admin
       .from("matches")
-      .select("is_event, team_a, team_b, team_a_name, team_b_name")
+      .select("is_event, tournament_slug, team_a, team_b, team_a_name, team_b_name")
       .eq("id", q.match_id)
       .maybeSingle();
     isEvent = !!match?.is_event;
+    if (isEvent) {
+      eventColumns = match?.tournament_slug === "ewc-2026" ? "ewc" : "bounty";
+    }
     if (match) {
       const teamLabel = (slug: string | null, name: string | null) =>
         name || (slug ? getTeam(slug)?.tag ?? getTeam(slug)?.name ?? slug : "");
@@ -82,7 +89,9 @@ export async function POST(request: Request) {
   const userIds = [...new Set(preds.map((p) => p.user_id))];
   const { data: profiles, error: profErr } = await admin
     .from("profiles")
-    .select("id, points, bounty_points, correct, streak, bounty_correct, bounty_streak")
+    .select(
+      "id, points, bounty_points, correct, streak, bounty_correct, bounty_streak, ewc_points, ewc_correct",
+    )
     .in("id", userIds);
   // Fail before recording the result so a missing column (migration not applied)
   // stays retryable instead of locking the question with no awards.
@@ -106,10 +115,16 @@ export async function POST(request: Request) {
         .update({
           points: prof.points + reward,
           correct: prof.correct + 1,
-          ...(isEvent
+          ...(eventColumns === "bounty"
             ? {
                 bounty_points: prof.bounty_points + reward,
                 bounty_correct: prof.bounty_correct + 1,
+              }
+            : {}),
+          ...(eventColumns === "ewc"
+            ? {
+                ewc_points: (prof.ewc_points ?? 0) + reward,
+                ewc_correct: (prof.ewc_correct ?? 0) + 1,
               }
             : {}),
         })

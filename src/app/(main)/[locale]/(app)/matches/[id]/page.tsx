@@ -1,19 +1,19 @@
-import { type ReactNode } from "react";
+import { type ReactNode, type CSSProperties } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
-import { ChevronLeft, Target, Swords, Ban, CircleCheck, History } from "lucide-react";
+import { ChevronLeft, Ban, CircleCheck, History } from "lucide-react";
+import { SwordsGlyph, TargetGlyph, type GlyphIcon } from "@/components/layout/NavGlyphs";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { QuestionCard } from "@/components/match/QuestionCard";
-import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Tooltip } from "@/components/ui/Tooltip";
 import {
   getTeam,
   getTournament,
+  matchSkin,
   matchTeam,
-  matchTimeLabel,
   playedMaps,
   type Match,
   type PlayedMap,
@@ -21,6 +21,7 @@ import {
 import { getMatchById } from "@/lib/db/matches";
 import { getQuestionsForMatch } from "@/lib/db/questions";
 import { getWorldRanks } from "@/lib/db/team-ranks";
+import { mapArt, mapIcon } from "@/lib/maps";
 import { cn } from "@/lib/utils";
 
 /** Every other dynamic route names itself in the tab; this one didn't. */
@@ -63,6 +64,7 @@ export default async function MatchPage({
   const b = withRank(matchTeam(match, "b"));
   const tour = getTournament(match.tournamentSlug);
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
+  const skin = matchSkin(match, tour);
   const veto = match.veto ?? [];
   const maps = playedMaps(match);
   // Which team picked each map (for the map score-strip hover).
@@ -75,33 +77,58 @@ export default async function MatchPage({
   const showScore = isLive || match.status === "finished";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
+      {/* Impeccable: Crafted Return — plain text, no plate. It's a way back,
+          not an action, and it sits close to what it belongs to. */}
+      {/* Tailwind v4's `space-y-*` puts `margin-bottom` on the child, not
+          `margin-top` on the next one — so the link's `-my-2` was overriding it
+          and deleting the whole 32px gap, leaving the words 5px off the header.
+          The negative margin now only tucks the top; the gap below is the
+          container's, and it's small because the link already carries 12px of
+          its own padding inside the 44px hit area. */}
+      <div className="space-y-2">
       <Link
         href="/matches"
-        className="-ml-2 inline-flex h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        className="-mt-2 inline-flex min-h-11 items-center gap-1 py-2 pr-2 text-sm font-semibold text-ink-subtle transition-colors hover:text-ink"
       >
         <ChevronLeft className="size-4" />
         Усі матчі
       </Link>
 
       {/* Match header */}
+      {/* Impeccable: Crafted Match Arena — no outline and no marks: the header
+          is lit from both bottom corners by the two teams' real brand colours,
+          so every match page wears the colours of the match itself. */}
       <div
+        style={
+          { "--team-a": a.brand, "--team-b": b.brand } as CSSProperties
+        }
         className={cn(
+          // Event headers keep their own colour but not their own geometry: the
+          // `border` and the padded logo frames made the BLAST header ~18px
+          // taller than every other one, so two match pages side by side had
+          // different rhythm for no reason a reader could name.
           "relative overflow-hidden rounded-2xl",
-          isEvent ? "event-aura border border-white/10" : "surface-2",
+          skin === "blast"
+            ? "event-aura"
+            : skin === "ewc"
+              ? "ewc-aura ewc-fire"
+              : "surface-2",
         )}
       >
-        {!isEvent && (
-          <div className="aura-accent pointer-events-none absolute inset-0 opacity-60" />
+        {/* The team-brand wash is what an unskinned header is lit by. A skinned
+            one already has its own light, and layering both just muddies each. */}
+        {!skin && (
+          <div className="team-arena pointer-events-none absolute inset-0" />
         )}
-        <div className="relative px-4 py-5 sm:px-8 sm:py-7">
+        <div className="relative px-4 py-5 sm:px-7 sm:py-6">
           {/* The scoreboard says this visually; the page still needs one real
               heading, and duplicating the names on screen would be noise. */}
           <h1 className="sr-only">
             {a.name} vs {b.name}
             {match.stage ? ` — ${match.stage}` : ""}
           </h1>
-          <div className="flex items-center justify-between gap-2 text-xs text-ink-muted">
+          <div className="relative flex items-center justify-between gap-2 text-xs text-ink-muted">
             {tour ? (
               <Link
                 href={`/tournaments/${tour.slug}`}
@@ -123,21 +150,29 @@ export default async function MatchPage({
                 {match.tournamentName}
               </span>
             )}
+            {/* Impeccable: Crafted Live Marker — the kickoff time is gone from
+                this page; by the time you're here you're reading the result,
+                not planning around a start time. Only the live state still
+                earns the centre of the rail, because that one changes what the
+                page means. */}
+            {isLive && (
+              <span className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex">
+                <LiveBadge />
+              </span>
+            )}
             <span className="shrink-0">{match.stage} · {match.format}</span>
           </div>
 
           {/* Mobile: vertical scoreboard */}
-          <div className="mt-4 space-y-3 sm:hidden">
-            <div className="flex flex-wrap items-center gap-2">
-              {isLive ? (
+          {/* Impeccable: Crafted Mobile Header — the rows are stacked tight;
+              the block should read as one object, not four floating lines. */}
+          <div className="mt-3 space-y-2 md:hidden">
+            {isLive && (
+              <div className="flex justify-center">
                 <LiveBadge />
-              ) : (
-                <span className="text-xs font-semibold text-info">
-                  {matchTimeLabel(match)}
-                </span>
-              )}
-            </div>
-            <div className="space-y-2">
+              </div>
+            )}
+            <div className="space-y-1.5">
               <MobileTeamRow team={a} score={match.scoreA} leading={match.scoreA > match.scoreB} showScore={showScore} />
               <MobileTeamRow team={b} score={match.scoreB} leading={match.scoreB > match.scoreA} showScore={showScore} />
             </div>
@@ -145,128 +180,168 @@ export default async function MatchPage({
           </div>
 
           {/* sm+: big logos at the edges, names inside, score centered */}
-          <div className="mt-6 hidden items-center gap-4 sm:flex lg:gap-6">
-            <div className="flex flex-1 items-center gap-4">
-              <LogoFrame framed={isEvent}>
-                <TeamLogo team={a} size="xl" />
-              </LogoFrame>
+          {/* Impeccable: Crafted Scoreboard Grid — `1fr auto 1fr`, not a flex
+              row. With flex the centre column was content-sized between two
+              flexible flanks, so the score drifted off true centre whenever the
+              two team names had different widths. A grid puts it on the axis and
+              keeps it there. The centre column also owns the kickoff time and
+              the map strip, so the crests centre against a column that's as tall
+              as they are — which is what closes the hole that used to sit under
+              the logos. */}
+          <div className="mt-4 hidden grid-cols-[1fr_auto_1fr] items-center gap-5 md:grid lg:gap-8">
+            <div className="flex items-center gap-4">
+              {/* Impeccable: Crafted Team Plinth — brand-coloured pool of light
+                  under each crest, so the two sides read at a glance. */}
+              <span
+                className="relative inline-flex rounded-2xl"
+                style={{ boxShadow: `0 8px 34px -20px ${a.brand}` }}
+              >
+                <TeamLogo team={a} size="2xl" />
+              </span>
               <div className="min-w-0">
-                <p className="truncate text-lg font-bold text-ink lg:text-xl">{a.name}</p>
+                <p className="truncate text-xl font-bold tracking-tight text-ink lg:text-2xl">{a.name}</p>
                 {a.worldRank > 0 && (
-                  <p className="text-xs text-ink-subtle">#{a.worldRank} у світі</p>
+                  <p className="whitespace-nowrap text-xs text-ink-subtle">#{a.worldRank} у світі</p>
                 )}
               </div>
             </div>
 
-            <div className="flex shrink-0 flex-col items-center gap-2">
-              {isLive ? (
-                <LiveBadge />
-              ) : (
-                <span className="text-xs font-semibold text-info">
-                  {matchTimeLabel(match)}
-                </span>
-              )}
+            {/* The centre column: score over series, on the page's true axis. */}
+            <div className="flex shrink-0 flex-col items-center gap-3">
+              {/* Impeccable: Crafted Scoreboard — the leading number carries a
+                  halo of its own light; the divider is a thin rule, not a colon
+                  competing with the digits. */}
               {showScore ? (
-                <div className="flex items-center gap-2 font-mono">
+                <div className="flex items-baseline gap-3 font-mono">
                   <span
                     className={cn(
-                      "tnum text-5xl font-bold",
-                      match.scoreA > match.scoreB ? "text-accent" : "text-ink",
+                      "tnum text-5xl font-bold leading-none tracking-tight lg:text-6xl",
+                      match.scoreA > match.scoreB
+                        ? "text-accent [text-shadow:0_0_22px_color-mix(in_oklch,var(--accent)_20%,transparent)]"
+                        : "text-ink",
                     )}
                   >
                     {match.scoreA}
                   </span>
-                  <span className="text-2xl text-ink-faint">:</span>
+                  <span
+                    aria-hidden
+                    className="h-6 w-px shrink-0 self-center bg-[color-mix(in_oklch,var(--ink)_22%,transparent)]"
+                  />
                   <span
                     className={cn(
-                      "tnum text-5xl font-bold",
-                      match.scoreB > match.scoreA ? "text-accent" : "text-ink",
+                      "tnum text-5xl font-bold leading-none tracking-tight lg:text-6xl",
+                      match.scoreB > match.scoreA
+                        ? "text-accent [text-shadow:0_0_22px_color-mix(in_oklch,var(--accent)_20%,transparent)]"
+                        : "text-ink",
                     )}
                   >
                     {match.scoreB}
                   </span>
                 </div>
               ) : (
-                <span className="font-mono text-3xl font-bold text-ink-subtle">
+                <span className="font-mono text-3xl font-bold tracking-[0.12em] text-ink-subtle">
                   VS
                 </span>
               )}
               {maps.length > 0 && <MapScoreStrip maps={maps} pickedBy={pickedBy} />}
             </div>
 
-            <div className="flex flex-1 items-center justify-end gap-4">
+            <div className="flex items-center justify-end gap-4">
               <div className="min-w-0 text-right">
-                <p className="truncate text-lg font-bold text-ink lg:text-xl">{b.name}</p>
+                <p className="truncate text-xl font-bold tracking-tight text-ink lg:text-2xl">{b.name}</p>
                 {b.worldRank > 0 && (
-                  <p className="text-xs text-ink-subtle">#{b.worldRank} у світі</p>
+                  <p className="whitespace-nowrap text-xs text-ink-subtle">#{b.worldRank} у світі</p>
                 )}
               </div>
-              <LogoFrame framed={isEvent}>
-                <TeamLogo team={b} size="xl" />
-              </LogoFrame>
+              <span
+                className="relative inline-flex rounded-2xl"
+                style={{ boxShadow: `0 8px 34px -20px ${b.brand}` }}
+              >
+                <TeamLogo team={b} size="2xl" />
+              </span>
             </div>
           </div>
+
         </div>
+      </div>
       </div>
 
       {/* PRIMARY: predictions */}
       <section className="space-y-4">
-        <SectionHeader
-          icon={Target}
-          title="Прогнози на матч"
-          hint={
-            questions.length > 0
-              ? `${questions.length} питань · відповідай до дедлайну`
-              : "Прогнози закриті"
-          }
-        />
+        <SectionLabel icon={TargetGlyph} level="h2">Прогнози на матч</SectionLabel>
+        {/* `match` is passed for the option crests, not for the match header
+            row — that one is gated on `withMatch`, which stays off here. */}
         {questions.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {questions.map((q) => (
-              <QuestionCard key={q.id} question={q} />
+              <QuestionCard key={q.id} question={q} match={match} />
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
+          <div className="rounded-2xl well px-6 py-10 text-center text-sm text-ink-subtle">
             Для цього матчу прогнози вже закриті.
           </div>
         )}
       </section>
 
       {/* CONTEXT: subordinate */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {veto.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-            <Swords className="size-4 text-ink-subtle" />
-            Map veto
-          </h3>
-          <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-lg surface-1">
+        <section className="space-y-4">
+          <SectionLabel icon={SwordsGlyph}>Map veto</SectionLabel>
+          {/* Impeccable: Crafted Veto Ledger — every row carries the map's own
+              art, held to the right and masked so the labels always win. A map
+              that survived the veto is lit; a banned one is drained to almost
+              nothing and struck through. The team is its crest, not a tag. */}
+          <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-2xl surface-1">
             {veto.map((v, i) => {
               const team = v.team === "a" ? a : v.team === "b" ? b : null;
               const isPick = v.action === "pick";
               const isDecider = v.action === "decider";
+              const art = mapArt(v.map);
+              const icon = mapIcon(v.map);
               return (
-                <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-                  {isDecider ? (
-                    <CircleCheck className="size-4 shrink-0 text-accent" />
-                  ) : isPick ? (
-                    <CircleCheck className="size-4 shrink-0 text-success" />
-                  ) : (
-                    <Ban className="size-4 shrink-0 text-ink-faint" />
+                <div
+                  key={i}
+                  className={cn(
+                    "map-strip flex items-center gap-3 px-3.5 py-2.5 text-sm",
+                    !isPick && !isDecider && "map-banned",
                   )}
-                  <span className="w-12 shrink-0 text-xs font-semibold text-ink-subtle">
-                    {team ? team.tag : "Decider"}
+                  style={
+                    { "--map-art": art ? `url(${art})` : "none" } as CSSProperties
+                  }
+                >
+                  <span className="grid size-8 shrink-0 place-items-center">
+                    {team ? (
+                      <TeamLogo team={team} size="xs" />
+                    ) : isDecider ? (
+                      <CircleCheck className="size-4 text-accent" />
+                    ) : (
+                      <Ban className="size-4 text-ink-faint" />
+                    )}
                   </span>
+                  {icon && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={icon}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className={cn(
+                        "size-5 shrink-0 object-contain",
+                        isPick || isDecider ? "opacity-90" : "opacity-30 grayscale",
+                      )}
+                    />
+                  )}
                   <span
                     className={cn(
-                      "flex-1 font-semibold",
-                      isPick || isDecider ? "text-ink" : "text-ink-subtle line-through decoration-ink-faint",
+                      "flex-1 font-bold tracking-tight",
+                      isPick || isDecider ? "text-ink" : "text-ink-muted",
                     )}
                   >
                     {v.map}
                   </span>
-                  <Badge tone={isDecider ? "accent" : isPick ? "success" : "neutral"}>
+                  <Badge tone={isDecider ? "accent" : isPick ? "accent" : "neutral"}>
                     {isDecider ? "Decider" : isPick ? "Pick" : "Ban"}
                   </Badge>
                 </div>
@@ -276,11 +351,8 @@ export default async function MatchPage({
         </section>
         )}
 
-        <section className="space-y-3">
-          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-            <History className="size-4 text-ink-subtle" />
-            Історія зустрічей
-          </h3>
+        <section className="space-y-4">
+          <SectionLabel icon={History}>Історія зустрічей</SectionLabel>
           {match.h2h && (match.h2h.a > 0 || match.h2h.b > 0) ? (
             <div className="rounded-lg surface-1 p-4">
               <div className="flex items-center justify-between">
@@ -318,13 +390,39 @@ export default async function MatchPage({
               )}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
+            <div className="rounded-2xl well px-6 py-10 text-center text-sm text-ink-subtle">
               Команди не грали між собою раніше.
             </div>
           )}
         </section>
       </div>
     </div>
+  );
+}
+
+/**
+ * Impeccable: Crafted Section Label — the page's only heading style, so
+ * "Прогнози на матч", "Map veto" and "Історія зустрічей" are the same size,
+ * weight, colour and glyph tone by construction rather than by three matching
+ * class strings. The `pl-1` nudges the row off the card edge below it; a
+ * heading that starts on exactly the same pixel as the panel under it reads as
+ * stuck to it.
+ */
+function SectionLabel({
+  icon: Icon,
+  level = "h3",
+  children,
+}: {
+  icon: GlyphIcon;
+  level?: "h2" | "h3";
+  children: ReactNode;
+}) {
+  const Tag = level;
+  return (
+    <Tag className="flex items-center gap-2.5 pl-1 text-[0.8125rem] font-bold uppercase tracking-wide text-ink-muted">
+      <Icon className="size-[1.125rem] shrink-0 text-ink-subtle" />
+      {children}
+    </Tag>
   );
 }
 
@@ -337,20 +435,23 @@ function MapScoreStrip({
 }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-1.5">
+      {/* Impeccable: Crafted Map Chips — each one wears its map's radar glyph,
+          so the series reads as places, not words. */}
       {maps.map((m, i) => {
         const picker = pickedBy.get(m.name);
+        const icon = mapIcon(m.name);
         return (
           <Tooltip
             key={i}
             className={cn(
-              "inline-flex cursor-help items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold",
+              "inline-flex cursor-help items-center gap-1.5 rounded-lg py-1 pl-1.5 pr-2.5 text-xs font-semibold",
               m.status === "live"
                 ? "bg-live/15 text-live ring-1 ring-live/30"
                 : m.status === "finished"
-                  ? "bg-surface-2 text-ink"
+                  ? "bg-fill-2 text-ink"
                   : m.status === "skipped"
-                    ? "bg-surface-2 text-ink-dim line-through decoration-ink-dim/70"
-                    : "bg-surface-2 text-ink-dim",
+                    ? "bg-fill-1 text-ink-dim"
+                    : "bg-fill-1 text-ink-dim",
             )}
             label={
               m.status === "skipped"
@@ -362,6 +463,21 @@ function MapScoreStrip({
                   : m.name
             }
           >
+            {icon ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={icon}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className={cn(
+                  "size-4 shrink-0 object-contain",
+                  m.status === "skipped" ? "opacity-35 grayscale" : "opacity-95",
+                )}
+              />
+            ) : (
+              <span className="w-0.5" />
+            )}
             {m.name}
             {m.status === "finished" ? (
               <span className="tnum font-mono">
@@ -379,20 +495,6 @@ function MapScoreStrip({
   );
 }
 
-function LogoFrame({
-  framed,
-  children,
-}: {
-  framed: boolean;
-  children: ReactNode;
-}) {
-  if (!framed) return <>{children}</>;
-  return (
-    <span className="inline-flex rounded-2xl bg-black/25 p-2 ring-1 ring-white/10 backdrop-blur-sm">
-      {children}
-    </span>
-  );
-}
 
 function MobileTeamRow({
   team,
@@ -406,7 +508,15 @@ function MobileTeamRow({
   showScore: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-2/50 px-3 py-2.5">
+    /* Impeccable: Crafted Mobile Scoreline — a recessed slot in the arena
+       floor, tinted by the team's own colour, instead of an outlined row. */
+    <div
+      className="relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2.5 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_9%,transparent)_inset,0_0_0_1px_color-mix(in_oklch,var(--ink)_7%,transparent)]"
+      style={{
+        backgroundImage: `linear-gradient(90deg, color-mix(in oklch, ${team.brand} 22%, transparent), transparent 62%)`,
+        backgroundColor: "color-mix(in oklch, var(--ink) 5%, transparent)",
+      }}
+    >
       <TeamLogo team={team} size="md" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-bold text-ink">{team.name}</p>

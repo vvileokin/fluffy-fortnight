@@ -3,10 +3,16 @@ import { type Team } from "@/lib/data";
 
 const sizeMap = {
   xs: 20,
+  // Match-card crest — the card is the densest place a team appears, so it
+  // sits between xs and md rather than sharing sm with inline lists.
+  cardCrest: 34,
   sm: 28,
-  md: 40,
+  md: 44,
   lg: 56,
   xl: 72,
+  // Match-header crest. Big enough to headline the page, small enough that the
+  // scoreboard row doesn't tower over the map strip beneath it.
+  "2xl": 84,
 } as const;
 
 /**

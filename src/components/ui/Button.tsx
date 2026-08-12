@@ -8,17 +8,23 @@ type Size = "sm" | "md" | "lg";
 const base =
   "inline-flex items-center justify-center gap-2 font-semibold whitespace-nowrap select-none " +
   "transition-[background-color,color,border-color,box-shadow,transform] duration-150 " +
-  "ease-[cubic-bezier(0.22,1,0.36,1)] active:translate-y-px " +
+  "ease-[cubic-bezier(0.22,1,0.36,1)] active:translate-y-[2px] motion-reduce:active:translate-y-0 " +
   "disabled:pointer-events-none disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2";
 
+// Impeccable: Crafted Button Set — the primary action is a lit key with real
+// travel (`.key` supplies the bevel + body + press collapse). The quiet
+// variants trade their outlines for hairline rings and inset light, so a page
+// of controls stops reading as a spreadsheet of boxes.
 const variants: Record<Variant, string> = {
   accent:
-    "bg-accent text-accent-ink hover:bg-accent-hover shadow-[0_6px_24px_-12px_var(--accent)]",
-  secondary: "bg-surface-3 text-ink hover:bg-surface-2 border border-border",
+    "key bg-accent text-accent-ink hover:bg-accent-hover",
+  secondary:
+    "bg-surface-3 text-ink hover:bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_10%,transparent),0_1px_0_0_color-mix(in_oklch,var(--ink)_12%,transparent)_inset]",
   outline:
-    "border border-border-strong text-ink hover:bg-surface-2 hover:border-ink-faint",
-  ghost: "text-ink-muted hover:text-ink hover:bg-surface-2",
-  danger: "bg-danger text-white hover:opacity-90",
+    "text-ink hover:bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_18%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_30%,transparent)]",
+  ghost: "text-ink-subtle hover:text-ink",
+  danger:
+    "bg-danger text-white hover:opacity-90 shadow-[0_1px_0_0_color-mix(in_oklch,#fff_28%,transparent)_inset,0_8px_24px_-12px_var(--danger)]",
 };
 
 const sizes: Record<Size, string> = {

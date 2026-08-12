@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
+import type { CSSProperties } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { Clock, Check, Lock, CircleHelp, Trophy } from "lucide-react";
+import { Clock, Check } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { getMatch, matchTeam, type Question, type Match } from "@/lib/data";
+import { BrandIcon } from "@/components/ui/BrandIcon";
+import { getMatch, matchTeam, teamByLabel, type Question, type Match } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -63,9 +65,34 @@ export function QuestionCard({
     window.setTimeout(() => setJustSaved(false), 1600);
   }
 
+  // An option label like "Liquid" or "NAVI" gets a crest; "Більше 24.5" gets
+  // none. The two sides of this match are checked first because imported teams
+  // (PandaScore, admin-created) exist on the match but not in the static
+  // catalog — fnatic is one of them.
+  const sides = match ? [matchTeam(match, "a"), matchTeam(match, "b")] : [];
+  function resolveTeam(label: string) {
+    const key = label.trim().toLowerCase();
+    return (
+      sides.find(
+        (t) => t.name.toLowerCase() === key || t.tag.toLowerCase() === key,
+      ) ?? teamByLabel(label)
+    );
+  }
+
   return (
-    <div className="surface-1 rounded-xl">
-      {match && (
+    /* Impeccable: Crafted Prediction Slate — rebuilt as a selector, not a
+       table. The two-tone rows split every option into a grey half and a
+       yellow half and fought the scoreboard for attention; now the options
+       sit as equal segments inside one recessed track, each carrying its own
+       label over its own payout, and picking one lights the whole segment.
+       Same control language as the filter tabs and tournament switch, so the
+       page has one way of saying "this one is selected". */
+    <div className="surface-1 overflow-hidden rounded-2xl">
+      {/* The "which match is this" row belongs to feeds that mix matches
+          together. `withMatch` is what asks for it — the match page passes
+          `match` purely so the options can resolve their crests, and would
+          otherwise render a link back to the page you're already on. */}
+      {withMatch && match && (
         <Link
           href={`/matches/${match.id}`}
           className="flex min-h-11 items-center gap-2 px-4 py-2 text-xs text-ink-muted shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] transition-colors hover:text-ink"
@@ -80,104 +107,137 @@ export function QuestionCard({
       )}
 
       <div className="p-4">
-        <div className="flex items-center gap-2.5">
-          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-surface-2 text-accent">
-            <QuestionIcon kind={question.kind} />
-          </span>
-          <h3 className="text-sm font-bold leading-snug text-ink text-balance">
+        {/* Title rail: the question on the left, its clock on the right, on one
+            baseline. The deadline used to sit at the very bottom of the card,
+            four rows away from the thing it constrains. */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="min-w-0 text-sm font-bold leading-snug text-ink text-balance">
             {question.title}
           </h3>
+          {/* Nothing here once the question is locked. A "Закрито" chip was
+              stating the obvious twice over — the options are already dead to
+              the touch and the result is on the card — and it put a grey label
+              in the loudest corner of the rail. */}
+          {!locked && (
+            <span
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-semibold",
+                upcoming ? "text-info" : "text-ink-muted",
+              )}
+            >
+              <Clock className="size-3.5 shrink-0" /> {question.deadlineLabel}
+            </span>
+          )}
         </div>
 
-        {/* Options */}
+        {/* Impeccable: Crafted Choice Row — the options wear the teams. Each
+            one is raked with that side's real brand colour, the same light the
+            match header, the veto ledger and the mobile scorelines already use,
+            so picking a winner looks like picking *that team* rather than
+            operating a generic control. Options that aren't teams (over/under,
+            map counts) fall back to a neutral plate and still line up. */}
         <div
           className={cn(
-            "mt-3.5 grid gap-2",
-            question.options.length > 2 ? "sm:grid-cols-3" : "sm:grid-cols-2",
+            "mt-3 grid gap-2",
+            question.options.length > 2 ? "grid-cols-3" : "grid-cols-2",
           )}
         >
           {question.options.map((opt) => {
             const selected = picked === opt.id;
+            const optTeam = resolveTeam(opt.label);
             return (
               <button
                 key={opt.id}
                 onClick={() => choose(opt.id)}
                 disabled={locked || upcoming}
                 aria-pressed={selected}
+                style={
+                  optTeam
+                    ? ({
+                        backgroundImage: `linear-gradient(100deg, color-mix(in oklch, ${optTeam.brand} ${selected ? 26 : 13}%, transparent), transparent 68%)`,
+                      } as CSSProperties)
+                    : undefined
+                }
                 className={cn(
-                  "group/opt relative flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                  "disabled:cursor-not-allowed",
+                  "group/opt relative flex h-14 min-w-0 items-center gap-2.5 overflow-hidden rounded-xl px-3 text-left",
+                  "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   selected
-                    ? "border-accent bg-[color-mix(in_oklch,var(--accent)_12%,transparent)]"
-                    : "border-border bg-surface-2 hover:border-border-strong enabled:hover:bg-surface-3",
-                  (locked || upcoming) && !selected && "opacity-60",
+                    ? "bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_65%,transparent),0_4px_16px_-14px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
+                    : "bg-surface-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_18%,transparent)]",
+                  (locked || upcoming) && !selected && "opacity-55",
                 )}
               >
-                {/* label + sublabel on one line, flush left */}
-                <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
+                {optTeam ? (
+                  <TeamLogo team={optTeam} size="sm" />
+                ) : (
                   <span
                     className={cn(
-                      "truncate text-sm font-semibold",
-                      selected ? "text-ink" : "text-ink-muted group-hover/opt:text-ink",
+                      "size-1.5 shrink-0 rounded-full transition-colors",
+                      selected ? "bg-accent" : "bg-[color-mix(in_oklch,var(--ink)_25%,transparent)]",
+                    )}
+                  />
+                )}
+
+                <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                  <span className="flex min-w-0 max-w-full items-baseline gap-1.5">
+                    <span
+                      className={cn(
+                        "truncate text-sm font-bold tracking-tight",
+                        selected ? "text-ink" : "text-ink-muted group-hover/opt:text-ink",
+                      )}
+                    >
+                      {opt.label}
+                    </span>
+                    {opt.sublabel && (
+                      <span className="shrink-0 text-[0.6875rem] text-ink-subtle">
+                        {opt.sublabel}
+                      </span>
+                    )}
+                  </span>
+                  {/* The payout is the currency, so it carries the currency's
+                      mark. `items-center` + `leading-none` is what keeps the
+                      gem and the digits on one axis at this size. */}
+                  <span
+                    className={cn(
+                      "tnum flex items-center gap-1 font-mono text-[0.6875rem] font-extrabold leading-none",
+                      selected ? "text-accent" : "text-accent/80",
                     )}
                   >
-                    {opt.label}
+                    <BrandIcon name="points" className="size-3.5" />
+                    +{opt.reward}
                   </span>
-                  {opt.sublabel && (
-                    <span className="shrink-0 text-[0.6875rem] text-ink-subtle">
-                      {opt.sublabel}
-                    </span>
-                  )}
                 </span>
-                {/* reserved selection slot on the right keeps rewards aligned */}
-                <span className="grid size-4 shrink-0 place-items-center">
-                  {selected && (
-                    <span className="grid size-4 place-items-center rounded-full bg-accent text-accent-ink">
-                      <Check className="size-3" strokeWidth={3} />
-                    </span>
-                  )}
-                </span>
-                <span className="tnum w-11 shrink-0 text-right font-mono text-xs font-bold text-accent">
-                  +{opt.reward}
-                </span>
+
+                {/* The tick is the non-colour half of the selected state. */}
+                {selected && (
+                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
+                    <Check className="size-3" strokeWidth={3.5} />
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
 
-        {/* Footer */}
-        <div className="mt-3 flex items-center justify-between gap-2 text-xs">
-          <span
-            className={cn(
-              "flex items-center gap-1.5 font-medium",
-              upcoming ? "text-info" : locked ? "text-ink-subtle" : "text-ink-muted",
-            )}
-          >
-            {locked ? (
-              <>
-                <Lock className="size-3.5 shrink-0" /> Прийом закрито
-              </>
-            ) : (
-              <>
-                <Clock className="size-3.5 shrink-0" /> Дедлайн: {question.deadlineLabel}
-              </>
-            )}
-          </span>
-
-          {/* The "Збережено" flash is short and always shown; the rest is secondary
-              helper text that only competes for room on phones, so it waits for sm+. */}
+        {/* Footer — status only now the deadline has moved up beside the
+            question. One line, centred under the track. */}
+        <div className="mt-2.5 flex min-h-4 items-center justify-center text-xs">
           {justSaved ? (
-            <span className="flex shrink-0 items-center gap-1 font-semibold text-success">
+            <span className="flex items-center gap-1 font-semibold text-success">
               <Check className="size-3.5" strokeWidth={3} /> Збережено
             </span>
           ) : locked ? (
-            <span className="hidden shrink-0 text-ink-subtle sm:inline">{picked ? "Твій вибір зафіксовано" : "Без відповіді"}</span>
+            // Missing the deadline isn't worth a line of type. The footer keeps
+            // its min-height so a skipped question is still the same size as an
+            // answered one in the stack.
+            picked && <span className="text-ink-subtle">Твій вибір зафіксовано</span>
           ) : picked ? (
-            <span className="hidden shrink-0 text-ink-subtle sm:inline">Можна змінити до дедлайну</span>
+            <span className="text-ink-subtle">Можна змінити до дедлайну</span>
           ) : upcoming ? (
-            <span className="hidden shrink-0 text-ink-subtle sm:inline">Відкриється перед матчем</span>
+            <span className="text-ink-subtle">Відкриється перед матчем</span>
           ) : (
-            <span className="hidden shrink-0 text-ink-subtle sm:inline">Обери варіант</span>
+            <span className="text-ink-subtle">Обери варіант</span>
           )}
         </div>
       </div>
@@ -185,9 +245,3 @@ export function QuestionCard({
   );
 }
 
-function QuestionIcon({ kind }: { kind: Question["kind"] }) {
-  const cls = "size-3.5";
-  if (kind === "player_stat") return <Trophy className={cls} />;
-  if (kind === "custom") return <CircleHelp className={cls} />;
-  return <Trophy className={cls} />;
-}

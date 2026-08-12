@@ -37,7 +37,7 @@ export const teams: Record<string, Team> = {
   sharks: { slug: "sharks", name: "DENDELE", tag: "DEN", logo: "/teams/dendele.svg", brand: "#0B4DA2", ink: "white", region: "SA", worldRank: 32 },
   thunder: { slug: "thunder", name: "THUNDERTDU", tag: "TDU", logo: "/teams/thunderdownunder.png", brand: "#F39200", ink: "black", region: "Oceania", worldRank: 41 },
   liquid: { slug: "liquid", name: "Liquid", tag: "TL", logo: "/teams/liquid.svg", brand: "#0A1F44", ink: "white", region: "NA", worldRank: 41 },
-  tyloo: { slug: "tyloo", name: "TYLOO", tag: "TY", logo: "/teams/tyloo.png", brand: "#D71920", ink: "white", region: "Asia", worldRank: 17 },
+  tyloo: { slug: "tyloo", name: "TYLOO", tag: "TY", logo: "/teams/tyloo.svg", brand: "#D71920", ink: "white", region: "Asia", worldRank: 17 },
 
   // --- BLAST Bounty S2 field (top seeds) ---
   vitality: { slug: "vitality", name: "Vitality", tag: "VIT", logo: "/teams/vitality.svg", brand: "#F2C200", ink: "black", region: "EU", worldRank: 3 },
@@ -68,6 +68,14 @@ export const teams: Record<string, Team> = {
   eyeballers: { slug: "eyeballers", name: "EYEBALLERS", tag: "EYE", logo: "/teams/eyeballers.svg", brand: "#E8C81E", ink: "black", region: "EU", worldRank: 31 },
   hundredthieves: { slug: "hundredthieves", name: "100 Thieves", tag: "100T", logo: "/teams/hundredthieves.svg", brand: "#E4002B", ink: "white", region: "NA", worldRank: 46 },
   og: { slug: "og", name: "OG", tag: "OG", logo: "/teams/og.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 70 },
+
+  // --- EWC 2026 field: the six that weren't in the catalog yet ---
+  ninez: { slug: "ninez", name: "9z", tag: "9z", logo: "/teams/ninez.webp", brand: "#1B1B1F", ink: "white", region: "SA", worldRank: 31 },
+  jijiehao: { slug: "jijiehao", name: "JiJieHao", tag: "JJH", logo: "/teams/jijiehao.svg", brand: "#8A1B1B", ink: "white", region: "Asia", worldRank: 58 },
+  k27: { slug: "k27", name: "K27", tag: "K27", logo: "/teams/k27.svg", brand: "#12303A", ink: "white", region: "EU", worldRank: 62 },
+  legacy: { slug: "legacy", name: "Legacy", tag: "LEG", logo: "/teams/legacy.webp", brand: "#0E6B3A", ink: "white", region: "SA", worldRank: 39 },
+  luminosity: { slug: "luminosity", name: "Luminosity", tag: "LG", logo: "/teams/luminosity.svg", brand: "#0B3D8A", ink: "white", region: "NA", worldRank: 44 },
+  parivision: { slug: "parivision", name: "PARIVISION", tag: "PARI", logo: "/teams/parivision.webp", brand: "#1E8F5A", ink: "white", region: "EU", worldRank: 20 },
 };
 
 export type Tier = 1 | 2;
@@ -89,8 +97,23 @@ export type Tournament = {
   format: string;
   accent: string; // subtle cover tint (oklch)
   coverImage?: string; // optional cover photo, recommended 800×300
-  isEvent?: boolean; // special featured event (Bounty predictor + neon match skin)
+  isEvent?: boolean; // special featured event (Bounty predictor, bounty points)
+  skin?: EventSkin; // dress only — see EventSkin
 };
+
+/**
+ * A tournament's visual dress, and nothing else.
+ *
+ * This is deliberately not `isEvent`. That flag decides real behaviour — the
+ * Bounty tab, which leaderboard loads, whether a resolve writes bounty points —
+ * and BLAST is the only tournament that should ever own it. A second event
+ * needs its own look without inheriting any of that, so the dress lives in its
+ * own field and the two can never be confused.
+ *
+ *   blast — neon red/blue arena
+ *   ewc   — Esports World Cup: drifting fire over near-black
+ */
+export type EventSkin = "blast" | "ewc";
 
 export const allTournaments: Tournament[] = [
   {
@@ -214,13 +237,44 @@ export const allTournaments: Tournament[] = [
     format: "Bounty picks → LAN Playoffs",
     accent: "oklch(0.6 0.25 25)",
     isEvent: true,
+    skin: "blast",
+  },
+  {
+    slug: "ewc-2026",
+    name: "Esports World Cup 2026",
+    shortName: "EWC 2026",
+    tier: 1,
+    status: "live",
+    startISO: "2026-08-12",
+    endISO: "2026-08-23",
+    dateLabel: "12 – 23 сер",
+    location: "Париж (Accor Arena)",
+    online: false,
+    prizeUSD: 2000000,
+    // The full 32, in group order. The roster grid re-sorts by world rank for
+    // display; this list stays grouped so the draw is readable in the source.
+    teamSlugs: [
+      // Group A
+      "spirit", "aurora", "g2", "gamerlegion", "luminosity", "m80", "big", "jijiehao",
+      // Group B
+      "falcons", "legacy", "betboom", "astralis", "mibr", "faze", "nip", "k27",
+      // Group C
+      "vitality", "mouz", "fut", "b8", "parivision", "tyloo", "lynn", "hundredthieves",
+      // Group D
+      "natus", "furia", "ninez", "mongolz", "magic", "pain", "wildcard", "threedmax",
+    ],
+    format: "4 × GSL (BO1 → BO3) → Playoffs",
+    accent: "oklch(0.66 0.22 38)",
+    coverImage: "/brand/ewc-cover.webp",
+    isEvent: true,
+    skin: "ewc",
   },
 ];
 
 // Only the BLAST Bounty event is public for now (other events are kept as
 // internal demo data and can be re-enabled later).
 export const tournaments: Tournament[] = allTournaments.filter(
-  (t) => t.slug === "blast-bounty-s2",
+  (t) => t.slug === "blast-bounty-s2" || t.slug === "ewc-2026",
 );
 
 /* --- BLAST Bounty S2: seeds & bounty stages --- */
@@ -969,7 +1023,21 @@ export type Giveaway = {
   image?: string; // optional prize photo, recommended 640×400
   description: string;
   conditions: string[];
-  entered?: boolean; // demo: whether the current user already applied
+  /** How many winners the draw picks. */
+  winnersCount: number;
+  /** Set once the draw has run — after this the giveaway is closed for good. */
+  drawnAt?: string;
+  /** Public result of the draw, in placing order. */
+  winners: GiveawayWinner[];
+  /** Whether the signed-in user has an entry (undefined when signed out). */
+  entered?: boolean;
+};
+
+export type GiveawayWinner = {
+  userId: string;
+  handle: string;
+  avatarUrl?: string;
+  place: number;
 };
 
 export const giveaways: Giveaway[] = [
@@ -991,6 +1059,8 @@ export const giveaways: Giveaway[] = [
       "Мінімум 500 поінтів у поточному сезоні",
       "Відкритий для трейду Steam-акаунт",
     ],
+    winnersCount: 1,
+    winners: [],
   },
   {
     slug: "awp-dragon",
@@ -1010,6 +1080,8 @@ export const giveaways: Giveaway[] = [
       "Мінімум 1000 поінтів у сезоні",
       "Один акаунт — одна заявка",
     ],
+    winnersCount: 1,
+    winners: [],
     entered: true,
   },
 ];
@@ -1072,10 +1144,44 @@ export function getTeam(slug: string): Team {
   return teams[slug];
 }
 
+/**
+ * Prediction options are written by hand — "Liquid", "NAVI" — not by slug, so
+ * this resolves a label back to a team when one exists. Display names are
+ * indexed first and tags only fill gaps, so a tag can never shadow another
+ * team's real name. Returns undefined for the common case where the option
+ * isn't a team at all ("Більше 24.5"), and for teams imported at runtime that
+ * aren't in this static catalog.
+ */
+const teamsByLabel = (() => {
+  const byLabel = new Map<string, Team>();
+  const all = Object.values(teams);
+  for (const t of all) byLabel.set(t.name.toLowerCase(), t);
+  for (const t of all) {
+    const tag = t.tag.toLowerCase();
+    if (!byLabel.has(tag)) byLabel.set(tag, t);
+  }
+  return byLabel;
+})();
+
+export function teamByLabel(label: string): Team | undefined {
+  return teamsByLabel.get(label.trim().toLowerCase());
+}
+
 export function getTournament(slug: string): Tournament | undefined {
   // Search the full set so matches from any tournament resolve a name,
   // even though only the event is shown in the public catalog.
   return allTournaments.find((t) => t.slug === slug);
+}
+
+/**
+ * Which dress a match wears. Falls back to "blast" for anything still flagged
+ * `isEvent` without an explicit skin, so imported DB matches (which only carry
+ * `is_event`) keep the look they have today.
+ */
+export function matchSkin(match: Match, tour?: Tournament): EventSkin | null {
+  const t = tour ?? getTournament(match.tournamentSlug);
+  if (t?.skin) return t.skin;
+  return (match.isEvent ?? t?.isEvent) ? "blast" : null;
 }
 
 export function getMatch(id: string): Match | undefined {

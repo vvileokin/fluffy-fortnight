@@ -10,6 +10,8 @@ export type Profile = {
   avatar_url: string | null;
   points: number;
   bounty_points: number;
+  /** EWC 2026 event points. Absent until migration 0033 runs. */
+  ewc_points?: number;
   correct: number;
   streak: number;
   is_admin: boolean;
@@ -28,14 +30,24 @@ export function useProfile() {
     }
     let cancelled = false;
     const supabase = createClient();
-    supabase
-      .from("profiles")
-      .select("id, handle, avatar_url, points, bounty_points, correct, streak, is_admin")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!cancelled) setProfile((data as Profile) ?? null);
+    const BASE = "id, handle, avatar_url, points, bounty_points, correct, streak, is_admin";
+    const read = (columns: string) =>
+      supabase.from("profiles").select(columns).eq("id", user.id).maybeSingle();
+
+    // `ewc_points` doesn't exist until migration 0033 runs, and PostgREST fails
+    // the *whole* select on one unknown column — which would blank the balance
+    // and the streak too, not just the event chip. Retry without it rather than
+    // let a pending migration empty the top bar.
+    read(`${BASE}, ewc_points`).then(({ data, error }) => {
+      if (cancelled) return;
+      if (!error) {
+        setProfile((data as unknown as Profile) ?? null);
+        return;
+      }
+      read(BASE).then(({ data: base }) => {
+        if (!cancelled) setProfile((base as unknown as Profile) ?? null);
       });
+    });
     return () => {
       cancelled = true;
     };

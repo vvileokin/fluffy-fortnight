@@ -142,3 +142,47 @@ export async function getBountyLeaderboard(limit = 50): Promise<LeaderRow[]> {
     return [];
   }
 }
+
+/**
+ * Esports World Cup board.
+ *
+ * Unlike the bounty, EWC has no draft to enumerate participants from, so the
+ * field is simply everyone who has scored at this event. `streak` is returned
+ * as 0 on purpose: a streak belongs to the player across the whole season, not
+ * to one tournament, so the event board doesn't carry one and the column is
+ * hidden at the call site.
+ */
+export async function getEwcLeaderboard(limit = 50): Promise<LeaderRow[]> {
+  try {
+    const sb = await createClient();
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+
+    const { data, error } = await sb
+      .from("profiles")
+      .select("id, handle, avatar_url, ewc_points, ewc_correct")
+      .gt("ewc_points", 0)
+      .order("ewc_points", { ascending: false })
+      .limit(Math.max(limit, 200));
+    // Pre-migration the columns don't exist; an empty board is the right
+    // answer then, not a crash.
+    if (error || !data) return [];
+
+    const ranked = rankByPoints(
+      data.map((p) => ({
+        handle: p.handle as string,
+        points: (p.ewc_points as number) ?? 0,
+        correct: (p.ewc_correct as number) ?? 0,
+        streak: 0,
+        avatarUrl: (p.avatar_url as string) ?? undefined,
+        isYou: user?.id === p.id,
+      })),
+    );
+    return ranked
+      .sort((a, b) => a.rank - b.rank || b.correct - a.correct)
+      .slice(0, limit);
+  } catch {
+    return [];
+  }
+}

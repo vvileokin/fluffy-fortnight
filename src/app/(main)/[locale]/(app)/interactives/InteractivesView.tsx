@@ -1,4 +1,4 @@
-import { Target } from "lucide-react";
+import { TargetGlyph } from "@/components/layout/NavGlyphs";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { LiveBadge } from "@/components/ui/Badge";
@@ -22,7 +22,7 @@ export function InteractivesView({
 
   return (
     <div className="space-y-6">
-      <PageIntro icon={Target} title="Інтерактиви" />
+      <PageIntro icon={TargetGlyph} title="Інтерактиви" />
 
       {sections.length > 0 ? (
         <div className="space-y-8">
@@ -55,8 +55,8 @@ export function InteractivesView({
           ))}
         </div>
       ) : (
-        <div className="grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-16 text-center">
-          <Target className="size-8 text-ink-faint" />
+        <div className="grid place-items-center rounded-2xl well px-6 py-16 text-center">
+          <TargetGlyph className="size-8 text-ink-faint" />
           <p className="mt-3 text-sm font-semibold text-ink">Тут поки порожньо</p>
           <p className="mt-1 text-xs text-ink-subtle">
             Нові прогнози з’являться перед найближчими матчами.

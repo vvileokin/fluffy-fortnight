@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { History, Swords } from "lucide-react";
+import { History } from "lucide-react";
+import { SwordsGlyph } from "@/components/layout/NavGlyphs";
 import { Link } from "@/i18n/navigation";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { FilterTabs, type FilterOption } from "@/components/ui/FilterTabs";
@@ -37,13 +38,13 @@ export function ResultsView({
           aria-label="Матчі"
           className="surface-1 inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
         >
-          <Swords className="size-4" />
+          <SwordsGlyph className="size-4" />
           <span className="hidden sm:inline">Матчі</span>
         </Link>
       </div>
 
       {matches.length === 0 ? (
-        <div className="grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-16 text-center">
+        <div className="grid place-items-center rounded-2xl well px-6 py-16 text-center">
           <History className="size-8 text-ink-faint" />
           <p className="mt-3 text-sm font-semibold text-ink">Ще немає зіграних матчів</p>
           <p className="mt-1 text-xs text-ink-subtle">

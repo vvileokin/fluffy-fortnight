@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     id: 1,
     promo_enabled: Boolean(body.promo_enabled),
     promo_image: body.promo_image ? String(body.promo_image) : null,
+    hero_image: body.hero_image ? String(body.hero_image) : null,
     promo_link_type: body.promo_link_type === "match" ? "match" : "tournament",
     promo_target: body.promo_target ? String(body.promo_target) : null,
     covers:

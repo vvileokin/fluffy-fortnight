@@ -1,27 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Swords, History } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { SwordsGlyph } from "@/components/layout/NavGlyphs";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { FilterTabs, type FilterOption } from "@/components/ui/FilterTabs";
 import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { type Match, type Tournament } from "@/lib/data";
 
 /** "Результати" link — the full archive of finished matches. */
-function ResultsLink() {
-  return (
-    <Link
-      href="/results"
-      aria-label="Результати"
-      className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink surface-1"
-    >
-      <History className="size-4" />
-      <span className="hidden sm:inline">Результати</span>
-    </Link>
-  );
-}
-
 export function MatchesView({
   matches,
   tournaments,
@@ -45,12 +31,9 @@ export function MatchesView({
   if (matches.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <PageIntro icon={Swords} title="Матчі" />
-          <ResultsLink />
-        </div>
-        <div className="grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-16 text-center">
-          <Swords className="size-8 text-ink-faint" />
+        <PageIntro icon={SwordsGlyph} title="Матчі" />
+        <div className="grid place-items-center rounded-2xl well px-6 py-16 text-center">
+          <SwordsGlyph className="size-8 text-ink-faint" />
           <p className="mt-3 text-sm font-semibold text-ink">Наразі матчів немає</p>
           <p className="mt-1 text-xs text-ink-subtle">
             Щойно з’являться найближчі матчі — вони будуть тут.
@@ -62,10 +45,7 @@ export function MatchesView({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <PageIntro icon={Swords} title="Матчі" />
-        <ResultsLink />
-      </div>
+      <PageIntro icon={SwordsGlyph} title="Матчі" />
 
       <FilterTabs options={options} value={tour} onChange={setTour} />
 

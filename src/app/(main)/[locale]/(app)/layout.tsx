@@ -11,6 +11,9 @@ export default async function AppLayout({
   const { promo } = await getSiteSettings();
   return (
     <>
+      {/* Impeccable: Crafted Arena Atmosphere — fixed, behind everything, the
+          light the whole product sits in. Decorative only, never announced. */}
+      <div className="arena" aria-hidden />
       <Sidebar promo={promo} />
       <div className="lg:pl-[248px]">
         <Topbar />

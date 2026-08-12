@@ -9,11 +9,26 @@
 :root {
   color-scheme: dark;
 
-  /* --- Surfaces (navy near-black, hue ~246) --- */
-  --bg: oklch(0.109 0.026 246);          /* #000913 app canvas */
-  --surface: oklch(0.124 0.03 246);      /* #000B18 cards, sidebar */
-  --surface-2: oklch(0.163 0.032 245);   /* elevated / hover */
-  --surface-3: oklch(0.205 0.033 244);   /* inputs, chips, raised */
+  /* --- Surfaces (navy near-black, hue ~246) ---
+     The canvas used to sit at 0.109 with cards at 0.124 — fifteen thousandths
+     apart, which is why every panel read as a ruled cell rather than an object.
+     Dropping the floor to 0.072 gives cards three times the separation and
+     costs nothing in contrast: text only ever gets easier to read on a darker
+     ground. #000B18 stays exactly where it was, as the card. */
+  --bg: oklch(0.062 0.028 250);          /* app canvas — deep, near-black navy */
+  --surface: oklch(0.112 0.034 250);     /* cards, sidebar */
+  --surface-2: oklch(0.145 0.036 249);   /* elevated / hover */
+  --surface-3: oklch(0.186 0.037 248);   /* inputs, chips, raised */
+
+  /* Translucent fills for slots, rows and chips.
+     These used to be written inline as `color-mix(var(--ink) N%, transparent)`.
+     `--ink` is a near-white, so that produced a *grey* veil over a navy
+     product — which is exactly why the leaderboard rows read as grey rather
+     than dark blue. Lightening toward a mid-blue instead keeps every recessed
+     surface inside the brand's own hue family. */
+  --fill-1: oklch(0.62 0.075 250 / 0.09);
+  --fill-2: oklch(0.62 0.075 250 / 0.15);
+  --fill-3: oklch(0.62 0.075 250 / 0.22);
   --border: oklch(0.243 0.032 244);      /* hairlines */
   --border-strong: oklch(0.33 0.038 243);/* emphasized dividers */
 
@@ -62,6 +77,9 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
+  --color-fill-1: var(--fill-1);
+  --color-fill-2: var(--fill-2);
+  --color-fill-3: var(--fill-3);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
@@ -90,8 +108,12 @@
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
 
+  /* One family across the whole product. `mono` is kept as a token name
+     because every numeric call site already says `font-mono`, but it resolves
+     to the same face — the numerals hold a column via tabular figures, not via
+     a second typeface. */
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-mono: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* =========================================================================
@@ -160,7 +182,7 @@ body {
 
 .tnum {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
+  font-feature-settings: "tnum" 1;
 }
 
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
@@ -176,7 +198,7 @@ body {
 }
 
 .glow-accent {
-  box-shadow: 0 6px 30px -10px color-mix(in oklch, var(--accent) 55%, transparent);
+  box-shadow: 0 6px 24px -14px color-mix(in oklch, var(--accent) 30%, transparent);
 }
 
 /* =========================================================================
@@ -219,19 +241,38 @@ body {
     box-shadow var(--dur) var(--ease-out),
     background-color var(--dur) var(--ease-out);
 }
+/* Hover lifts the plane; it does not draw a brighter frame around it. An
+   outline that thickens under the cursor is the first thing the eye catches,
+   which is exactly backwards — the shadow should deepen, the edge shouldn't
+   move. */
 @media (hover: hover) {
   .lift:hover {
     transform: translateY(-2px);
     background-color: var(--surface-2);
     box-shadow:
-      0 0 0 1px color-mix(in oklch, var(--ink) 12%, transparent),
-      0 1px 0 0 color-mix(in oklch, var(--ink) 12%, transparent) inset,
+      0 0 0 1px color-mix(in oklch, var(--ink) 7%, transparent),
+      0 1px 0 0 color-mix(in oklch, var(--ink) 8%, transparent) inset,
       0 8px 20px -6px oklch(0 0 0 / 0.6),
-      0 32px 56px -30px oklch(0 0 0 / 1);
+      0 32px 56px -30px oklch(0 0 0 / 1),
+      /* The card's own colour, thrown onto the canvas beneath it. A raised
+         object that is lit from inside should tint the floor it hovers over.
+         Falls back through `--tour-a` (match cards already set it) and then to
+         transparent, so a card that has declared no colour simply gets the
+         neutral shadow above and nothing else. */
+      0 14px 44px -26px color-mix(in oklch, var(--glow, var(--tour-a, transparent)) 65%, transparent);
   }
 }
+
+/* Press. Hover alone leaves a card feeling like a picture of a button; the
+   plane has to come back down under the finger, and faster than it rose. */
+.lift:active {
+  transform: translateY(0);
+  transition-duration: var(--dur-fast);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .lift:hover {
+  .lift:hover,
+  .lift:active {
     transform: none;
   }
 }
@@ -295,7 +336,254 @@ body {
 /* Faint yellow radial used sparingly behind hero / key CTA */
 .aura-accent {
   background:
-    radial-gradient(120% 120% at 50% 0%, color-mix(in oklch, var(--accent) 9%, transparent), transparent 60%);
+    radial-gradient(120% 120% at 50% 0%, color-mix(in oklch, var(--accent) 4%, transparent), transparent 60%);
+}
+
+/* =========================================================================
+   ARENA — the room the interface sits in
+   The canvas was one flat navy. Real arenas have light in them: a cold pool
+   low on one side, a warm signal high on the other. No grid, no texture, no
+   outlines — just light. It's fixed and sits behind every pixel of content,
+   so it reads as depth of room rather than decoration on a card. Data
+   legibility is untouched: nothing here sits under text.
+   ========================================================================= */
+
+.arena {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    /* warm signal, high right — the brand's own yellow, barely there */
+    radial-gradient(46rem 30rem at 88% -6%, color-mix(in oklch, var(--accent) 3%, transparent), transparent 68%),
+    /* cold pool, low left — UA azure */
+    radial-gradient(58rem 42rem at 0% 88%, color-mix(in oklch, var(--info) 7%, transparent), transparent 66%),
+    /* a second, deeper pool behind the middle of the feed */
+    radial-gradient(64rem 34rem at 46% 118%, color-mix(in oklch, var(--info) 5%, transparent), transparent 62%),
+    /* the floor darkens toward the horizon so cards have something to lift off */
+    linear-gradient(180deg, color-mix(in oklch, var(--ink) 3%, transparent) 0%, transparent 26%);
+}
+
+/* Team-coloured arena light. The caller sets --team-a / --team-b from each
+   side's real brand colour, so every match is lit by the two teams actually
+   playing it. Anchored at the bottom corners: the copy up top stays on flat
+   ground. */
+.team-arena {
+  background-image:
+    /* the crests sit near the outer edges, so the hot centre of each pool is
+       pushed off-canvas — teams are lit from the wings, not spotlit */
+    /* Mixed against a raised surface rather than transparent: a neon brand
+       (fnatic orange) is pulled down to a burnt ember instead of blowing out
+       behind its own crest, and a near-black brand (Liquid navy) still lifts
+       off the floor enough to read. Both sides land in the same register. */
+    radial-gradient(80% 125% at -10% 132%, color-mix(in oklch, var(--team-a, var(--info)) 34%, var(--surface-3)), transparent 56%),
+    radial-gradient(80% 125% at 110% 132%, color-mix(in oklch, var(--team-b, var(--live)) 34%, var(--surface-3)), transparent 56%),
+    linear-gradient(180deg, color-mix(in oklch, var(--ink) 5%, transparent), transparent 38%);
+}
+
+/* The same light, whispered, straight onto a match card's own background.
+   13% is the ceiling where a white-brand team (NAVI, Falcons) still reads as
+   a tint rather than a wash. */
+/* Four pools on one plate. The top corners carry the two teams' brands; the
+   bottom corners carry the tournament's. Every match card gets the same four
+   slots — BLAST just fills the bottom pair with its own red and blue, the way
+   its event skin used to, instead of swapping in a different chassis. That's
+   what made a BLAST card look like a different component next to a Stake one:
+   not the colour, but the brighter surface and the white ring that came with
+   it. Colour is identity; geometry is the system. */
+.match-plate {
+  background-image:
+    radial-gradient(58% 130% at 0% 0%, color-mix(in oklch, var(--team-a, transparent) 13%, transparent), transparent 72%),
+    radial-gradient(58% 130% at 100% 0%, color-mix(in oklch, var(--team-b, transparent) 13%, transparent), transparent 72%),
+    radial-gradient(62% 105% at 0% 118%, color-mix(in oklch, var(--tour-a, transparent) 26%, transparent), transparent 62%),
+    radial-gradient(62% 105% at 100% 118%, color-mix(in oklch, var(--tour-b, transparent) 26%, transparent), transparent 62%);
+}
+
+/* Cover images that scale on hover. Scaling a child inside an overflow-hidden
+   parent leaves a hairline of the parent's background along the edge where the
+   browser rounds the composited layer. Promoting both to their own layer and
+   over-sizing the child by a pixel removes the seam. */
+.cover-zoom {
+  transform: translateZ(0);
+}
+.cover-zoom > img {
+  will-change: transform;
+  transform: scale(1.01);
+  backface-visibility: hidden;
+}
+@media (hover: hover) {
+  .group:hover .cover-zoom > img {
+    transform: scale(1.07);
+  }
+}
+
+/* =========================================================================
+   MAP VETO
+   A veto is a sequence of decisions, not a table. Each map gets its own
+   thumbnail; picks are lit and legible, bans are drained to near-nothing and
+   struck through. The team is shown by its crest, not its three-letter tag.
+   ========================================================================= */
+
+.map-strip {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface);
+  transition:
+    box-shadow var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out);
+}
+/* The map art, dropped in as a background by the caller via --map-art. Held
+   to the right third and faded out so the labels never fight it. */
+.map-strip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--map-art, none);
+  background-size: cover;
+  background-position: 50% 45%;
+  opacity: var(--map-art-opacity, 0.3);
+  -webkit-mask-image: linear-gradient(90deg, transparent 8%, #000 62%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 8%, #000 62%, #000 100%);
+  pointer-events: none;
+}
+/* Scrim so the name stays readable over any art. */
+.map-strip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--surface) 18%, color-mix(in oklch, var(--surface) 55%, transparent) 58%, transparent);
+  pointer-events: none;
+}
+.map-strip > * {
+  position: relative;
+  z-index: 1;
+}
+/* A banned map is a map that isn't happening: the art all but disappears. */
+.map-banned {
+  --map-art-opacity: 0.07;
+}
+.map-banned::after {
+  background: linear-gradient(90deg, var(--surface) 30%, color-mix(in oklch, var(--surface) 75%, transparent) 70%, color-mix(in oklch, var(--surface) 40%, transparent));
+}
+
+/* =========================================================================
+   AURA
+   Colour arrives as light, never as fill. Two soft pools bled in from opposite
+   corners of a surface, each caller choosing its own pair via --aura-1 and
+   --aura-2, so a giveaway can glow green-gold and an empty state can glow
+   azure-violet without either becoming a coloured box. Composes onto the
+   element's own background-color, so `.surface-1 .aura` still keeps its plate.
+   ========================================================================= */
+.aura {
+  background-image:
+    radial-gradient(62% 92% at 10% -6%, color-mix(in oklch, var(--aura-1, var(--info)) 20%, transparent), transparent 62%),
+    radial-gradient(58% 88% at 94% 106%, color-mix(in oklch, var(--aura-2, var(--accent)) 14%, transparent), transparent 60%);
+}
+
+/* Empty states. A dashed rectangle is the single most spreadsheet-looking
+   thing a dark UI can do. An absence should read as a hollow cut into the
+   floor: darker than the surface, lit only along its lower lip. */
+.well {
+  background-color: color-mix(in oklch, var(--bg) 60%, var(--surface));
+  /* A hollow still gets light in it — an unlit one reads as a dead panel
+     rather than as space waiting to be filled. */
+  background-image:
+    radial-gradient(70% 100% at 50% 108%, color-mix(in oklch, var(--info) 11%, transparent), transparent 66%);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--ink) 5%, transparent),
+    0 3px 10px -2px oklch(0 0 0 / 0.55) inset,
+    0 -1px 0 0 color-mix(in oklch, var(--ink) 6%, transparent) inset;
+}
+
+/* Live rail — a filament of red light across the top edge of the card,
+   instead of ringing the whole thing in a red border. Static: the LIVE dot
+   already carries the motion, and six of these pulsing at once is a strobe. */
+.rail-live::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--live), transparent);
+  box-shadow: 0 0 12px 0 color-mix(in oklch, var(--live) 70%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* =========================================================================
+   TACTILE CONTROLS
+   Prediction picks are the one thing on this site people came to press. They
+   get real key travel: a lit top bevel, a solid body below the face, and an
+   actual 2px drop on :active with the body collapsing under it. Yellow only
+   arrives once a choice is committed.
+   ========================================================================= */
+
+.plate {
+  background-color: color-mix(in oklch, var(--ink) 5%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--ink) 7%, transparent);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .plate:hover:not(:disabled) {
+    background-color: color-mix(in oklch, var(--ink) 9%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--ink) 13%, transparent);
+  }
+}
+.plate:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+/* Committed pick: a yellow hairline and a faint wash. Nothing else. */
+.plate-on {
+  background-color: color-mix(in oklch, var(--accent) 7%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 38%, transparent);
+}
+@media (hover: hover) {
+  .plate-on:hover:not(:disabled) {
+    background-color: color-mix(in oklch, var(--accent) 13%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 60%, transparent);
+  }
+}
+.plate-on:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+/* Primary action, same travel language as a pick. */
+/* NB: the key body must be mixed against pure black, not `--bg`. `--bg` has
+   chroma (0.022 at hue 246), so `color-mix(in oklch, var(--accent), var(--bg))`
+   interpolates hue from 103 to 246 and lands on cyan — a teal line under a
+   yellow button. Black is chroma 0, so its hue is powerless and the mix just
+   darkens the yellow. */
+.key {
+  box-shadow:
+    0 1px 0 0 color-mix(in oklch, #fff 26%, transparent) inset,
+    0 2px 0 0 color-mix(in oklch, var(--accent) 42%, oklch(0 0 0)),
+    0 8px 20px -16px color-mix(in oklch, var(--accent) 40%, transparent);
+}
+.key:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 0 color-mix(in oklch, #fff 18%, transparent) inset,
+    0 0 0 0 transparent,
+    0 3px 10px -10px color-mix(in oklch, var(--accent) 35%, transparent);
+}
+
+/* Segmented control: the selected segment is lit from within, not just filled. */
+.seg-on {
+  box-shadow:
+    0 1px 0 0 color-mix(in oklch, #fff 22%, transparent) inset,
+    0 3px 10px -8px color-mix(in oklch, var(--accent) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plate:active:not(:disabled),
+  .plate-on:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 /* Neon blue/red arena skin for featured event surfaces (BLAST Bounty). */
@@ -313,6 +601,87 @@ body {
   background-image:
     radial-gradient(60% 100% at 0% 120%, rgba(255, 12, 60, 0.35), transparent 60%),
     radial-gradient(60% 100% at 100% 120%, rgba(46, 86, 255, 0.4), transparent 60%);
+}
+
+/* --- Esports World Cup 2026: fire -------------------------------------
+   Where BLAST is two hard neon corners, EWC is one drifting body of heat —
+   embers low, a hot diagonal streak across the upper left, and near-black
+   everywhere the fire isn't. The real artwork rides on top as `.ewc-fire`;
+   these gradients are what it sits in, and what stands in for it on surfaces
+   too small to carry a photograph.
+
+   The tokens are the event's own, declared here rather than in :root: they
+   belong to one tournament, not to the product. */
+.ewc-aura {
+  --ewc-ember: 255 88 16;
+  --ewc-core: 255 168 32;
+  --ewc-deep: 158 26 4;
+
+  background-color: #14060a;
+  background-image:
+    /* the hot streak, upper-left to centre */
+    linear-gradient(101deg, transparent 6%, rgb(var(--ewc-core) / 0.20) 20%, rgb(var(--ewc-ember) / 0.10) 34%, transparent 58%),
+    radial-gradient(78% 120% at 12% 4%, rgb(var(--ewc-core) / 0.30), transparent 58%),
+    radial-gradient(96% 130% at 42% 116%, rgb(var(--ewc-ember) / 0.42), transparent 62%),
+    radial-gradient(120% 130% at 88% 92%, rgb(var(--ewc-deep) / 0.55), transparent 68%);
+  box-shadow: 0 1px 0 0 rgb(255 190 120 / 0.14) inset;
+}
+
+/* The artwork itself, laid over `.ewc-aura` on surfaces big enough for it.
+   `soft-light` keeps the photo's darks from flattening the gradient under it,
+   so the two read as one lit room rather than a picture on a wall. */
+.ewc-fire::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/brand/ewc-fire.webp");
+  background-size: cover;
+  background-position: 50% 42%;
+  opacity: 0.55;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* Roster tile at the event.
+   The team's own colour still rakes in from the left — a 26-team wall has to
+   stay readable as identities, not as 26 identical embers — but it sits on the
+   event's fire instead of the neutral plate. `--team` is the crest colour, set
+   per tile by the component. */
+.ewc-tile {
+  background-color: #150609;
+  background-image:
+    linear-gradient(100deg, color-mix(in oklch, var(--team, transparent) 20%, transparent), transparent 54%),
+    radial-gradient(88% 150% at 6% 130%, rgb(255 88 16 / 0.26), transparent 62%),
+    radial-gradient(100% 150% at 104% -20%, rgb(158 26 4 / 0.40), transparent 66%);
+}
+
+/* Tournament card at the event. Far quieter than the banner: a card sits in a
+   grid with others, so the fire is a suggestion at the edges rather than the
+   subject. Roughly a third of `.ewc-aura`'s intensity. */
+.ewc-aura-card {
+  background-color: color-mix(in oklch, var(--surface) 80%, #21080b);
+  background-image:
+    /* One long diagonal sweep instead of two hard corner pools — that abruptness
+       is what read as "not smooth". The stops are close in value so the ramp has
+       no visible edge, and the whole thing stays well under the banner's heat. */
+    linear-gradient(112deg,
+      rgb(255 96 20 / 0.16) 0%,
+      rgb(200 44 10 / 0.10) 38%,
+      rgb(120 20 6 / 0.05) 68%,
+      transparent 100%),
+    radial-gradient(120% 150% at 100% 0%, rgb(255 110 28 / 0.13), transparent 62%);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, rgb(255 120 40) 16%, transparent),
+    0 1px 0 0 rgb(255 180 120 / 0.07) inset,
+    0 12px 34px -16px oklch(0 0 0 / 0.8);
+}
+
+/* Card-weight: same fire, dialled back so a grid of them stays calm. */
+.ewc-aura-soft {
+  background-color: color-mix(in oklch, var(--surface) 76%, #17070b);
+  background-image:
+    radial-gradient(64% 108% at 0% 118%, rgb(255 88 16 / 0.22), transparent 60%),
+    radial-gradient(64% 108% at 100% 118%, rgb(158 26 4 / 0.30), transparent 60%);
 }
 
 @media (prefers-reduced-motion: reduce) {

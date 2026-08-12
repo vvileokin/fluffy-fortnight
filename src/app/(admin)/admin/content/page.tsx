@@ -32,6 +32,7 @@ export default function ContentAdmin() {
     promoBanner.linkType,
   );
   const [promoTarget, setPromoTarget] = React.useState<string>(promoBanner.target);
+  const [heroImage, setHeroImage] = React.useState<string>("");
   const [covers, setCovers] = React.useState<Record<string, string>>({});
   const [matches, setMatches] = React.useState<MatchLite[]>([]);
   const [saving, setSaving] = React.useState(false);
@@ -53,6 +54,7 @@ export default function ContentAdmin() {
           data.promo_link_type === "match" ? "match" : "tournament",
         );
         setPromoTarget(data.promo_target || promoBanner.target);
+        setHeroImage(data.hero_image || "");
         setCovers((data.covers as Record<string, string>) ?? {});
       });
     createClient()
@@ -78,6 +80,7 @@ export default function ContentAdmin() {
         promo_image: promoImage,
         promo_link_type: promoLinkType,
         promo_target: promoTarget,
+        hero_image: heroImage,
         covers,
       }),
     });
@@ -144,6 +147,29 @@ export default function ContentAdmin() {
           </div>
         </div>
       </Panel>
+
+      {/* Home hero artwork */}
+      <div className="mt-4">
+        <Panel title="Головний банер (головна)">
+          <div className="space-y-3 p-4">
+            <ImageField
+              label="Фото банера"
+              hint="Рекомендовано 2000×760 px. Без фото банер лишається стандартним."
+              folder="hero"
+              value={heroImage || undefined}
+              onChange={setHeroImage}
+            />
+            {heroImage && (
+              <button
+                onClick={() => setHeroImage("")}
+                className="text-xs font-semibold text-ink-subtle transition-colors hover:text-danger"
+              >
+                Прибрати фото
+              </button>
+            )}
+          </div>
+        </Panel>
+      </div>
 
       {/* Promo banner + tournament covers */}
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">

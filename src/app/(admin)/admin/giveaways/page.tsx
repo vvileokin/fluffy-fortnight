@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trophy, Check, Clock, Dices, Crown, Plus, Trash2 } from "lucide-react";
+import { Trophy, Check, Dices, Crown, Plus, Trash2, Ban, Loader2 } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -9,23 +9,21 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { ImageField } from "@/components/admin/ImageField";
 import { createClient } from "@/lib/supabase/client";
+import { formatInt } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-type Applicant = { handle: string; confirmed: boolean };
+type Applicant = {
+  userId: string;
+  handle: string;
+  avatarUrl: string | null;
+  points: number;
+  confirmed: boolean;
+};
+type Winner = { userId: string; handle: string; place: number };
 type GiveItem = { slug: string; prize: string };
 
 const inputCls =
   "h-10 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none";
-
-const applicants: Applicant[] = [
-  { handle: "zaraza_ua", confirmed: true },
-  { handle: "kv1tka", confirmed: true },
-  { handle: "molotok", confirmed: false },
-  { handle: "b1t_believer", confirmed: true },
-  { handle: "shadow_kyiv", confirmed: true },
-  { handle: "praporshchyk", confirmed: false },
-  { handle: "oleksandr_p", confirmed: true },
-];
 
 const emptyForm = {
   prize: "",
@@ -40,7 +38,11 @@ const emptyForm = {
 export default function GiveawaysAdmin() {
   const [list, setList] = React.useState<GiveItem[]>([]);
   const [active, setActive] = React.useState<string | null>(null);
-  const [winner, setWinner] = React.useState<string | null>(null);
+  const [applicants, setApplicants] = React.useState<Applicant[]>([]);
+  const [winners, setWinners] = React.useState<Winner[]>([]);
+  const [drawnAt, setDrawnAt] = React.useState<string | null>(null);
+  const [drawing, setDrawing] = React.useState(false);
+  const [drawError, setDrawError] = React.useState<string | null>(null);
   const [confirmReroll, setConfirmReroll] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
   const [form, setForm] = React.useState(emptyForm);
@@ -73,19 +75,74 @@ export default function GiveawaysAdmin() {
     }
     setList((prev) => prev.filter((g) => g.slug !== slug));
     setActive((cur) => (cur === slug ? null : cur));
-    setWinner(null);
   }
+
+  // Entries live behind the service role — a player can only read their own
+  // row — so the admin list comes from the API, not from the browser client.
+  const loadEntries = React.useCallback(async (slug: string) => {
+    const res = await fetch(`/api/admin/giveaways/draw?slug=${encodeURIComponent(slug)}`);
+    const j = await res.json().catch(() => null);
+    if (!res.ok || !j?.ok) {
+      setApplicants([]);
+      setWinners([]);
+      setDrawnAt(null);
+      return;
+    }
+    setApplicants(j.entries as Applicant[]);
+    setWinners(j.winners as Winner[]);
+    setDrawnAt(j.drawnAt as string | null);
+  }, []);
+
+  React.useEffect(() => {
+    if (!active) return;
+    setConfirmReroll(false);
+    setDrawError(null);
+    void loadEntries(active);
+  }, [active, loadEntries]);
 
   const confirmed = applicants.filter((a) => a.confirmed);
 
-  function draw() {
-    if (winner && !confirmReroll) {
+  async function setConfirmedFlag(userId: string, next: boolean) {
+    if (!active) return;
+    setApplicants((prev) =>
+      prev.map((a) => (a.userId === userId ? { ...a, confirmed: next } : a)),
+    );
+    await fetch("/api/admin/giveaways/draw", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug: active, userId, confirmed: next }),
+    });
+  }
+
+  async function draw() {
+    if (!active) return;
+    // A redraw replaces a published result, so it takes a second press.
+    if (winners.length > 0 && !confirmReroll) {
       setConfirmReroll(true);
       return;
     }
-    const pick = confirmed[Math.floor(Math.random() * confirmed.length)];
-    setWinner(pick.handle);
+    setDrawing(true);
+    setDrawError(null);
+    const res = await fetch("/api/admin/giveaways/draw", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug: active, redraw: winners.length > 0 }),
+    });
+    const j = await res.json().catch(() => null);
+    setDrawing(false);
     setConfirmReroll(false);
+    if (!res.ok || !j?.ok) {
+      setDrawError(
+        j?.error === "no_entries"
+          ? "Немає жодної підтвердженої заявки."
+          : j?.error === "already_drawn"
+            ? "Розіграш уже проведено."
+            : "Не вдалося розіграти. Спробуй ще раз.",
+      );
+      return;
+    }
+    setWinners(j.winners as Winner[]);
+    await loadEntries(active);
   }
 
   const [saving, setSaving] = React.useState(false);
@@ -116,7 +173,6 @@ export default function GiveawaysAdmin() {
     }
     setList((prev) => [{ slug: j.slug, prize: form.prize.trim() }, ...prev]);
     setActive(j.slug);
-    setWinner(null);
     setForm(emptyForm);
     setCreating(false);
   }
@@ -157,7 +213,6 @@ export default function GiveawaysAdmin() {
               <button
                 onClick={() => {
                   setActive(g.slug);
-                  setWinner(null);
                   setConfirmReroll(false);
                 }}
                 className={cn(
@@ -188,81 +243,126 @@ export default function GiveawaysAdmin() {
             </span>
           }
         >
-          <ul className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
-            {applicants.map((a) => (
-              <li
-                key={a.handle}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-2.5",
-                  winner === a.handle && "bg-[color-mix(in_oklch,var(--accent)_10%,transparent)]",
-                )}
-              >
-                <Avatar name={a.handle} size="sm" ring={winner === a.handle} />
-                <span className="flex-1 text-sm font-semibold text-ink">
-                  {a.handle}
-                </span>
-                {winner === a.handle && (
-                  <Badge tone="accent">
-                    <Crown className="size-3" /> Переможець
-                  </Badge>
-                )}
-                <Badge tone={a.confirmed ? "success" : "warning"}>
-                  {a.confirmed ? (
-                    <>
-                      <Check className="size-3" strokeWidth={3} /> Підтв.
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="size-3" /> Очікує
-                    </>
-                  )}
-                </Badge>
-              </li>
-            ))}
-          </ul>
+          {applicants.length === 0 ? (
+            <p className="px-4 py-10 text-center text-sm text-ink-subtle">
+              Заявок ще немає. Вони з&rsquo;являться тут щойно хтось візьме участь.
+            </p>
+          ) : (
+            <ul className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
+              {applicants.map((a) => {
+                const place = winners.find((w) => w.userId === a.userId)?.place;
+                return (
+                  <li
+                    key={a.userId}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-2.5",
+                      place && "bg-[color-mix(in_oklch,var(--accent)_10%,transparent)]",
+                      !a.confirmed && "opacity-55",
+                    )}
+                  >
+                    <Avatar name={a.handle} src={a.avatarUrl ?? undefined} size="sm" ring={!!place} />
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                      {a.handle}
+                    </span>
+                    <span className="tnum shrink-0 font-mono text-xs text-ink-subtle">
+                      {formatInt(a.points)}
+                    </span>
+                    {place && (
+                      <Badge tone="accent">
+                        <Crown className="size-3" /> {winners.length > 1 ? `#${place}` : "Переможець"}
+                      </Badge>
+                    )}
+                    {/* Disqualifying is the admin action here, not approving:
+                        entries are eligible on arrival, so this button only ever
+                        removes someone who broke the rules. */}
+                    <button
+                      onClick={() => setConfirmedFlag(a.userId, !a.confirmed)}
+                      disabled={!!drawnAt}
+                      title={a.confirmed ? "Дискваліфікувати" : "Поновити"}
+                      className={cn(
+                        "grid size-7 shrink-0 place-items-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+                        a.confirmed
+                          ? "text-ink-subtle hover:bg-danger/15 hover:text-danger"
+                          : "text-danger hover:bg-success/15 hover:text-success",
+                      )}
+                    >
+                      {a.confirmed ? <Check className="size-3.5" strokeWidth={3} /> : <Ban className="size-3.5" />}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </Panel>
 
         <div className="space-y-3">
           <Panel title="Вибір переможця">
             <div className="p-4">
-              {winner ? (
-                <div className="mb-3 flex items-center gap-3 rounded-lg border border-accent/40 bg-accent/10 p-3">
-                  <Avatar name={winner} size="md" ring />
-                  <div>
-                    <p className="text-[0.6875rem] uppercase tracking-wide text-ink-subtle">
-                      Переможець
-                    </p>
-                    <p className="text-sm font-bold text-ink">{winner}</p>
-                  </div>
-                </div>
+              {winners.length > 0 ? (
+                <ul className="mb-3 space-y-2">
+                  {winners.map((w) => (
+                    <li
+                      key={w.userId}
+                      className="flex items-center gap-3 rounded-lg bg-[color-mix(in_oklch,var(--accent)_10%,transparent)] p-3 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_35%,transparent)]"
+                    >
+                      <Avatar name={w.handle} size="md" ring />
+                      <div className="min-w-0">
+                        <p className="text-[0.6875rem] uppercase tracking-wide text-ink-subtle">
+                          {winners.length > 1 ? `Місце ${w.place}` : "Переможець"}
+                        </p>
+                        <p className="truncate text-sm font-bold text-ink">{w.handle}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               ) : (
                 <div className="mb-3 grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface-2 py-6 text-center">
                   <Trophy className="size-6 text-ink-faint" />
                   <p className="mt-2 text-xs text-ink-subtle">
                     Переможця ще не обрано
                   </p>
+                  <p className="mt-1 text-xs text-ink-faint">
+                    {confirmed.length} підтверджених заявок
+                  </p>
                 </div>
               )}
 
               <button
                 onClick={draw}
+                disabled={drawing || confirmed.length === 0}
                 className={cn(
-                  "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
+                  "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-45",
                   confirmReroll
                     ? "bg-warning text-bg hover:opacity-90"
                     : "bg-accent text-accent-ink hover:bg-accent-hover",
                 )}
               >
-                <Dices className="size-4" />
-                {confirmReroll
-                  ? "Підтвердити повторний вибір"
-                  : winner
-                    ? "Обрати ще раз"
-                    : "Розіграти переможця"}
+                {drawing ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Dices className="size-4" />
+                )}
+                {drawing
+                  ? "Розігруємо…"
+                  : confirmReroll
+                    ? "Підтвердити повторний вибір"
+                    : winners.length > 0
+                      ? "Обрати ще раз"
+                      : "Розіграти переможця"}
               </button>
               {confirmReroll && (
                 <p className="mt-2 text-center text-xs text-warning">
-                  Повторний вибір також запишеться в журнал.
+                  Це замінить опублікований результат. Дію буде записано в журнал.
+                </p>
+              )}
+              {drawError && (
+                <p role="alert" className="mt-2 text-center text-xs font-semibold text-danger">
+                  {drawError}
+                </p>
+              )}
+              {drawnAt && !confirmReroll && (
+                <p className="mt-2 text-center text-xs text-ink-subtle">
+                  Розіграно {new Date(drawnAt).toLocaleString("uk-UA")}
                 </p>
               )}
             </div>

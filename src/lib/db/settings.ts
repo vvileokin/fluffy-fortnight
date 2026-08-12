@@ -5,11 +5,14 @@ import { promoBanner, type PromoBanner, type Tournament } from "@/lib/data";
 export type SiteSettings = {
   promo: PromoBanner;
   covers: Record<string, string>; // tournament slug -> cover image url
+  /** Home hero artwork. Empty means the Hero keeps its built-in treatment. */
+  heroImage: string;
 };
 
 const defaults: SiteSettings = {
   promo: { ...promoBanner },
   covers: {},
+  heroImage: "",
 };
 
 /** Editable site content (promo banner + tournament covers). Falls back to the
@@ -27,6 +30,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         target: data.promo_target || defaults.promo.target,
       },
       covers: (data.covers as Record<string, string>) ?? {},
+      heroImage: data.hero_image || "",
     };
   } catch {
     return defaults;

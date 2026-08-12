@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import type { CSSProperties } from "react";
 import { ChevronDown } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { TeamLogo } from "@/components/ui/TeamLogo";
@@ -220,14 +221,19 @@ function RealMatch({ match }: { match: Match }) {
   const bWin = isFinished && match.scoreB > match.scoreA;
 
   return (
+    /* Impeccable: Crafted Bracket Node — lit by both teams' colours from the
+       top corners; live nodes carry the red filament instead of a red box. */
     <Link
       href={`/matches/${match.id}`}
+      style={{ "--team-a": a.brand, "--team-b": b.brand } as CSSProperties}
       className={cn(
-        "block overflow-hidden rounded-lg border transition-colors",
-        isLive ? "border border-live/40 bg-surface" : "surface-1",
+        "lift relative block overflow-hidden rounded-lg",
+        isLive
+          ? "rail-live surface-1 match-plate shadow-[0_0_0_1px_color-mix(in_oklch,var(--live)_35%,transparent),0_8px_22px_-14px_color-mix(in_oklch,var(--live)_60%,transparent)]"
+          : "surface-1 match-plate",
       )}
     >
-      <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
+      <div className="relative flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{match.format}</span>
         {isLive ? (
           <LiveTag />
@@ -238,7 +244,7 @@ function RealMatch({ match }: { match: Match }) {
         )}
       </div>
       <TeamLine team={a} score={match.scoreA} win={aWin} lose={bWin} showScore={showScore} />
-      <div className="h-px bg-border" />
+      <Seam />
       <TeamLine team={b} score={match.scoreB} win={bWin} lose={aWin} showScore={showScore} />
     </Link>
   );
@@ -292,7 +298,7 @@ function TbdMatch({ slot }: { slot: BracketSlot }) {
         </span>
       </div>
       <TbdLine />
-      <div className="h-px bg-border" />
+      <Seam />
       <TbdLine />
     </div>
   );
@@ -304,13 +310,16 @@ function PairMatch({ low, high, format }: { low: string; high: string; format: s
   const b = getTeam(low);
   if (!a || !b) return <TbdMatch slot={{ format: format as BracketSlot["format"] }} />;
   return (
-    <div className="overflow-hidden rounded-lg surface-1">
+    <div
+      style={{ "--team-a": a.brand, "--team-b": b.brand } as CSSProperties}
+      className="match-plate surface-1 overflow-hidden rounded-lg"
+    >
       <div className="flex items-center justify-between gap-2 px-3 pb-0.5 pt-1.5 text-[0.6875rem]">
         <span className="font-medium text-ink-subtle">{format}</span>
         <span className="font-semibold text-ink-subtle">TBD</span>
       </div>
       <TeamLine team={a} score={0} win={false} lose={false} showScore={false} />
-      <div className="h-px bg-border" />
+      <Seam />
       <TeamLine team={b} score={0} win={false} lose={false} showScore={false} />
     </div>
   );
@@ -323,6 +332,14 @@ function LiveTag() {
       <span className="live-dot inline-block size-1.5 rounded-full bg-live" />
       LIVE
     </span>
+  );
+}
+
+/* Impeccable: Crafted Seam — a hairline of light between the two sides of a
+   node, so the split reads without another grey rule on the page. */
+function Seam() {
+  return (
+    <div className="h-px bg-[color-mix(in_oklch,var(--ink)_8%,transparent)]" />
   );
 }
 

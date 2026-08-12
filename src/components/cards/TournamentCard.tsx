@@ -1,7 +1,9 @@
+import type { CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { Calendar, MapPin, Wifi, Trophy } from "lucide-react";
+import { Calendar, MapPin, Wifi, ChevronRight } from "lucide-react";
+import { TrophyGlyph } from "@/components/layout/NavGlyphs";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
 import { getTeam, formatPrize, type Tournament } from "@/lib/data";
@@ -13,14 +15,33 @@ export function TournamentCard({ t }: { t: Tournament }) {
   const extra = t.teamSlugs.length - shown.length;
 
   return (
+    /* Impeccable: Crafted Tournament Card — the layout it always had; what
+       changed is the finish. It now wears the same plate as a match card: lit
+       from the top corners by its own accent (`.match-plate` reads --team-a and
+       --team-b, so passing one colour to both gives a single symmetric wash),
+       and closing on the same chevron. Mixed into a feed, the two card types
+       now read as one material. */
     <Link
       href={`/tournaments/${t.slug}`}
-      className="group lift surface-1 relative flex flex-col overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+      style={
+        t.skin === "ewc"
+          ? ({ "--glow": "rgb(255 88 16)" } as CSSProperties)
+          : ({ "--team-a": t.accent, "--team-b": t.accent } as CSSProperties)
+      }
+      className={cn(
+        "group lift relative flex h-full flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+        // An event card wears its event. Everything else keeps the shared plate
+        // lit by its own accent.
+        t.skin === "ewc" ? "ewc-aura-card" : "surface-1 match-plate",
+      )}
     >
       {/* Cover — the tournament's own accent bled through the top of the card,
-          so each one is tinted by its identity rather than a uniform grey. */}
+          so each one is tinted by its identity rather than a uniform grey.
+          `.cover-zoom` promotes the image to its own compositing layer and
+          pre-scales it a hair, which kills the hairline seam the browser used
+          to leave along the edge mid-zoom. */}
       <div
-        className="relative h-24 overflow-hidden"
+        className="cover-zoom relative h-28 overflow-hidden"
         style={{
           background: `radial-gradient(120% 140% at 15% 0%, color-mix(in oklch, ${t.accent} 38%, var(--surface)) 0%, color-mix(in oklch, ${t.accent} 12%, var(--surface)) 45%, var(--surface) 100%)`,
         }}
@@ -32,9 +53,10 @@ export function TournamentCard({ t }: { t: Tournament }) {
               alt=""
               fill
               sizes="(max-width:640px) 100vw, 380px"
-              className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
+              className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-surface/70 via-transparent to-transparent" />
+            {/* Just enough to seat the Tier/LIVE chips; the artwork stays visible. */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
           </>
         )}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
@@ -44,7 +66,7 @@ export function TournamentCard({ t }: { t: Tournament }) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
+      <div className="relative flex flex-1 flex-col gap-3 p-4">
         <h3 className="text-base font-bold leading-snug tracking-tight text-ink text-balance">
           {t.name}
         </h3>
@@ -77,8 +99,11 @@ export function TournamentCard({ t }: { t: Tournament }) {
               </span>
             )}
           </div>
-          <span className="tnum font-mono text-sm font-bold text-accent">
-            {formatPrize(t.prizeUSD)}
+          <span className="flex items-center gap-1">
+            <span className="tnum font-mono text-sm font-bold text-accent">
+              {formatPrize(t.prizeUSD)}
+            </span>
+            <ChevronRight className="size-4 text-ink-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
           </span>
         </div>
       </div>
@@ -91,14 +116,14 @@ export function TournamentCardWide({ t }: { t: Tournament }) {
     <Link
       href={`/tournaments/${t.slug}`}
       className={cn(
-        "group lift surface-1 flex items-center gap-4 rounded-xl p-3 pr-4",
+        "group lift surface-1 flex items-center gap-4 rounded-2xl p-3 pr-4",
       )}
     >
       <div
         className="grid size-12 shrink-0 place-items-center rounded-md"
         style={{ background: `color-mix(in oklch, ${t.accent} 20%, var(--surface-2))` }}
       >
-        <Trophy className="size-5 text-ink" />
+        <TrophyGlyph className="size-5 text-ink" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { Trophy, Swords, Target, Gift, Crown } from "lucide-react";
+
+import { TrophyGlyph, SwordsGlyph, TargetGlyph, GiftGlyph, CrownGlyph } from "@/components/layout/NavGlyphs";
 import { Hero } from "@/components/home/Hero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { TournamentCard } from "@/components/cards/TournamentCard";
@@ -25,7 +26,7 @@ function feedRank(m: Match): number {
 
 export default async function HomePage() {
   // Nothing here depends on anything else, so pay for one round-trip, not five.
-  const [t, matches, giveaways, seasonLeaderboard, { covers }, openQuestions] =
+  const [t, matches, giveaways, seasonLeaderboard, { covers, heroImage }, openQuestions] =
     await Promise.all([
       getTranslations("home"),
       getMatches(),
@@ -52,12 +53,12 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-10 sm:space-y-12">
-      <Hero />
+      <Hero image={heroImage || undefined} href="/tournaments/ewc-2026" />
 
       {/* Current tournaments — nothing running means no empty heading. */}
       {currentTournaments.length > 0 && (
         <section className="space-y-4">
-          <SectionHeader icon={Trophy} title={t("currentTournaments")} href="/tournaments" />
+          <SectionHeader icon={TrophyGlyph} title={t("currentTournaments")} href="/tournaments" />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {currentTournaments.map((t) => (
               <TournamentCard key={t.slug} t={t} />
@@ -69,7 +70,7 @@ export default async function HomePage() {
       {/* Hot predictions (only when there are open questions) */}
       {hotQuestions.length > 0 && (
         <section className="space-y-4">
-          <SectionHeader icon={Target} title={t("hotPredictions")} href="/interactives" />
+          <SectionHeader icon={TargetGlyph} title={t("hotPredictions")} href="/interactives" />
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {hotQuestions.map((q) => (
               <QuestionCard key={q.id} question={q} withMatch match={matchById.get(q.matchId)} />
@@ -81,7 +82,7 @@ export default async function HomePage() {
       {/* Live & upcoming matches (only when there are any) */}
       {feedMatches.length > 0 && (
         <section className="space-y-4">
-          <SectionHeader icon={Swords} title={t("liveUpcoming")} href="/matches" />
+          <SectionHeader icon={SwordsGlyph} title={t("liveUpcoming")} href="/matches" />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {feedMatches.map((m, i) => (
               // Phones get a shorter feed — three is enough before the fold.
@@ -98,7 +99,7 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-6">
         {giveaways.length > 0 && (
           <section className="space-y-4 lg:col-span-2">
-            <SectionHeader icon={Gift} title={t("giveaways")} href="/giveaways" />
+            <SectionHeader icon={GiftGlyph} title={t("giveaways")} href="/giveaways" />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
               {giveaways.map((g) => (
                 <GiveawayCard key={g.slug} g={g} />
@@ -108,8 +109,8 @@ export default async function HomePage() {
         )}
 
         <section className={cn("space-y-4", giveaways.length > 0 ? "lg:col-span-3" : "lg:col-span-5")}>
-          <SectionHeader icon={Crown} title={t("seasonLeaderboard")} href="/leaderboard" />
-          <LeaderboardTable rows={seasonLeaderboard} topN={5} />
+          <SectionHeader icon={CrownGlyph} title={t("seasonLeaderboard")} href="/leaderboard" />
+          <LeaderboardTable rows={seasonLeaderboard} topN={5} podium />
         </section>
       </div>
     </div>

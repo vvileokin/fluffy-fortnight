@@ -1,20 +1,33 @@
+import type { CSSProperties } from "react";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { Gift, Users, ArrowRight } from "lucide-react";
+import { Gift, Users, ArrowRight, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatInt } from "@/lib/utils";
 import { type Giveaway } from "@/lib/data";
 
 export function GiveawayCard({ g }: { g: Giveaway }) {
   return (
+    /* Impeccable: Crafted Giveaway Card — a prize card should feel like a
+       prize. The body carries the giveaway's own colour pooled up from the
+       bottom, so the card is lit end to end rather than only in its header
+       strip, and the artwork sits in a stronger pool of the same hue. */
     <Link
       href={`/giveaways/${g.slug}`}
-      className="group lift surface-1 relative flex flex-col overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+      style={
+        {
+          "--aura-1": g.cover,
+          "--aura-2": "var(--accent)",
+          // What the card throws onto the canvas when it lifts.
+          "--glow": g.cover,
+        } as CSSProperties
+      }
+      className="group lift surface-1 aura relative flex flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
     >
       <div
         className="relative flex h-24 items-center justify-center"
         style={{
-          background: `linear-gradient(135deg, color-mix(in oklch, ${g.cover} 24%, var(--surface)), var(--surface) 75%)`,
+          background: `radial-gradient(90% 130% at 50% 128%, color-mix(in oklch, ${g.cover} 34%, transparent), transparent 62%), linear-gradient(135deg, color-mix(in oklch, ${g.cover} 20%, var(--surface)), var(--surface) 78%)`,
         }}
       >
         {g.image ? (
@@ -36,7 +49,14 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
           />
         )}
         <div className="absolute left-3 top-3">
-          {g.status === "ending" ? (
+          {/* A drawn giveaway is a different thing from an open one, and the
+              card is where most people meet it — showing "Активний" on a prize
+              that already has a winner is the one wrong answer here. */}
+          {g.winners.length > 0 || g.status === "finished" ? (
+            <Badge tone="neutral">
+              <Trophy className="size-3" /> Розіграно
+            </Badge>
+          ) : g.status === "ending" ? (
             <Badge tone="live">Завершується</Badge>
           ) : (
             <Badge tone="success">Активний</Badge>
@@ -44,7 +64,7 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-4">
+      <div className="relative flex flex-1 flex-col gap-2 p-4">
         <h3 className="text-sm font-bold leading-snug text-ink text-balance">
           {g.prize}
         </h3>

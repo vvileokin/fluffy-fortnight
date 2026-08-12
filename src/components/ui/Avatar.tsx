@@ -4,6 +4,8 @@ const sizes = {
   sm: "size-8 text-xs",
   md: "size-9 text-sm",
   lg: "size-12 text-base",
+  /** Podium first place — the one avatar on the site that gets to be a portrait. */
+  xl: "size-[4.25rem] text-2xl",
 } as const;
 
 export function Avatar({

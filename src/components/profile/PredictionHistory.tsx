@@ -18,7 +18,7 @@ export function PredictionHistory({ items }: { items: HistoryItem[] }) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-10 text-center text-sm text-ink-subtle">
+      <div className="rounded-2xl well px-6 py-10 text-center text-sm text-ink-subtle">
         Тут зʼявляться твої прогнози та нараховані поінти.
       </div>
     );

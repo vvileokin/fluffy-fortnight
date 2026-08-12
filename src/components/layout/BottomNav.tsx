@@ -15,8 +15,12 @@ export function BottomNav() {
   const t = useTranslations("nav");
 
   return (
+    /* Impeccable: Crafted Bottom Bar — icons only. Five Ukrainian labels at
+       10px under five glyphs was noise; the icons already say it. The live tab
+       is a solid yellow lozenge, the way a physical selector reads. Labels
+       stay in the accessible name for screen readers and long-press. */
     <nav className="fixed inset-x-0 bottom-0 z-30 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-[color-mix(in_oklch,var(--surface)_86%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-      <div className="grid grid-cols-5">
+      <div className="relative grid grid-cols-5 px-2 py-2">
         {bottomNav.map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
@@ -25,22 +29,22 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className="relative flex h-16 flex-col items-center justify-center gap-1"
+              aria-label={t(item.key)}
+              title={t(item.key)}
+              className="flex h-12 items-center justify-center"
             >
-              {active && (
-                <span className="absolute top-0 h-[2px] w-8 rounded-full bg-accent" />
-              )}
-              <Icon
-                className={cn("size-[22px]", active ? "text-accent" : "text-ink-subtle")}
-                strokeWidth={active ? 2.5 : 2}
-              />
               <span
                 className={cn(
-                  "text-[0.625rem] font-semibold leading-none",
-                  active ? "text-ink" : "text-ink-subtle",
+                  "grid h-11 w-[3.5rem] place-items-center rounded-md transition-[background-color,color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                  // Impeccable: Crafted Tab Light — the glow belongs to the
+                  // selected key, not to the bar. It reads as the lozenge
+                  // throwing light onto the surface under it.
+                  active
+                    ? "bg-accent text-accent-ink shadow-[0_2px_12px_-6px_color-mix(in_oklch,var(--accent)_45%,transparent),0_6px_20px_-14px_color-mix(in_oklch,var(--accent)_50%,transparent)]"
+                    : "text-ink-subtle",
                 )}
               >
-                {t(item.key)}
+                <Icon className="size-[21px]" />
               </span>
             </Link>
           );

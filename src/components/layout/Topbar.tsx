@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { Bell, Target, Swords, Gift, TrendingUp, Check, LogIn } from "lucide-react";
 import { Brand } from "./Brand";
 import { Avatar } from "@/components/ui/Avatar";
+import { BrandIcon } from "@/components/ui/BrandIcon";
 import { displayName } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -94,9 +95,16 @@ export function Topbar() {
 
   const handle = profile?.handle || (user ? displayName(user) : "");
   const points = profile?.points ?? 0;
+  const streak = profile?.streak ?? 0;
+  const eventPoints = profile?.ewc_points ?? 0;
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-[color-mix(in_oklch,var(--surface)_78%,transparent)] px-4 backdrop-blur-xl sm:px-6">
+    /* Impeccable: Crafted Top Bar — opaque, in the canvas's own colour, with no
+       seam under it. It used to be 78% surface over a blur, so scrolled content
+       ghosted through and the bar read as sliding rather than sitting still.
+       z-40 stays: the bar is a stacking context, so the notifications panel can
+       only clear the sidebar and bottom bar (both z-30) if the bar itself does. */
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-3 bg-bg px-4 sm:px-6">
       <div className="flex items-center gap-2 lg:hidden">
         <Brand compact />
       </div>
@@ -118,20 +126,67 @@ export function Topbar() {
         {/* The BLAST event is over, so its bounty chip is off the bar. The
             points themselves are untouched — they still count on the profile
             and in the event leaderboard. */}
+        {/* Impeccable: Crafted Stat Rail — one balance, one badge.
+
+            Both marks are the same brand yellow, so two identically-plated
+            capsules side by side were unreadable: same hue, same weight, same
+            shape, and no way to tell at a glance which number was which. The
+            plate does the separating instead. The balance is the currency, so
+            it keeps the yellow-tinted plate the design system reserves for
+            points; the streak sits smaller on a neutral recessed one and reads
+            as a badge next to it. Hue stays constant, hierarchy comes from
+            plate, scale and weight. */}
         <Link
           href="/profile"
-          aria-label={`${handle}: ${points} ${t("points")}`}
-          className="flex items-center gap-2.5 rounded-full surface-1 py-1 pl-3 pr-1.5 transition-colors"
+          aria-label={`${formatInt(points)} ${t("points")}`}
+          className="flex h-10 items-center gap-1.5 rounded-full bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] pl-2 pr-3.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_28%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_18%,transparent)]"
         >
-          <span className="flex items-center gap-1.5 text-xs">
-            <span className="tnum font-mono font-semibold text-accent">
-              {formatInt(points)}
-            </span>
-            <span className="hidden text-ink-subtle sm:inline">
-              {t("pointsShort")}
-            </span>
+          <BrandIcon name="points" className="size-5" priority />
+          <span className="tnum font-mono text-sm font-extrabold leading-none text-accent">
+            {formatInt(points)}
           </span>
-          <Avatar name={handle} src={profile?.avatar_url} size="sm" />
+        </Link>
+
+        {/* Event currency. It links to the event's own board rather than the
+            profile, because the only question a player has when they look at
+            this number is "where does that put me at EWC". Hidden at zero so
+            the bar doesn't carry a dead stat outside the event. */}
+        {eventPoints > 0 && (
+          <Link
+            href="/tournaments/ewc-2026"
+            aria-label={`${formatInt(eventPoints)} EWC`}
+            className="flex h-9 items-center gap-1 rounded-full bg-[color-mix(in_oklch,rgb(255_88_16)_14%,transparent)] pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,rgb(255_88_16)_30%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,rgb(255_88_16)_22%,transparent)]"
+          >
+            <BrandIcon name="points-ewc" className="size-[1.125rem]" priority />
+            <span className="tnum font-mono text-[0.8125rem] font-bold leading-none text-[rgb(255_154_64)]">
+              {formatInt(eventPoints)}
+            </span>
+          </Link>
+        )}
+
+        <Link
+          href="/profile"
+          aria-label={`${t("streak")}: ${streak}`}
+          className="flex h-9 items-center gap-1 rounded-full bg-fill-2 pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] transition-colors hover:bg-fill-3"
+        >
+          <BrandIcon name="streak" className="size-[1.125rem]" priority />
+          <span className="tnum font-mono text-[0.8125rem] font-bold leading-none text-accent/85">
+            {streak}
+          </span>
+        </Link>
+
+        {/* The handle rides beside the avatar on desktop only. On a phone the
+            bar is already carrying three stats plus the bell, and a name is the
+            one thing there that the avatar alone communicates well enough. */}
+        <Link
+          href="/profile"
+          aria-label={handle}
+          className="flex items-center gap-2 rounded-full transition-opacity hover:opacity-85"
+        >
+          <Avatar name={handle} src={profile?.avatar_url} size="md" />
+          <span className="hidden max-w-[10rem] truncate text-sm font-bold text-ink lg:block">
+            {handle}
+          </span>
         </Link>
 
         <div className="relative" ref={menuRef}>
@@ -140,10 +195,10 @@ export function Topbar() {
             aria-label={t("notifications")}
             aria-expanded={open}
             className={cn(
-              "relative grid size-9 place-items-center rounded-full border transition-colors",
+              "relative grid size-10 place-items-center rounded-full transition-colors",
               open
-                ? "border-border-strong bg-surface-2 text-ink"
-                : "border-border bg-surface text-ink-muted hover:text-ink",
+                ? "bg-surface-2 text-accent"
+                : "bg-fill-1 text-ink-muted hover:bg-surface-2 hover:text-ink",
             )}
           >
             <Bell className="size-4" />
@@ -158,9 +213,9 @@ export function Topbar() {
               <div
                 role="dialog"
                 aria-label={t("notifications")}
-                className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl surface-1 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]"
+                className="absolute right-0 top-[calc(100%+0.5rem)] z-40 flex max-h-[min(70vh,32rem)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-surface shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_9%,transparent),0_24px_60px_-16px_rgba(0,0,0,0.95)]"
               >
-                <div className="flex items-center justify-between shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-4 py-3">
+                <div className="flex shrink-0 items-center justify-between shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-4 py-2.5">
                   <span className="text-sm font-bold text-ink">{t("notifications")}</span>
                   {unread > 0 && (
                     <button
@@ -172,7 +227,7 @@ export function Topbar() {
                     </button>
                   )}
                 </div>
-                <ul className="max-h-56 divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-y-auto">
+                <ul className="no-scrollbar min-h-0 flex-1 divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-y-auto overscroll-contain">
                   {items.length === 0 && (
                     <li className="px-4 py-10 text-center text-sm text-ink-subtle">
                       Сповіщень поки немає
@@ -184,26 +239,25 @@ export function Topbar() {
                       <li
                         key={n.id}
                         className={cn(
-                          "flex gap-3 px-4 py-3",
-                          !n.read && "bg-surface-2/50",
+                          "flex gap-2.5 px-3.5 py-2.5",
+                          !n.read && "bg-[color-mix(in_oklch,var(--accent)_5%,transparent)]",
                         )}
                       >
-                        <span
+                        <Icon
                           className={cn(
-                            "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
-                            !n.read
-                              ? "bg-[color-mix(in_oklch,var(--accent)_16%,transparent)] text-accent"
-                              : "bg-surface-2 text-ink-subtle",
+                            "mt-0.5 size-4 shrink-0",
+                            !n.read ? "text-accent" : "text-ink-subtle",
                           )}
-                        >
-                          <Icon className="size-4" />
-                        </span>
+                          strokeWidth={2.25}
+                        />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm leading-snug text-ink">{n.title}</p>
-                          <p className="mt-0.5 text-xs text-ink-subtle">{timeAgo(n.created_at)}</p>
+                          <p className="text-[0.8125rem] leading-snug text-ink">{n.title}</p>
+                          <p className="text-[0.6875rem] leading-snug text-ink-subtle">
+                            {timeAgo(n.created_at)}
+                          </p>
                         </div>
                         {!n.read && (
-                          <span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" />
+                          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent" />
                         )}
                       </li>
                     );

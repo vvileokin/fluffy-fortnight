@@ -1,5 +1,10 @@
-import { Manrope, JetBrains_Mono } from "next/font/google";
+import { Manrope } from "next/font/google";
 
+/**
+ * One family, several weights. Numerals run in Manrope too — its tabular
+ * figures hold a column fine, and a scoreboard set in the same face as the
+ * rest of the page reads as one product instead of two.
+ */
 export const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin", "cyrillic"],
@@ -7,11 +12,4 @@ export const manrope = Manrope({
   display: "swap",
 });
 
-export const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700"],
-  display: "swap",
-});
-
-export const fontVars = `${manrope.variable} ${jetbrains.variable}`;
+export const fontVars = manrope.variable;

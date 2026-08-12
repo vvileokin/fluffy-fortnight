@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Crown, Target, TrendingUp, Flame, Check, Mail, Send } from "lucide-react";
+import { Target, Check, Mail, Send, Package } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { BrandIcon } from "@/components/ui/BrandIcon";
 import { Badge } from "@/components/ui/Badge";
 import { ProfileEditButton } from "@/components/profile/ProfileEditButton";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { PredictionHistory, type HistoryItem } from "@/components/profile/PredictionHistory";
+import { Inventory } from "@/components/profile/Inventory";
+import { getInventory } from "@/lib/db/inventory";
 import { createClient } from "@/lib/supabase/server";
 import { getQuestion } from "@/lib/data";
 import { formatInt } from "@/lib/utils";
@@ -22,7 +25,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("handle, avatar_url, points, bounty_points, correct, streak")
+    .select("handle, avatar_url, points, bounty_points, streak")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -32,7 +35,6 @@ export default async function ProfilePage() {
     user.email?.split("@")[0] ||
     "гравець";
   const points = profile?.points ?? 0;
-  const correct = profile?.correct ?? 0;
   const streak = profile?.streak ?? 0;
 
   // Season rank = players strictly above me, + 1.
@@ -74,6 +76,8 @@ export default async function ProfilePage() {
     })
     .filter((x): x is HistoryItem => x !== null);
 
+  const inventory = await getInventory(user.id);
+
   const isTelegram = user.user_metadata?.provider === "telegram";
   const authMethod = isTelegram
     ? { label: "Telegram", icon: Send }
@@ -81,46 +85,77 @@ export default async function ProfilePage() {
       ? { label: "Google", icon: Check }
       : { label: "Пошта", icon: Mail };
 
+  /* Impeccable: Crafted Stat Rail — four big tiles for four small numbers was
+     the wrong ratio: most of them read "0" for most of a season, so a quarter
+     of the page above the fold was spent saying nothing. One strip welded to
+     the bottom of the identity slab does the same job at a fifth of the height.
+
+     The two metrics that have a brand mark carry it; rank doesn't have one, so
+     it goes without rather than borrowing a generic glyph to look consistent.
+     That was the old failure here — a filled crown sitting beside line-drawn
+     lucide icons read as an emoji dropped into the UI. A real mark or nothing. */
   const stats = [
-    { icon: Crown, label: "Місце в сезоні", value: `#${rank}` },
-    { icon: Target, label: "Поінтів", value: formatInt(points) },
-    { icon: TrendingUp, label: "Правильних", value: String(correct) },
-    { icon: Flame, label: "Серія", value: String(streak) },
-  ];
+    { label: "Місце", value: `#${rank}`, tone: "var(--accent)" },
+    { label: "Поінтів", value: formatInt(points), tone: "var(--accent)", icon: "points" },
+    { label: "Серія", value: String(streak), tone: "var(--accent)", icon: "streak" },
+  ] as const;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 rounded-xl surface-1 p-5 sm:flex-row sm:items-center sm:p-6">
-        <Avatar name={handle} src={profile?.avatar_url} size="lg" ring />
-        <div className="flex-1">
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink">{handle}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <Badge tone="success">
-              <authMethod.icon className="size-3" strokeWidth={3} />
-              {authMethod.label}
-            </Badge>
-            {user.email && !isTelegram && (
-              <span className="text-xs text-ink-subtle">{user.email}</span>
-            )}
+      <div className="overflow-hidden rounded-xl surface-1">
+        <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+          <Avatar name={handle} src={profile?.avatar_url} size="lg" ring />
+          <div className="flex-1">
+            <h1 className="text-2xl font-extrabold tracking-tight text-ink">{handle}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <Badge tone="success">
+                <authMethod.icon className="size-3" strokeWidth={3} />
+                {authMethod.label}
+              </Badge>
+              {user.email && !isTelegram && (
+                <span className="text-xs text-ink-subtle">{user.email}</span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <ProfileEditButton handle={handle} avatarUrl={profile?.avatar_url} />
+            <SignOutButton />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <ProfileEditButton handle={handle} avatarUrl={profile?.avatar_url} />
-          <SignOutButton />
-        </div>
+
+        <dl className="flex flex-wrap items-center gap-x-5 gap-y-2.5 bg-[color-mix(in_oklch,var(--ink)_3%,transparent)] px-5 py-3 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)_inset] sm:gap-x-7 sm:px-6">
+          {stats.map((s) => (
+            /* DOM order is dt → dd so a screen reader hears "Серія, 4"; the
+               eye wants the number first, so `order` swaps them visually
+               without lying to assistive tech about which is the label. */
+            <div key={s.label} className="flex items-center gap-1.5">
+              {"icon" in s && <BrandIcon name={s.icon} className="order-1 size-4" />}
+              <dt className="order-3 text-xs leading-none text-ink-subtle">{s.label}</dt>
+              <dd
+                className="tnum order-2 font-mono text-sm font-extrabold leading-none"
+                style={{ color: s.tone }}
+              >
+                {s.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-lg surface-1 p-4">
-            <s.icon className="size-4 text-accent" />
-            <p className="tnum mt-2 font-mono text-2xl font-bold text-ink">{s.value}</p>
-            <p className="mt-0.5 text-xs text-ink-subtle">{s.label}</p>
-          </div>
-        ))}
-      </div>
+      {/* Inventory — always shown, because an empty case here is the whole
+          point: it tells a new player there's something to win. */}
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
+          <Package className="size-4 text-ink-subtle" /> Інвентар
+          {inventory.length > 0 && (
+            <span className="tnum font-mono text-ink-subtle">
+              {inventory.length}
+            </span>
+          )}
+        </h2>
+        <Inventory items={inventory} />
+      </section>
 
       {/* History — only once the player actually has predictions */}
       {history.length > 0 && (

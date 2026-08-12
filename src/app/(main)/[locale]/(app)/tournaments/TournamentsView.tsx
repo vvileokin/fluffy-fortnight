@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trophy } from "lucide-react";
+import { TrophyGlyph } from "@/components/layout/NavGlyphs";
 import { PageIntro } from "@/components/ui/PageIntro";
 import { FilterTabs, type FilterOption } from "@/components/ui/FilterTabs";
 import { TournamentCard } from "@/components/cards/TournamentCard";
@@ -25,7 +25,7 @@ export function TournamentsView({ tournaments }: { tournaments: Tournament[] }) 
 
   return (
     <div className="space-y-6">
-      <PageIntro icon={Trophy} title="Турніри" />
+      <PageIntro icon={TrophyGlyph} title="Турніри" />
 
       <FilterTabs
         options={options}
@@ -40,8 +40,8 @@ export function TournamentsView({ tournaments }: { tournaments: Tournament[] }) 
           ))}
         </div>
       ) : (
-        <div className="grid place-items-center rounded-lg border border-dashed border-[color-mix(in_oklch,var(--ink)_12%,transparent)] bg-surface px-6 py-16 text-center">
-          <Trophy className="size-8 text-ink-faint" />
+        <div className="grid place-items-center rounded-2xl well px-6 py-16 text-center">
+          <TrophyGlyph className="size-8 text-ink-faint" />
           <p className="mt-3 text-sm font-semibold text-ink">Турнірів не знайдено</p>
           <p className="mt-1 text-xs text-ink-subtle">
             Спробуй інший фільтр — усі активні події тут.
