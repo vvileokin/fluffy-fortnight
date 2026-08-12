@@ -171,7 +171,11 @@ export function QuestionCard({
                   // look right when their curves are concentric — inner radius
                   // equals outer minus the gap. At 20px the plate curved away
                   // from a crest that then read as a square in a pill.
-                  "group/opt relative flex h-[2.75rem] min-w-0 items-center gap-2 overflow-hidden rounded-md px-2.5 text-left",
+                  // The left inset matches the 5px the crest already has above
+                  // and below it, so the logo sits in an even margin on three
+                  // sides instead of floating 10px in from the edge. The right
+                  // keeps its full padding — that side holds text, not a tile.
+                  "group/opt relative flex h-[2.75rem] min-w-0 items-center gap-2 overflow-hidden rounded-md pl-[0.3125rem] pr-2.5 text-left",
                   "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   // On the event the option plate is a well cut into the ember

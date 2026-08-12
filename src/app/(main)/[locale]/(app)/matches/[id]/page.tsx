@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { ChevronLeft, Ban, CircleCheck, History } from "lucide-react";
 import { SwordsGlyph, TargetGlyph, type GlyphIcon } from "@/components/layout/NavGlyphs";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { Badge, LiveBadge } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { Tooltip } from "@/components/ui/Tooltip";
 import {
@@ -121,7 +121,7 @@ export default async function MatchPage({
         {!skin && (
           <div className="team-arena pointer-events-none absolute inset-0" />
         )}
-        <div className="relative px-4 py-5 sm:px-7 sm:py-6">
+        <div className="relative px-4 py-3.5 sm:px-7 sm:py-6">
           {/* The scoreboard says this visually; the page still needs one real
               heading, and duplicating the names on screen would be noise. */}
           <h1 className="sr-only">
@@ -150,28 +150,13 @@ export default async function MatchPage({
                 {match.tournamentName}
               </span>
             )}
-            {/* Impeccable: Crafted Live Marker — the kickoff time is gone from
-                this page; by the time you're here you're reading the result,
-                not planning around a start time. Only the live state still
-                earns the centre of the rail, because that one changes what the
-                page means. */}
-            {isLive && (
-              <span className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex">
-                <LiveBadge />
-              </span>
-            )}
             <span className="shrink-0">{match.stage} · {match.format}</span>
           </div>
 
           {/* Mobile: vertical scoreboard */}
           {/* Impeccable: Crafted Mobile Header — the rows are stacked tight;
               the block should read as one object, not four floating lines. */}
-          <div className="mt-3 space-y-2 md:hidden">
-            {isLive && (
-              <div className="flex justify-center">
-                <LiveBadge />
-              </div>
-            )}
+          <div className="mt-2.5 space-y-2 md:hidden">
             <div className="space-y-1.5">
               <MobileTeamRow team={a} score={match.scoreA} leading={match.scoreA > match.scoreB} showScore={showScore} />
               <MobileTeamRow team={b} score={match.scoreB} leading={match.scoreB > match.scoreA} showScore={showScore} />
