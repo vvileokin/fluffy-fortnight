@@ -36,9 +36,16 @@ function deriveFromMaps(
   format: string,
   fallback: { status: string; a: number; b: number },
 ): { status: string; score_a: number; score_b: number } {
+  // If no maps entered yet, keep fallback status (usually "upcoming").
+  if (maps.length === 0) {
+    return { status: fallback.status, score_a: fallback.a, score_b: fallback.b };
+  }
+
+  // If maps are entered (even without scores), the match is at least "live".
   const played = maps.filter((m) => (Number(m.a) || 0) > 0 || (Number(m.b) || 0) > 0);
   if (played.length === 0) {
-    return { status: fallback.status, score_a: fallback.a, score_b: fallback.b };
+    // Maps entered but no scores yet: live, 0-0.
+    return { status: "live", score_a: 0, score_b: 0 };
   }
 
   let a = 0;
