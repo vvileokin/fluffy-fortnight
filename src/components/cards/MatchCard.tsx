@@ -210,7 +210,7 @@ export function MatchCard({ match }: { match: Match }) {
             </span>
             <span className="flex items-center gap-1 text-xs">
               <span className="text-ink-subtle">{t("upTo")}</span>
-              <span className="tnum flex items-center gap-1 font-mono font-bold leading-none text-accent">
+              <span className={cn("tnum flex items-center gap-1 font-mono font-bold leading-none", skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent")}>
                 <BrandIcon name={skin === "ewc" ? "points-ewc" : "points"} className="size-3.5" />
                 +{match.maxReward}
               </span>
