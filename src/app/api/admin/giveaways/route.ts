@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     sponsor: g.sponsor ? String(g.sponsor) : null,
     value_usd: Number(g.value_usd ?? 0),
     end_label: g.end_label ? String(g.end_label) : null,
+    end_iso: g.end_iso ? String(g.end_iso) : null,
     entrants: Number(g.entrants ?? 0),
     min_points: Number(g.min_points ?? 0),
     status: String(g.status ?? "open"),
@@ -44,7 +45,17 @@ export async function POST(request: Request) {
   // Detect whether this is a brand-new giveaway so we only notify on creation.
   const { data: prior } = await admin.from("giveaways").select("slug").eq("slug", slug).maybeSingle();
 
-  const { error } = await admin.from("giveaways").upsert(row, { onConflict: "slug" });
+  let { error } = await admin.from("giveaways").upsert(row, { onConflict: "slug" });
+  // `skin` arrives with migration 0034. Until that's run the column isn't there
+  // and PostgREST rejects the whole row, which would mean an admin can't save a
+  // giveaway at all on an un-migrated database. Losing the styling is a far
+  // better failure than losing the giveaway, so drop it and retry. A write
+  // reports the missing column as PGRST204 (schema cache) rather than the
+  // 42703 a read would give, so both are worth catching.
+  if (error?.code === "PGRST204" || error?.code === "42703") {
+    const { skin: _skin, ...withoutSkin } = row;
+    ({ error } = await admin.from("giveaways").upsert(withoutSkin, { onConflict: "slug" }));
+  }
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }

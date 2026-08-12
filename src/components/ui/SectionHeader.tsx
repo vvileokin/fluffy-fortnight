@@ -36,7 +36,7 @@ export function SectionHeader({
        hit area via padding that cancels itself out, so the target is untouched
        while the type lines up. */
     <div className={cn("flex items-baseline justify-between gap-4", className)}>
-      <div className="flex min-w-0 items-baseline gap-2.5">
+      <div className="flex min-w-0 items-baseline gap-2 sm:gap-2.5">
         {/* Impeccable: Crafted Section Mark — bare glyph in the accent, sized to
             the heading beside it. No tile, no ring. */}
         {/* An <svg> has no baseline of its own, so it would hijack the group's.
@@ -45,13 +45,13 @@ export function SectionHeader({
         {Icon && (
           <Icon
             className={cn(
-              "size-4 shrink-0 self-center sm:size-5",
+              "size-3.5 shrink-0 self-center sm:size-5",
               iconTone === "muted" ? "text-ink-subtle" : "text-accent",
             )}
           />
         )}
         <div className="min-w-0">
-          <h2 className="text-base font-bold leading-tight tracking-tight text-ink sm:text-xl">
+          <h2 className="text-sm font-bold leading-tight tracking-tight text-ink sm:text-xl">
             {title}
           </h2>
           {hint && <p className="truncate text-xs text-ink-subtle">{hint}</p>}
@@ -62,10 +62,10 @@ export function SectionHeader({
       {href && (
         <Link
           href={href}
-          className="group -my-2.5 inline-flex shrink-0 items-center gap-1 py-2.5 text-sm font-semibold leading-6 text-ink-subtle transition-colors hover:text-ink"
+          className="group -my-2.5 inline-flex shrink-0 items-center gap-1 py-2.5 text-xs font-semibold leading-6 text-ink-subtle transition-colors hover:text-ink sm:text-sm"
         >
           {seeAll}
-          <ArrowRight className="size-4 transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0.5" />
+          <ArrowRight className="size-3.5 transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0.5 sm:size-4" />
         </Link>
       )}
     </div>

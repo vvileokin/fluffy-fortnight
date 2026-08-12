@@ -85,7 +85,10 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
           </span>
         </div>
 
-        {!closed && (
+        {/* No clock without a real end date. A giveaway can carry only the
+            free-text deadline ("до 20 лип"), and rendering four boxes off a
+            missing timestamp is worse than rendering none. */}
+        {!closed && Number.isFinite(Date.parse(giveaway.endISO)) && (
           <div className="mt-3">
             <Countdown targetISO={giveaway.endISO} />
           </div>

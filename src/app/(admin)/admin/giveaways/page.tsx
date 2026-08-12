@@ -31,6 +31,7 @@ const emptyForm = {
   value: "",
   minPoints: "",
   endLabel: "",
+  endAt: "",
   conditions: "",
   image: "",
   skin: "",
@@ -160,6 +161,9 @@ export default function GiveawaysAdmin() {
         value_usd: Number(form.value) || 0,
         min_points: Number(form.minPoints) || 0,
         end_label: form.endLabel,
+        // `datetime-local` gives a local wall-clock string with no zone; the
+        // Date round-trip is what stamps the viewer's offset onto it.
+        end_iso: form.endAt ? new Date(form.endAt).toISOString() : null,
         image: form.image || null,
         skin: form.skin || null,
         description: `${form.prize.trim()} від ${form.sponsor || "CS2 UA"}.`,
@@ -444,14 +448,28 @@ export default function GiveawaysAdmin() {
               />
             </GField>
           </div>
-          <GField label="Дедлайн">
-            <input
-              className={inputCls}
-              placeholder="напр. до 20 лип"
-              value={form.endLabel}
-              onChange={(e) => setForm({ ...form, endLabel: e.target.value })}
-            />
-          </GField>
+          {/* Two different things, and only one of them drives the clock: the
+              label is what the card prints, the date is what the countdown on
+              the giveaway page counts down to. Without the date the page used
+              to render "NaN ДНІ : NaN ГОД". */}
+          <div className="grid grid-cols-2 gap-3">
+            <GField label="Дата завершення">
+              <input
+                type="datetime-local"
+                className={inputCls}
+                value={form.endAt}
+                onChange={(e) => setForm({ ...form, endAt: e.target.value })}
+              />
+            </GField>
+            <GField label="Підпис дедлайну">
+              <input
+                className={inputCls}
+                placeholder="напр. до 20 лип"
+                value={form.endLabel}
+                onChange={(e) => setForm({ ...form, endLabel: e.target.value })}
+              />
+            </GField>
+          </div>
           <GField label="Умови участі (кожна з нового рядка)">
             <textarea
               rows={3}

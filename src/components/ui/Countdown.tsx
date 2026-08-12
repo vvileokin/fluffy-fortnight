@@ -4,6 +4,12 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 function diff(target: number) {
+  // An absent or unparseable date gives NaN, and NaN survives Math.max, the
+  // divisions and padStart all the way to the screen as "NaN ДНІ : NaN ГОД".
+  // Treat it as an expired clock; callers that know better hide the whole block.
+  if (!Number.isFinite(target)) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
+  }
   const ms = Math.max(0, target - Date.now());
   const total = Math.floor(ms / 1000);
   return {

@@ -83,6 +83,20 @@ export function QuestionCard({
     );
   }
 
+  // Nothing to say on an untouched, open question — the options speak for
+  // themselves — so the footer collapses rather than reserving a line.
+  const footer = justSaved ? (
+    <span className="flex items-center gap-1 font-semibold text-success">
+      <Check className="size-3.5" strokeWidth={3} /> Збережено
+    </span>
+  ) : locked ? (
+    picked ? <span className="text-ink-subtle">Твій вибір зафіксовано</span> : null
+  ) : picked ? (
+    <span className="text-ink-subtle">Можна змінити до дедлайну</span>
+  ) : upcoming ? (
+    <span className="text-ink-subtle">Відкриється перед матчем</span>
+  ) : null;
+
   return (
     /* Impeccable: Crafted Prediction Slate — rebuilt as a selector, not a
        table. The two-tone rows split every option into a grey half and a
@@ -169,7 +183,7 @@ export function QuestionCard({
                 )}
               >
                 {optTeam ? (
-                  <TeamLogo team={optTeam} size="sm" />
+                  <TeamLogo team={optTeam} size="cardCrest" />
                 ) : (
                   <span
                     className={cn(
@@ -183,11 +197,16 @@ export function QuestionCard({
                   />
                 )}
 
-                <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                {/* The text column is exactly as tall as the crest beside it
+                    (34px, `cardCrest`) and pushes its two lines to the ends, so
+                    the name caps off the crest's top edge and the payout sits on
+                    its baseline. Left to `gap`, the stack was a few pixels
+                    taller than the logo and the whole row read as unaligned. */}
+                <span className="flex h-[2.125rem] min-w-0 flex-1 flex-col justify-between">
                   <span className="flex min-w-0 max-w-full items-baseline gap-1.5">
                     <span
                       className={cn(
-                        "truncate text-sm font-bold tracking-tight",
+                        "truncate text-sm font-bold uppercase leading-none",
                         selected ? "text-ink" : "text-ink-muted group-hover/opt:text-ink",
                       )}
                     >
@@ -204,7 +223,7 @@ export function QuestionCard({
                       gem and the digits on one axis at this size. */}
                   <span
                     className={cn(
-                      "tnum flex items-center gap-1 font-mono text-[0.6875rem] font-extrabold leading-none",
+                      "tnum flex items-center gap-1 font-mono text-xs font-extrabold leading-none",
                       isEwc
                         ? selected
                           ? "text-[rgb(255_154_64)]"
@@ -214,7 +233,7 @@ export function QuestionCard({
                           : "text-accent/80",
                     )}
                   >
-                    <BrandIcon name={match?.tournamentSlug === "ewc-2026" ? "points-ewc" : "points"} className="size-3.5" />
+                    <BrandIcon name={isEwc ? "points-ewc" : "points"} className="size-4" />
                     +{opt.reward}
                   </span>
                 </span>
@@ -224,24 +243,16 @@ export function QuestionCard({
           })}
         </div>
 
-        {/* Footer — status only now the deadline has moved up beside the
-            question. One line, centred under the track. */}
-        <div className="mt-2.5 flex min-h-4 items-center justify-center text-xs">
-          {justSaved ? (
-            <span className="flex items-center gap-1 font-semibold text-success">
-              <Check className="size-3.5" strokeWidth={3} /> Збережено
-            </span>
-          ) : locked ? (
-            // Missing the deadline isn't worth a line of type. The footer keeps
-            // its min-height so a skipped question is still the same size as an
-            // answered one in the stack.
-            picked && <span className="text-ink-subtle">Твій вибір зафіксовано</span>
-          ) : picked ? (
-            <span className="text-ink-subtle">Можна змінити до дедлайну</span>
-          ) : upcoming ? (
-            <span className="text-ink-subtle">Відкриється перед матчем</span>
-          ) : null}
-        </div>
+        {/* Footer — one line of status, and only when there is one. It used to
+            hold a reserved min-height so every card measured the same, but once
+            the idle prompt went the reserved strip was pure dead space under
+            every unanswered question. Cards in a grid already stretch to the
+            tallest in their row, so nothing needs padding out by hand. */}
+        {footer && (
+          <div className="mt-2.5 flex items-center justify-center text-xs">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
