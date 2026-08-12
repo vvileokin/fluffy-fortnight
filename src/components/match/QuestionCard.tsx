@@ -166,7 +166,12 @@ export function QuestionCard({
                     : undefined
                 }
                 className={cn(
-                  "group/opt relative flex h-[2.75rem] min-w-0 items-center gap-2 overflow-hidden rounded-xl px-2.5 text-left",
+                  // `rounded-md` (12px), not `rounded-xl` (20px): the crest
+                  // inside sits 5px in with a 7px radius, and nested boxes only
+                  // look right when their curves are concentric — inner radius
+                  // equals outer minus the gap. At 20px the plate curved away
+                  // from a crest that then read as a square in a pill.
+                  "group/opt relative flex h-[2.75rem] min-w-0 items-center gap-2 overflow-hidden rounded-md px-2.5 text-left",
                   "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   // On the event the option plate is a well cut into the ember
