@@ -67,19 +67,19 @@ export function Hero({ image, href }: { image?: string; href?: string }) {
         }}
       />
 
-      <div className="relative flex flex-1 flex-col justify-end px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-11">
+      <div className="relative flex flex-1 flex-col justify-end px-4 py-5 sm:px-8 sm:py-9 lg:px-10 lg:py-11">
         <h1 className="max-w-[16ch] text-balance text-[clamp(1.9rem,6vw,3.4rem)] font-extrabold leading-[1.04] tracking-[-0.03em] text-ink">
           {t("heroTitleStart")}{" "}
           <span className="text-accent">{t("heroTitleAccent")}</span>
         </h1>
 
-        <p className="mt-4 max-w-[52ch] text-pretty text-sm leading-relaxed text-ink-muted sm:text-base">
+        <p className="mt-2.5 max-w-[52ch] sm:mt-4 text-pretty text-sm leading-relaxed text-ink-muted sm:text-base">
           {t("heroSubtitle")}
         </p>
 
         {/* One filled action, one bare one. The secondary route doesn't need a
             box drawn round it to be found. */}
-        <div className="mt-6 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-6">
           <Button href="/interactives" size="lg">
             <TargetGlyph className="size-4" />
             {t("startPredicting")}
