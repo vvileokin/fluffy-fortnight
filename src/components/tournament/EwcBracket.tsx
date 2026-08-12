@@ -141,8 +141,19 @@ function Side({
 function BracketMatch({ r }: { r: Resolved }) {
   const m = r.match;
   const done = m?.status === "finished";
-  const aWon = done && m!.scoreA > m!.scoreB;
-  const bWon = done && m!.scoreB > m!.scoreA;
+  // The bracket fixes its own side order (the published opening pairs); the
+  // admin's row is in whatever order it was created in, and `byPair` matches
+  // the two on a sorted key, so the orders routinely disagree. Reading
+  // `scoreA` for whichever team the *bracket* lists first therefore printed
+  // the result backwards — a win for the away side showed as a win for the
+  // home one. Scores belong to teams, not to positions, so look them up by
+  // slug and derive the winner from the match's own sides.
+  const scoreOf = (slug?: string) =>
+    !m || !slug ? undefined : m.a === slug ? m.scoreA : m.b === slug ? m.scoreB : undefined;
+  const winner =
+    m && done && m.scoreA !== m.scoreB ? (m.scoreA > m.scoreB ? m.a : m.b) : undefined;
+  const aWon = winner !== undefined && winner === r.a;
+  const bWon = winner !== undefined && winner === r.b;
   const time = m?.startISO
     ? new Date(m.startISO).toLocaleTimeString("uk-UA", {
         hour: "2-digit",
@@ -157,8 +168,8 @@ function BracketMatch({ r }: { r: Resolved }) {
         <span>{m?.format ?? r.node.format}</span>
       </div>
       <div className="[&>*+*]:shadow-[0_-1px_0_0_rgb(255_255_255/0.07)]">
-        <Side slug={r.a} score={m?.scoreA} won={aWon} dim={done && bWon} />
-        <Side slug={r.b} score={m?.scoreB} won={bWon} dim={done && aWon} />
+        <Side slug={r.a} score={scoreOf(r.a)} won={aWon} dim={bWon} />
+        <Side slug={r.b} score={scoreOf(r.b)} won={bWon} dim={aWon} />
       </div>
     </div>
   );
