@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trophy, Check, Dices, Crown, Plus, Trash2, Ban, Loader2 } from "lucide-react";
+import { Trophy, Check, Dices, Crown, Plus, Trash2, Pencil, Ban, Loader2 } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -35,6 +35,7 @@ const emptyForm = {
   endLabel: "",
   endAt: "",
   conditions: "",
+  description: "",
   image: "",
   skin: "",
   winnersCount: "1",
@@ -55,6 +56,11 @@ export default function GiveawaysAdmin() {
   const [confirmReroll, setConfirmReroll] = React.useState(false);
   const [creating, setCreating] = React.useState(false);
   const [form, setForm] = React.useState(emptyForm);
+  // Slug being edited, or null when the modal is creating a new giveaway. The
+  // save route already upserts on slug, so editing is the same call with the
+  // existing id carried along — there was simply never a way to start one,
+  // which left a published giveaway unchangeable except by deleting it.
+  const [editingSlug, setEditingSlug] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
     const { data } = await createClient()
@@ -156,6 +162,43 @@ export default function GiveawaysAdmin() {
 
   const [saving, setSaving] = React.useState(false);
 
+  /** Pull an existing giveaway into the form so it can be edited. */
+  async function startEdit(slug: string) {
+    const { data } = await createClient()
+      .from("giveaways")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (!data) return;
+    const g = data as Record<string, unknown>;
+    const iso = g.end_iso as string | null;
+    setForm({
+      prize: String(g.prize ?? ""),
+      sponsor: String(g.sponsor ?? ""),
+      value: String(g.value_usd ?? ""),
+      minPoints: String(g.min_points ?? ""),
+      endLabel: String(g.end_label ?? ""),
+      // `datetime-local` wants local wall-clock with no zone; slicing the ISO
+      // string would show UTC and silently shift the deadline on save.
+      endAt: iso
+        ? new Date(new Date(iso).getTime() - new Date(iso).getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 16)
+        : "",
+      conditions: (Array.isArray(g.conditions) ? (g.conditions as string[]) : []).join("\n"),
+      description: String(g.description ?? ""),
+      image: String(g.image ?? ""),
+      skin: String(g.skin ?? ""),
+      winnersCount: String(g.winners_count ?? 1),
+      entryCost: String(g.entry_cost ?? 0),
+      entryCurrency: String(g.entry_currency ?? "points"),
+      maxTickets: String(g.max_tickets ?? 1),
+      requireTelegram: g.require_telegram === true,
+    });
+    setEditingSlug(slug);
+    setCreating(true);
+  }
+
   async function createGiveaway() {
     if (!form.prize.trim()) return;
     setSaving(true);
@@ -163,6 +206,7 @@ export default function GiveawaysAdmin() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
+        ...(editingSlug ? { slug: editingSlug } : {}),
         prize: form.prize.trim(),
         sponsor: form.sponsor,
         value_usd: Number(form.value) || 0,
@@ -173,7 +217,12 @@ export default function GiveawaysAdmin() {
         end_iso: form.endAt ? new Date(form.endAt).toISOString() : null,
         image: form.image || null,
         skin: form.skin || null,
-        description: `${form.prize.trim()} від ${form.sponsor || "CS2 UA"}.`,
+        // Editable, with the old auto-sentence as the fallback for a new
+        // giveaway. It used to be generated on every save, so editing anything
+        // at all would have wiped a hand-written description.
+        description:
+          form.description.trim() ||
+          `${form.prize.trim()} від ${form.sponsor || "CS2 UA"}.`,
         conditions: form.conditions.split("\n").map((s) => s.trim()).filter(Boolean),
         status: "open",
         winners_count: Number(form.winnersCount) || 1,
@@ -189,9 +238,15 @@ export default function GiveawaysAdmin() {
       alert(j.error || "Помилка збереження");
       return;
     }
-    setList((prev) => [{ slug: j.slug, prize: form.prize.trim() }, ...prev]);
+    const saved = { slug: j.slug as string, prize: form.prize.trim() };
+    setList((prev) =>
+      prev.some((g) => g.slug === saved.slug)
+        ? prev.map((g) => (g.slug === saved.slug ? saved : g))
+        : [saved, ...prev],
+    );
     setActive(j.slug);
     setForm(emptyForm);
+    setEditingSlug(null);
     setCreating(false);
   }
 
@@ -202,7 +257,11 @@ export default function GiveawaysAdmin() {
         subtitle="Створюй розіграші, керуй заявками та обирай переможця. Кожен вибір фіксується в аудиті."
         action={
           <button
-            onClick={() => setCreating(true)}
+            onClick={() => {
+              setForm(emptyForm);
+              setEditingSlug(null);
+              setCreating(true);
+            }}
             className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
           >
             <Plus className="size-4" />
@@ -239,6 +298,13 @@ export default function GiveawaysAdmin() {
                 )}
               >
                 {g.prize}
+              </button>
+              <button
+                onClick={() => startEdit(g.slug)}
+                aria-label="Редагувати розіграш"
+                className="grid size-8 place-items-center text-ink-subtle transition-colors hover:bg-accent/15 hover:text-accent"
+              >
+                <Pencil className="size-3.5" />
               </button>
               <button
                 onClick={() => remove(g.slug)}
@@ -397,15 +463,25 @@ export default function GiveawaysAdmin() {
 
       <Modal
         open={creating}
-        onClose={() => setCreating(false)}
-        title="Створити розіграш"
+        onClose={() => {
+          setCreating(false);
+          setEditingSlug(null);
+        }}
+        title={editingSlug ? "Редагувати розіграш" : "Створити розіграш"}
         footer={
           <>
-            <Button variant="ghost" size="md" onClick={() => setCreating(false)}>
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => {
+                setCreating(false);
+                setEditingSlug(null);
+              }}
+            >
               Скасувати
             </Button>
             <Button size="md" onClick={createGiveaway} disabled={saving}>
-              {saving ? "Збереження…" : "Опублікувати"}
+              {saving ? "Збереження…" : editingSlug ? "Зберегти" : "Опублікувати"}
             </Button>
           </>
         }
@@ -545,6 +621,15 @@ export default function GiveawaysAdmin() {
               <span className="text-sm text-ink">Потрібна підписка на TG</span>
             </label>
           </div>
+          <GField label="Опис (порожньо — згенерується автоматично)">
+            <textarea
+              rows={3}
+              className="w-full resize-none rounded-lg border border-border bg-surface-2 p-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
+              placeholder="Що саме розігруємо і на яких умовах"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </GField>
           <GField label="Умови участі (кожна з нового рядка)">
             <textarea
               rows={3}
