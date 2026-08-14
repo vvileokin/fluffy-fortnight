@@ -10,6 +10,7 @@ type Tone =
   | "info"
   | "tier1"
   | "tier2"
+  | "ewc"
   | "danger";
 
 // Backgrounds mix the tone with an opaque black so badges stay solid and
@@ -31,6 +32,10 @@ const tones: Record<Tone, string> = {
   info: "bg-[color-mix(in_oklch,var(--info)_22%,oklch(0_0_0))] text-info border-[color-mix(in_oklch,var(--info)_46%,oklch(0_0_0))]",
   tier1: "bg-[color-mix(in_oklch,var(--tier1)_20%,oklch(0_0_0))] text-tier1 border-[color-mix(in_oklch,var(--tier1)_42%,oklch(0_0_0))]",
   tier2: "bg-surface-3 text-ink-subtle border-border-strong",
+  // The event's ember, off the same tokens the EWC surfaces use. Deliberately
+  // not a mix of `--accent`: the season yellow is the one colour a badge on an
+  // EWC plate must not read as.
+  ewc: "bg-[rgb(var(--ewc-ember)/0.22)] text-[rgb(var(--ewc-ring))] border-[rgb(var(--ewc-ring)/0.45)]",
   danger: "bg-[color-mix(in_oklch,var(--danger)_20%,oklch(0_0_0))] text-danger border-[color-mix(in_oklch,var(--danger)_46%,oklch(0_0_0))]",
 };
 
@@ -48,7 +53,17 @@ export function Badge({
       className={cn(
         // Impeccable: Crafted Badge — a fixed 22px height on every tone, so a
         // row of statuses lines up whether or not one of them carries a dot.
-        "inline-flex h-[1.375rem] shrink-0 items-center gap-1 rounded-md border px-2 text-[0.6875rem] font-bold uppercase tracking-wide leading-none",
+        //
+        // `pb-px` is an optical correction, not a spacing choice. `items-center`
+        // centres the *line box*, and Manrope's line box is asymmetric — 12px of
+        // ascent over 3px of descent — while these labels are uppercase and so
+        // reach only cap height with nothing below the baseline. Centring the box
+        // therefore leaves the visible letters half a pixel low. Shrinking the
+        // content box by 1px at the bottom pushes them back: measured, the cap
+        // now sits 7px from the top and 7px from the bottom of the 22px chip.
+        // (Line-height can't fix this — the half-leading cancels out of the
+        // arithmetic, so the offset is identical at every value.)
+        "inline-flex h-[1.375rem] shrink-0 items-center gap-1 rounded-md border px-2 pb-px text-[0.6875rem] font-bold uppercase tracking-wide leading-none",
         tones[tone],
         className,
       )}

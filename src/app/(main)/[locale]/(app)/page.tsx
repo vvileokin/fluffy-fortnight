@@ -63,6 +63,11 @@ export default async function HomePage() {
     <div className="space-y-6 sm:space-y-12">
       <Hero image={heroImage || undefined} href="/tournaments/ewc-2026" />
 
+      {/* Tournaments and giveaways share the top row. With one event running,
+          a three-across tournament grid left two thirds of the row empty while
+          the giveaway sat far below, tucked beside the leaderboard — so the
+          prize that's open right now was the least visible thing on the page.
+          Either section takes the full width when the other has nothing. */}
       {/* Current tournaments — nothing running means no empty heading. */}
       {currentTournaments.length > 0 && (
         <section className="space-y-2.5 sm:space-y-4">
@@ -70,6 +75,20 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {currentTournaments.map((t) => (
               <TournamentCard key={t.slug} t={t} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Giveaways sit directly under the tournaments and share their grid, so
+          a prize card is the same size as a tournament card rather than being
+          stretched across a row of its own. */}
+      {giveaways.length > 0 && (
+        <section className="space-y-2.5 sm:space-y-4">
+          <SectionHeader icon={GiftGlyph} title={t("giveaways")} href="/giveaways" />
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {giveaways.map((g) => (
+              <GiveawayCard key={g.slug} g={g} />
             ))}
           </div>
         </section>
@@ -102,25 +121,13 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Giveaways + season leaderboard. Giveaways may be empty on some days,
-          so the leaderboard takes the full width when there are none. */}
-      <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-5 lg:gap-6">
-        {giveaways.length > 0 && (
-          <section className="space-y-2.5 sm:space-y-4 lg:col-span-2">
-            <SectionHeader icon={GiftGlyph} title={t("giveaways")} href="/giveaways" />
-            <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              {giveaways.map((g) => (
-                <GiveawayCard key={g.slug} g={g} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section className={cn("space-y-2.5 sm:space-y-4", giveaways.length > 0 ? "lg:col-span-3" : "lg:col-span-5")}>
-          <SectionHeader icon={CrownGlyph} title={t("seasonLeaderboard")} href="/leaderboard" />
-          <LeaderboardTable rows={seasonLeaderboard} topN={5} podium />
-        </section>
-      </div>
+      {/* The leaderboard now has the row to itself — giveaways moved up beside
+          the tournaments — so the podium gets the full width it was always
+          cramped out of. */}
+      <section className="space-y-2.5 sm:space-y-4">
+        <SectionHeader icon={CrownGlyph} title={t("seasonLeaderboard")} href="/leaderboard" />
+        <LeaderboardTable rows={seasonLeaderboard} topN={5} podium />
+      </section>
     </div>
   );
 }

@@ -60,7 +60,9 @@ export function TournamentCard({ t }: { t: Tournament }) {
           </>
         )}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
-          <Badge tone={t.tier === 1 ? "tier1" : "tier2"}>Tier {t.tier}</Badge>
+          <Badge tone={t.skin === "ewc" ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
+            Tier {t.tier}
+          </Badge>
           {t.status === "live" && <LiveBadge />}
           {t.status === "finished" && <Badge tone="neutral">{tr("finished")}</Badge>}
         </div>
@@ -100,7 +102,12 @@ export function TournamentCard({ t }: { t: Tournament }) {
             )}
           </div>
           <span className="flex items-center gap-1">
-            <span className="tnum font-mono text-sm font-bold text-accent">
+            <span
+              className={cn(
+                "tnum font-mono text-sm font-bold",
+                t.skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+              )}
+            >
               {formatPrize(t.prizeUSD)}
             </span>
             <ChevronRight className="size-4 text-ink-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -127,14 +134,21 @@ export function TournamentCardWide({ t }: { t: Tournament }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <Badge tone={t.tier === 1 ? "tier1" : "tier2"}>T{t.tier}</Badge>
+          <Badge tone={t.skin === "ewc" ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
+            T{t.tier}
+          </Badge>
           <h3 className="truncate text-sm font-bold text-ink">{t.name}</h3>
         </div>
         <p className="mt-0.5 truncate text-xs text-ink-subtle">
           {t.dateLabel} · {t.location}
         </p>
       </div>
-      <span className="tnum shrink-0 font-mono text-sm font-bold text-accent">
+      <span
+        className={cn(
+          "tnum shrink-0 font-mono text-sm font-bold",
+          t.skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+        )}
+      >
         {formatPrize(t.prizeUSD)}
       </span>
     </Link>

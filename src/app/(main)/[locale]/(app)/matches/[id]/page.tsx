@@ -121,7 +121,11 @@ export default async function MatchPage({
         {!skin && (
           <div className="team-arena pointer-events-none absolute inset-0" />
         )}
-        <div className="relative px-4 py-3.5 sm:px-7 sm:py-6">
+        {/* The vertical padding used to be 24px a side on desktop, which put
+            48px of empty plate around an 84px crest and made the header the
+            tallest object on the page without carrying more information than
+            the row of cards below it. */}
+        <div className="relative px-4 py-3 sm:px-6 sm:py-4">
           {/* The scoreboard says this visually; the page still needs one real
               heading, and duplicating the names on screen would be noise. */}
           <h1 className="sr-only">
@@ -173,7 +177,7 @@ export default async function MatchPage({
               the map strip, so the crests centre against a column that's as tall
               as they are — which is what closes the hole that used to sit under
               the logos. */}
-          <div className="mt-4 hidden grid-cols-[1fr_auto_1fr] items-center gap-5 md:grid lg:gap-8">
+          <div className="mt-2.5 hidden grid-cols-[1fr_auto_1fr] items-center gap-5 md:grid lg:gap-8">
             <div className="flex items-center gap-4">
               {/* Impeccable: Crafted Team Plinth — brand-coloured pool of light
                   under each crest, so the two sides read at a glance. */}
@@ -181,7 +185,7 @@ export default async function MatchPage({
                 className="relative inline-flex rounded-2xl"
                 style={{ boxShadow: `0 8px 34px -20px ${a.brand}` }}
               >
-                <TeamLogo team={a} size="2xl" />
+                <TeamLogo team={a} size="xl" />
               </span>
               <div className="min-w-0">
                 <p className="truncate text-xl font-bold tracking-tight text-ink lg:text-2xl">{a.name}</p>
@@ -192,7 +196,7 @@ export default async function MatchPage({
             </div>
 
             {/* The centre column: score over series, on the page's true axis. */}
-            <div className="flex shrink-0 flex-col items-center gap-3">
+            <div className="flex shrink-0 flex-col items-center gap-2">
               {/* Impeccable: Crafted Scoreboard — the leading number carries a
                   halo of its own light; the divider is a thin rule, not a colon
                   competing with the digits. */}
@@ -200,7 +204,7 @@ export default async function MatchPage({
                 <div className="flex items-baseline gap-3 font-mono">
                   <span
                     className={cn(
-                      "tnum text-5xl font-bold leading-none tracking-tight lg:text-6xl",
+                      "tnum text-4xl font-bold leading-none tracking-tight lg:text-5xl",
                       match.scoreA > match.scoreB
                         ? "text-accent [text-shadow:0_0_22px_color-mix(in_oklch,var(--accent)_20%,transparent)]"
                         : "text-ink",
@@ -214,7 +218,7 @@ export default async function MatchPage({
                   />
                   <span
                     className={cn(
-                      "tnum text-5xl font-bold leading-none tracking-tight lg:text-6xl",
+                      "tnum text-4xl font-bold leading-none tracking-tight lg:text-5xl",
                       match.scoreB > match.scoreA
                         ? "text-accent [text-shadow:0_0_22px_color-mix(in_oklch,var(--accent)_20%,transparent)]"
                         : "text-ink",
@@ -224,7 +228,7 @@ export default async function MatchPage({
                   </span>
                 </div>
               ) : (
-                <span className="font-mono text-3xl font-bold tracking-[0.12em] text-ink-subtle">
+                <span className="font-mono text-2xl font-bold tracking-[0.12em] text-ink-subtle">
                   VS
                 </span>
               )}
@@ -242,7 +246,7 @@ export default async function MatchPage({
                 className="relative inline-flex rounded-2xl"
                 style={{ boxShadow: `0 8px 34px -20px ${b.brand}` }}
               >
-                <TeamLogo team={b} size="2xl" />
+                <TeamLogo team={b} size="xl" />
               </span>
             </div>
           </div>

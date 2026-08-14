@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { Gift, Users, ArrowRight, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { BrandIcon } from "@/components/ui/BrandIcon";
 import { formatInt, cn } from "@/lib/utils";
 import { type Giveaway } from "@/lib/data";
 
@@ -24,7 +25,7 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
         } as CSSProperties
       }
       className={cn(
-        "group lift relative flex flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+        "group lift relative flex h-full flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
         ewc ? "ewc-aura-card" : "surface-1 aura",
       )}
     >
@@ -75,9 +76,28 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
           ) : g.status === "ending" ? (
             <Badge tone="live">Завершується</Badge>
           ) : (
-            <Badge tone="success">Активний</Badge>
+            <Badge tone={ewc ? "ewc" : "success"}>Активний</Badge>
           )}
         </div>
+
+        {/* The price of a ticket, opposite the status. A paid giveaway that
+            looks free until you open it is the one thing this card must not
+            do — the cost is the first question anyone has about it. */}
+        {g.entryCost > 0 && g.winners.length === 0 && g.status !== "finished" && (
+          <span
+            className={cn(
+              "tnum absolute right-3 top-3 flex items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-bold",
+              "bg-black/45 backdrop-blur-[2px]",
+              ewc ? "text-[rgb(255_154_64)]" : "text-accent",
+            )}
+          >
+            <BrandIcon
+              name={g.entryCurrency === "ewc" ? "points-ewc" : "points"}
+              className="size-3.5"
+            />
+            {g.entryCost}
+          </span>
+        )}
       </div>
 
       <div className="relative flex flex-1 flex-col gap-2 p-4">

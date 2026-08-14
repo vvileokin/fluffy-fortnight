@@ -71,6 +71,12 @@ export function TournamentView({
   ];
 
   const [tab, setTab] = React.useState<Tab>("overview");
+
+  // At the event, every cue that would normally be the season's yellow burns
+  // ember instead — the prize, the selected tab, the tier chip. A yellow
+  // control sitting on the EWC's maroon floor reads as belonging to a
+  // different page.
+  const ewc = t.skin === "ewc";
   const teams = t.teamSlugs.map(getTeam);
   const finishedMatches = matches.filter((m) => m.status === "finished");
   const upcomingMatches = matches.filter((m) => m.status !== "finished");
@@ -117,9 +123,12 @@ export function TournamentView({
           />
         )}
         {/* Readability scrim over the neon so the title and meta stay legible.
-            Phones keep it dark all the way down — that's where the facts sit. */}
+            Phones used to keep it near-opaque because the facts sat here; they
+            moved into «Про турнір» below, so the banner now only carries a
+            large bold title — which clears contrast easily at this weight and
+            leaves the event's heat visible on the screen most people use. */}
         {t.skin && (
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/65 to-black/60 sm:from-black/60 sm:via-black/30 sm:to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/65 via-black/45 to-black/40 sm:from-black/60 sm:via-black/30 sm:to-transparent" />
         )}
         <div className="relative p-5 sm:p-7">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -149,7 +158,9 @@ export function TournamentView({
             ) : (
               <Badge tone="neutral">Завершено</Badge>
             )}
-            <Badge tone={t.tier === 1 ? "tier1" : "tier2"}>Tier {t.tier}</Badge>
+            <Badge tone={ewc ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
+              Tier {t.tier}
+            </Badge>
           </div>
           <h1 className="mt-2.5 text-balance text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
             {t.name}
@@ -181,7 +192,12 @@ export function TournamentView({
               <SwordsGlyph className="size-3.5 shrink-0 text-ink-subtle" />
               {t.format}
             </div>
-            <div className="tnum ml-auto flex items-center gap-1.5 font-mono text-base font-extrabold text-accent">
+            <div
+              className={cn(
+                "tnum ml-auto flex items-center gap-1.5 font-mono text-base font-extrabold",
+                ewc ? "text-[rgb(var(--ewc-ring))]" : "text-accent",
+              )}
+            >
               <TrophyGlyph className="size-3.5 shrink-0" />
               {formatPrize(t.prizeUSD)}
             </div>
@@ -206,7 +222,9 @@ export function TournamentView({
                 "transition-[background-color,color,box-shadow,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 "active:translate-y-px motion-reduce:active:translate-y-0",
                 active
-                  ? "seg-on bg-accent text-accent-ink"
+                  ? ewc
+                    ? "seg-on bg-[rgb(var(--ewc-ring))] text-[var(--ewc-base)]"
+                    : "seg-on bg-accent text-accent-ink"
                   : "text-ink-muted hover:bg-surface-2 hover:text-ink",
               )}
             >
@@ -236,7 +254,13 @@ export function TournamentView({
             >
               <MetaRow icon={DateGlyph} label="Дати" value={t.dateLabel} />
               <MetaRow icon={t.online ? Wifi : GeoGlyph} label="Локація" value={t.location} />
-              <MetaRow icon={TrophyGlyph} label="Призовий" value={formatPrize(t.prizeUSD)} accent />
+              <MetaRow
+                icon={TrophyGlyph}
+                label="Призовий"
+                value={formatPrize(t.prizeUSD)}
+                accent
+                ewc={ewc}
+              />
               <MetaRow icon={SwordsGlyph} label="Формат" value={t.format} />
             </dl>
           </section>
@@ -246,7 +270,7 @@ export function TournamentView({
           {t.skin === "ewc" && (
             <section className="space-y-3">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-                <EwcMark className="h-2.5 w-auto shrink-0 translate-y-[0.5px] text-accent" />
+                <EwcMark className="h-2.5 w-auto shrink-0 translate-y-[0.5px] text-[rgb(var(--ewc-ring))]" />
                 Сітка турніру
               </h2>
               <EwcBracket matches={matches} />
@@ -438,11 +462,14 @@ function MetaRow({
   label,
   value,
   accent,
+  ewc,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   accent?: boolean;
+  /** Burn the accented value ember instead of season yellow. */
+  ewc?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-3">
@@ -453,7 +480,11 @@ function MetaRow({
       <dd
         className={cn(
           "text-right text-sm font-semibold",
-          accent ? "font-mono text-accent" : "text-ink",
+          accent
+            ? ewc
+              ? "font-mono text-[rgb(var(--ewc-ring))]"
+              : "font-mono text-accent"
+            : "text-ink",
         )}
       >
         {value}

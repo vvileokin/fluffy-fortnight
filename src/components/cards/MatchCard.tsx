@@ -131,7 +131,7 @@ export function MatchCard({ match }: { match: Match }) {
               className="size-3.5 shrink-0 object-contain"
             />
           ) : skin === "ewc" ? (
-            <EwcMark className="h-2 w-auto shrink-0 text-accent" />
+            <EwcMark className="h-2 w-auto shrink-0 text-[rgb(255_154_64)]" />
           ) : (
             skin === "blast" && <BlastMark className="size-3.5 shrink-0 text-accent" />
           )}
@@ -205,7 +205,12 @@ export function MatchCard({ match }: { match: Match }) {
         {hasQuestions ? (
           <>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
-              <TargetGlyph className="size-3.5 text-accent" />
+              <TargetGlyph
+                className={cn(
+                  "size-3.5",
+                  skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+                )}
+              />
               {t("questions", { count: match.openQuestions })}
             </span>
             <span className="flex items-center gap-1 text-xs">

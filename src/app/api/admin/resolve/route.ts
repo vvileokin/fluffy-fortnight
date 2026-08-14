@@ -45,9 +45,19 @@ export async function POST(request: Request) {
       .select("is_event, tournament_slug, team_a, team_b, team_a_name, team_b_name")
       .eq("id", q.match_id)
       .maybeSingle();
-    isEvent = !!match?.is_event;
-    if (isEvent) {
-      eventColumns = match?.tournament_slug === "ewc-2026" ? "ewc" : "bounty";
+    // The tournament decides the column, not the `is_event` checkbox.
+    //
+    // This used to read the flag first and only then look at the slug, so an
+    // EWC match whose box wasn't ticked scored as an ordinary match: yellow
+    // points and streak went out, `ewc_points` silently didn't. The flag is a
+    // display hint that an admin sets by hand and forgets; the slug is a fact
+    // about which tournament the match belongs to. Read the fact.
+    if (match?.tournament_slug === "ewc-2026") {
+      isEvent = true;
+      eventColumns = "ewc";
+    } else if (match?.is_event) {
+      isEvent = true;
+      eventColumns = "bounty";
     }
     if (match) {
       const teamLabel = (slug: string | null, name: string | null) =>

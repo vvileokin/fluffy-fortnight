@@ -17,33 +17,59 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * sentence you want to have to defend.
  */
 
-/** Who is eligible: an entry that hasn't been disqualified. */
+/**
+ * Who is eligible, one slot per ticket.
+ *
+ * A player holding five tickets appears five times, which is the whole point
+ * of paying for them. `tickets` is absent until migration 0035, so a row
+ * without it counts once — the one-entry-per-person giveaway this used to be.
+ */
 async function eligible(admin: ReturnType<typeof createAdminClient>, slug: string) {
-  const rows: { user_id: string }[] = [];
+  const rows: { user_id: string; tickets?: number }[] = [];
   const step = 1000;
   for (let from = 0; ; from += step) {
     const { data, error } = await admin
       .from("giveaway_entries")
-      .select("user_id")
+      .select("user_id, tickets")
       .eq("giveaway_slug", slug)
       .eq("confirmed", true)
       .order("created_at")
       .range(from, from + step - 1);
     if (error) throw new Error(error.message);
-    rows.push(...((data ?? []) as { user_id: string }[]));
+    rows.push(...((data ?? []) as { user_id: string; tickets?: number }[]));
     if (!data || data.length < step) break;
   }
-  return rows.map((r) => r.user_id);
+
+  const pool: string[] = [];
+  for (const r of rows) {
+    const n = Math.max(1, Number(r.tickets ?? 1));
+    for (let i = 0; i < n; i++) pool.push(r.user_id);
+  }
+  return pool;
 }
 
-/** Fisher–Yates over a CSPRNG. */
-function shuffle<T>(list: T[]): T[] {
-  const a = [...list];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = randomInt(i + 1);
-    [a[i], a[j]] = [a[j], a[i]];
+/**
+ * Weighted draw without replacement.
+ *
+ * Each ticket is a separate chance, but the moment someone wins, every ticket
+ * they hold leaves the bag — so seven prizes go to seven different people. The
+ * alternative (leaving the tickets in) lets one person with five tickets take
+ * two or three of the seven skins, which is not what anybody means by "more
+ * tickets, better odds".
+ *
+ * `randomInt` rather than `Math.random()`: for a prize with real money on it,
+ * "the winner was picked by a PRNG seeded from the clock" is not a sentence
+ * you want to have to defend.
+ */
+function draw(pool: string[], count: number): string[] {
+  let bag = [...pool];
+  const picked: string[] = [];
+  while (picked.length < count && bag.length > 0) {
+    const winner = bag[randomInt(bag.length)];
+    picked.push(winner);
+    bag = bag.filter((id) => id !== winner);
   }
-  return a;
+  return picked;
 }
 
 /**
@@ -66,7 +92,7 @@ export async function GET(request: Request) {
   const [{ data: entries }, { data: winners }, { data: giveaway }] = await Promise.all([
     admin
       .from("giveaway_entries")
-      .select("user_id, confirmed, created_at")
+      .select("user_id, confirmed, created_at, tickets, spent")
       .eq("giveaway_slug", slug)
       .order("created_at"),
     admin
@@ -103,6 +129,8 @@ export async function GET(request: Request) {
       points: (byId.get(e.user_id as string)?.points as number) ?? 0,
       confirmed: e.confirmed,
       createdAt: e.created_at,
+      tickets: (e.tickets as number) ?? 1,
+      spent: (e.spent as number) ?? 0,
     })),
     winners: (winners ?? []).map((w) => ({
       userId: w.user_id,
@@ -189,8 +217,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "no_entries" }, { status: 400 });
   }
 
-  const count = Math.max(1, Math.min(Number(giveaway.winners_count ?? 1), pool.length));
-  const picked = shuffle(pool).slice(0, count);
+  // Capped by *people*, not tickets: five tickets in one pair of hands can
+  // still only produce one winner.
+  const people = new Set(pool).size;
+  const count = Math.max(1, Math.min(Number(giveaway.winners_count ?? 1), people));
+  const picked = draw(pool, count);
 
   // Replace any previous result wholesale so a redraw can't leave stale winners.
   await admin.from("giveaway_winners").delete().eq("giveaway_slug", slug);
@@ -223,7 +254,7 @@ export async function POST(request: Request) {
 
   await logAdmin(
     "giveaways",
-    `${redraw ? "Перерозіграв" : "Розіграв"} ${slug} — ${picked.length} переможц(ів) із ${pool.length} заявок`,
+    `${redraw ? "Перерозіграв" : "Розіграв"} ${slug} — ${picked.length} переможц(ів) із ${people} учасників (${pool.length} квитків)`,
   );
 
   const { data: profiles } = await admin

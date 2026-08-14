@@ -20,6 +20,10 @@ type Row = {
   winners_count: number | null;
   drawn_at: string | null;
   skin: Giveaway["skin"] | null;
+  entry_cost: number | null;
+  entry_currency: Giveaway["entryCurrency"] | null;
+  max_tickets: number | null;
+  require_telegram: boolean | null;
 };
 
 function toGiveaway(r: Row): Giveaway {
@@ -44,6 +48,15 @@ function toGiveaway(r: Row): Giveaway {
     winnersCount: r.winners_count ?? 1,
     drawnAt: r.drawn_at ?? undefined,
     winners: [],
+    // All absent until migration 0035. The fallbacks are the behaviour the
+    // site had before it: free to enter, one entry each, no Telegram gate —
+    // so a pending migration degrades to the old giveaway rather than to a
+    // card that charges an undefined number of points.
+    entryCost: r.entry_cost ?? 0,
+    entryCurrency: r.entry_currency ?? "points",
+    maxTickets: r.max_tickets ?? 1,
+    requireTelegram: r.require_telegram ?? false,
+    myTickets: 0,
   };
 }
 
@@ -122,13 +135,23 @@ export const getGiveawayBySlug = cache(async function getGiveawayBySlug(
       data: { user },
     } = await sb.auth.getUser();
     if (user) {
-      const { data: mine } = await sb
-        .from("giveaway_entries")
-        .select("user_id")
-        .eq("giveaway_slug", slug)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      g.entered = !!mine;
+      const mineFor = (columns: string) =>
+        sb
+          .from("giveaway_entries")
+          .select(columns)
+          .eq("giveaway_slug", slug)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+      // `tickets` arrives with migration 0035, and PostgREST fails the whole
+      // select on one unknown column — which would hide the fact that this
+      // player has entered at all. Same retry the profile hook uses.
+      const full = await mineFor("user_id, tickets");
+      const mine = full.error ? (await mineFor("user_id")).data : full.data;
+
+      const row = mine as { user_id?: string; tickets?: number } | null;
+      g.entered = !!row;
+      g.myTickets = row?.tickets ?? (row ? 1 : 0);
     }
     return g;
   } catch {

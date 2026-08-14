@@ -37,6 +37,11 @@ export async function POST(request: Request) {
     skin: g.skin === "ewc" || g.skin === "blast" ? g.skin : null,
     description: g.description ? String(g.description) : null,
     conditions: Array.isArray(g.conditions) ? g.conditions : [],
+    winners_count: Math.max(1, Number(g.winners_count ?? 1)),
+    entry_cost: Math.max(0, Number(g.entry_cost ?? 0)),
+    entry_currency: g.entry_currency === "ewc" ? "ewc" : "points",
+    max_tickets: Math.max(1, Number(g.max_tickets ?? 1)),
+    require_telegram: g.require_telegram === true,
     updated_at: new Date().toISOString(),
   };
 
@@ -46,15 +51,23 @@ export async function POST(request: Request) {
   const { data: prior } = await admin.from("giveaways").select("slug").eq("slug", slug).maybeSingle();
 
   let { error } = await admin.from("giveaways").upsert(row, { onConflict: "slug" });
-  // `skin` arrives with migration 0034. Until that's run the column isn't there
-  // and PostgREST rejects the whole row, which would mean an admin can't save a
-  // giveaway at all on an un-migrated database. Losing the styling is a far
-  // better failure than losing the giveaway, so drop it and retry. A write
-  // reports the missing column as PGRST204 (schema cache) rather than the
-  // 42703 a read would give, so both are worth catching.
+  // `skin` arrives with migration 0034 and the ticket columns with 0035. Until
+  // those are run the columns aren't there and PostgREST rejects the whole row,
+  // which would mean an admin can't save a giveaway at all on an un-migrated
+  // database. Losing the styling or the pricing is a far better failure than
+  // losing the giveaway, so drop them and retry. A write reports the missing
+  // column as PGRST204 (schema cache) rather than the 42703 a read would give,
+  // so both are worth catching.
   if (error?.code === "PGRST204" || error?.code === "42703") {
-    const { skin: _skin, ...withoutSkin } = row;
-    ({ error } = await admin.from("giveaways").upsert(withoutSkin, { onConflict: "slug" }));
+    const {
+      skin: _skin,
+      entry_cost: _cost,
+      entry_currency: _currency,
+      max_tickets: _max,
+      require_telegram: _tg,
+      ...legacy
+    } = row;
+    ({ error } = await admin.from("giveaways").upsert(legacy, { onConflict: "slug" }));
   }
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

@@ -1034,6 +1034,16 @@ export type Giveaway = {
   winners: GiveawayWinner[];
   /** Whether the signed-in user has an entry (undefined when signed out). */
   entered?: boolean;
+  /** Price of one ticket. 0 = free to enter, the old behaviour. */
+  entryCost: number;
+  /** Which balance a ticket is paid from. */
+  entryCurrency: "points" | "ewc";
+  /** Tickets one player may hold. 1 = the old one-entry-per-person giveaway. */
+  maxTickets: number;
+  /** Entry requires a linked Telegram account subscribed to the channel. */
+  requireTelegram: boolean;
+  /** Tickets the signed-in user already holds (0 when signed out). */
+  myTickets: number;
 };
 
 export type GiveawayWinner = {
@@ -1064,6 +1074,11 @@ export const giveaways: Giveaway[] = [
     ],
     winnersCount: 1,
     winners: [],
+    entryCost: 0,
+    entryCurrency: "points",
+    maxTickets: 1,
+    requireTelegram: false,
+    myTickets: 0,
   },
   {
     slug: "awp-dragon",
@@ -1085,6 +1100,11 @@ export const giveaways: Giveaway[] = [
     ],
     winnersCount: 1,
     winners: [],
+    entryCost: 0,
+    entryCurrency: "points",
+    maxTickets: 1,
+    requireTelegram: false,
+    myTickets: 0,
     entered: true,
   },
 ];

@@ -617,16 +617,21 @@ body {
   --ewc-ring: 255 122 44;
 }
 
-/* Banner. The artwork rides on top via `.ewc-fire`, so the gradients here only
-   have to give it a floor to sit on. */
+/* Banner. The artwork rides on top via `.ewc-fire`, so the gradients here have
+   to give it a floor to sit on — and that floor has to carry real light, not
+   just a dark tint. Unifying the banner with the card dimmed these pools to
+   0.24/0.26 and dropped the bright upper-left core entirely, which left the
+   artwork blending against near-black and reading as nothing at all. The
+   embers are back; `--ewc-base` still ties the two surfaces together. */
 .ewc-aura {
   background-color: var(--ewc-base);
   background-image:
-    linear-gradient(101deg, transparent 30%, rgb(255 168 32 / 0.10) 47%, transparent 70%),
-    radial-gradient(86% 128% at -2% 104%, rgb(var(--ewc-ember) / 0.24), transparent 64%),
-    radial-gradient(86% 128% at 102% 104%, rgb(var(--ewc-deep) / 0.26), transparent 64%),
-    radial-gradient(140% 120% at 50% -30%, rgb(126 148 188 / 0.06), transparent 72%);
-  box-shadow: 0 1px 0 0 rgb(255 190 120 / 0.12) inset;
+    /* the hot streak, upper-left to centre */
+    linear-gradient(101deg, transparent 6%, rgb(255 168 32 / 0.20) 20%, rgb(var(--ewc-ember) / 0.10) 34%, transparent 58%),
+    radial-gradient(78% 120% at 12% 4%, rgb(255 168 32 / 0.30), transparent 58%),
+    radial-gradient(96% 130% at 42% 116%, rgb(var(--ewc-ember) / 0.42), transparent 62%),
+    radial-gradient(120% 130% at 88% 92%, rgb(var(--ewc-deep) / 0.55), transparent 68%);
+  box-shadow: 0 1px 0 0 rgb(255 190 120 / 0.14) inset;
 }
 
 .ewc-fire::before {
@@ -636,7 +641,11 @@ body {
   background-image: url("/brand/ewc-fire.webp");
   background-size: cover;
   background-position: 50% 42%;
-  opacity: 0.4;
+  opacity: 0.55;
+  /* Stays `soft-light`, which is what made the artwork read as heat *in* the
+     banner rather than a photo laid over it. It only works because the pools
+     above are bright enough to modulate — soft-light against a near-black
+     floor produces nothing, which is exactly how this went missing. */
   mix-blend-mode: soft-light;
   pointer-events: none;
 }

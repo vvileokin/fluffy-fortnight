@@ -34,10 +34,13 @@ type Unit = { value: number; label: string };
 export function Countdown({
   targetISO,
   variant = "boxes",
+  tone = "default",
   className,
 }: {
   targetISO: string;
   variant?: "boxes" | "inline";
+  /** `ewc` burns the digits and their wells ember, for event surfaces. */
+  tone?: "default" | "ewc";
   className?: string;
 }) {
   const target = React.useMemo(() => new Date(targetISO).getTime(), [targetISO]);
@@ -71,23 +74,48 @@ export function Countdown({
     );
   }
 
+  const ewc = tone === "ewc";
+
   return (
     <div className={cn("flex items-stretch gap-2", className)}>
       {units.map((u, i) => (
         <React.Fragment key={u.label}>
-          <div className="flex min-w-[3.25rem] flex-col items-center rounded-lg border border-border bg-surface-2 px-2 py-2">
+          {/* On the event the wells are cut into the ember floor rather than
+              raised out of the season's grey — a neutral panel here read as a
+              widget borrowed from another page. */}
+          <div
+            className={cn(
+              "flex min-w-[3.25rem] flex-col items-center rounded-lg border px-2 py-2",
+              ewc
+                ? "border-[rgb(var(--ewc-ring)/0.28)] bg-black/35"
+                : "border-border bg-surface-2",
+            )}
+          >
             <span
-              className="font-mono tnum text-2xl font-bold leading-none text-ink sm:text-3xl"
+              className={cn(
+                "font-mono tnum text-2xl font-bold leading-none sm:text-3xl",
+                ewc ? "text-[rgb(255_154_64)]" : "text-ink",
+              )}
               suppressHydrationWarning
             >
               {mounted ? pad(u.value) : "--"}
             </span>
-            <span className="mt-1 text-[0.625rem] font-medium uppercase tracking-wide text-ink-subtle">
+            <span
+              className={cn(
+                "mt-1 text-[0.625rem] font-medium uppercase tracking-wide",
+                ewc ? "text-[rgb(255_154_64)]/55" : "text-ink-subtle",
+              )}
+            >
               {u.label}
             </span>
           </div>
           {i < units.length - 1 && (
-            <span className="self-center font-mono text-xl text-ink-faint">
+            <span
+              className={cn(
+                "self-center font-mono text-xl",
+                ewc ? "text-[rgb(var(--ewc-ring)/0.5)]" : "text-ink-faint",
+              )}
+            >
               :
             </span>
           )}

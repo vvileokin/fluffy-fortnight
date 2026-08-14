@@ -18,6 +18,8 @@ type Applicant = {
   avatarUrl: string | null;
   points: number;
   confirmed: boolean;
+  /** Chances in the draw. 1 on every giveaway that predates ticket sales. */
+  tickets: number;
 };
 type Winner = { userId: string; handle: string; place: number };
 type GiveItem = { slug: string; prize: string };
@@ -35,6 +37,11 @@ const emptyForm = {
   conditions: "",
   image: "",
   skin: "",
+  winnersCount: "1",
+  entryCost: "0",
+  entryCurrency: "points",
+  maxTickets: "1",
+  requireTelegram: false,
 };
 
 export default function GiveawaysAdmin() {
@@ -169,6 +176,11 @@ export default function GiveawaysAdmin() {
         description: `${form.prize.trim()} від ${form.sponsor || "CS2 UA"}.`,
         conditions: form.conditions.split("\n").map((s) => s.trim()).filter(Boolean),
         status: "open",
+        winners_count: Number(form.winnersCount) || 1,
+        entry_cost: Number(form.entryCost) || 0,
+        entry_currency: form.entryCurrency,
+        max_tickets: Number(form.maxTickets) || 1,
+        require_telegram: form.requireTelegram,
       }),
     });
     const j = await res.json().catch(() => ({}));
@@ -270,6 +282,13 @@ export default function GiveawaysAdmin() {
                     <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
                       {a.handle}
                     </span>
+                    {/* Tickets are the odds, so on a paid giveaway this is the
+                        number that explains the draw — not the balance. */}
+                    {a.tickets > 1 && (
+                      <span className="tnum shrink-0 rounded-md bg-fill-1 px-1.5 py-0.5 font-mono text-xs font-bold text-ink">
+                        ×{a.tickets}
+                      </span>
+                    )}
                     <span className="tnum shrink-0 font-mono text-xs text-ink-subtle">
                       {formatInt(a.points)}
                     </span>
@@ -469,6 +488,62 @@ export default function GiveawaysAdmin() {
                 onChange={(e) => setForm({ ...form, endLabel: e.target.value })}
               />
             </GField>
+          </div>
+          {/* Ціна входу. `Мін. поінтів` вище — це поріг, який треба мати;
+              це — гроші, які списуються з балансу. Дві різні речі, тому
+              стоять окремо. */}
+          <div className="grid grid-cols-3 gap-3">
+            <GField label="Ціна квитка">
+              <input
+                type="number"
+                min={0}
+                className={cn(inputCls, "tnum font-mono")}
+                placeholder="10"
+                value={form.entryCost}
+                onChange={(e) => setForm({ ...form, entryCost: e.target.value })}
+              />
+            </GField>
+            <GField label="Валюта">
+              <select
+                className={inputCls}
+                value={form.entryCurrency}
+                onChange={(e) => setForm({ ...form, entryCurrency: e.target.value })}
+              >
+                <option value="points">Поінти</option>
+                <option value="ewc">EWC поінти</option>
+              </select>
+            </GField>
+            <GField label="Квитків на людину">
+              <input
+                type="number"
+                min={1}
+                className={cn(inputCls, "tnum font-mono")}
+                placeholder="5"
+                value={form.maxTickets}
+                onChange={(e) => setForm({ ...form, maxTickets: e.target.value })}
+              />
+            </GField>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <GField label="Кількість переможців">
+              <input
+                type="number"
+                min={1}
+                className={cn(inputCls, "tnum font-mono")}
+                placeholder="7"
+                value={form.winnersCount}
+                onChange={(e) => setForm({ ...form, winnersCount: e.target.value })}
+              />
+            </GField>
+            <label className="flex h-10 cursor-pointer items-center gap-2.5 self-end rounded-lg border border-border bg-surface-2 px-3">
+              <input
+                type="checkbox"
+                className="size-4 accent-[var(--accent)]"
+                checked={form.requireTelegram}
+                onChange={(e) => setForm({ ...form, requireTelegram: e.target.checked })}
+              />
+              <span className="text-sm text-ink">Потрібна підписка на TG</span>
+            </label>
           </div>
           <GField label="Умови участі (кожна з нового рядка)">
             <textarea

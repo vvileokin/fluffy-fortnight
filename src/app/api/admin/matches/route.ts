@@ -103,10 +103,13 @@ export async function POST(request: Request) {
     b: Number(m.score_b ?? 0),
   });
 
+  const tournamentSlug = String(m.tournament_slug ?? "blast-bounty-s2");
+  const isEventTournament = tournamentSlug === "ewc-2026";
+
   const row = {
     id,
-    tournament_slug: String(m.tournament_slug ?? "blast-bounty-s2"),
-    is_event: Boolean(m.is_event),
+    tournament_slug: tournamentSlug,
+    is_event: isEventTournament || Boolean(m.is_event),
     team_a: String(m.team_a),
     team_b: String(m.team_b),
     status: derived.status,

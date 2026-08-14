@@ -19,7 +19,11 @@ export default async function AppLayout({
         <Topbar />
         {/* Phones buy back a little width: 12px gutters instead of 16px, and a
             shorter run-in above the first section. Desktop is unchanged. */}
-        <main className="mx-auto w-full max-w-[1180px] px-3 pb-28 pt-3 sm:px-6 sm:pt-6 lg:pb-12">
+        {/* 1180 → 1320: the three-across card grids were coming out ~370px on a
+            desktop with room to spare, which is what made the tournament and
+            giveaway cards read as small. Widening the column lifts every grid
+            on the site by the same ~12% instead of special-casing one page. */}
+        <main className="mx-auto w-full max-w-[1320px] px-3 pb-28 pt-3 sm:px-6 sm:pt-6 lg:pb-12">
           {children}
         </main>
       </div>

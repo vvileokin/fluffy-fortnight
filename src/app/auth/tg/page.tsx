@@ -4,8 +4,18 @@
 // /auth/telegram (which verifies the HMAC and mints the session). Running it
 // inline — instead of a client component — fires on parse, so there's no
 // "please wait" flash while a JS bundle hydrates.
+//
+// `?mode=link` sends the same payload to /auth/telegram/link instead, which
+// attaches the Telegram account to the session you already have rather than
+// signing you into a new one. The flag is carried on our own return URL and
+// stripped before forwarding: every remaining parameter is part of Telegram's
+// signature, and one extra key would fail the HMAC.
 const forward = `!function(){try{
-  var go=function(q){location.replace('/auth/telegram?'+q)};
+  var sp=new URLSearchParams(location.search);
+  var link=sp.get('mode')==='link';
+  var target=link?'/auth/telegram/link':'/auth/telegram';
+  var fail=function(){location.replace(link?'/profile?telegram=telegram':'/login?error=telegram')};
+  var go=function(q){location.replace(target+'?'+q)};
   var raw=new URLSearchParams(location.hash.slice(1)).get('tgAuthResult');
   if(raw){
     var b=raw.replace(/-/g,'+').replace(/_/g,'/');
@@ -16,9 +26,10 @@ const forward = `!function(){try{
     Object.keys(o).forEach(function(k){if(o[k]!=null)out.set(k,String(o[k]))});
     return go(out.toString());
   }
-  var s=location.search.slice(1);
+  sp.delete('mode');
+  var s=sp.toString();
   if(s)return go(s);
-  location.replace('/login?error=telegram');
+  fail();
 }catch(e){location.replace('/login?error=telegram')}}();`;
 
 export default function TelegramReturnPage() {

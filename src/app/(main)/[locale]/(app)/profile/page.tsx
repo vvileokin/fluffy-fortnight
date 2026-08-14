@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { Target, Check, Mail, Send, Package } from "lucide-react";
+import { Target, Package, KeyRound } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandIcon } from "@/components/ui/BrandIcon";
-import { Badge } from "@/components/ui/Badge";
+import { AuthMethods } from "@/components/profile/AuthMethods";
 import { ProfileEditButton } from "@/components/profile/ProfileEditButton";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { PredictionHistory, type HistoryItem } from "@/components/profile/PredictionHistory";
@@ -26,6 +27,16 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select("handle, avatar_url, points, bounty_points, streak")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Asked separately, and deliberately not folded into the select above:
+  // `telegram_id` arrives with migration 0035, and PostgREST fails the whole
+  // select on one unknown column — which would blank the handle, the points
+  // and the streak rather than just the link row.
+  const { data: tg } = await supabase
+    .from("profiles")
+    .select("telegram_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -79,11 +90,18 @@ export default async function ProfilePage() {
   const inventory = await getInventory(user.id);
 
   const isTelegram = user.user_metadata?.provider === "telegram";
-  const authMethod = isTelegram
-    ? { label: "Telegram", icon: Send }
+  const provider = isTelegram
+    ? "telegram"
     : user.app_metadata?.provider === "google"
-      ? { label: "Google", icon: Check }
-      : { label: "Пошта", icon: Mail };
+      ? "google"
+      : "email";
+  const telegramLinked =
+    isTelegram || !!(tg?.telegram_id as string | null | undefined);
+  // Two writers, two keys: the link route stores `telegram_username`, while the
+  // sign-in route has always stored Telegram's handle as `user_name`. Reading
+  // only the first left every Telegram-native account with a nameless row.
+  const telegramUsername = (user.user_metadata?.telegram_username ??
+    user.user_metadata?.user_name) as string | undefined;
 
   /* Impeccable: Crafted Stat Rail — four big tiles for four small numbers was
      the wrong ratio: most of them read "0" for most of a season, so a quarter
@@ -108,15 +126,13 @@ export default async function ProfilePage() {
           <Avatar name={handle} src={profile?.avatar_url} size="lg" ring />
           <div className="flex-1">
             <h1 className="text-2xl font-extrabold tracking-tight text-ink">{handle}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <Badge tone="success">
-                <authMethod.icon className="size-3" strokeWidth={3} />
-                {authMethod.label}
-              </Badge>
-              {user.email && !isTelegram && (
-                <span className="text-xs text-ink-subtle">{user.email}</span>
-              )}
-            </div>
+            {/* The provider badge that used to sit here moved into «Способи
+                входу» below. Once an account can carry more than one method,
+                naming a single one at the top is both redundant and the less
+                useful half of the answer. */}
+            {user.email && !isTelegram && (
+              <p className="mt-1.5 truncate text-xs text-ink-subtle">{user.email}</p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <ProfileEditButton handle={handle} avatarUrl={profile?.avatar_url} />
@@ -142,6 +158,23 @@ export default async function ProfilePage() {
           ))}
         </dl>
       </div>
+
+      {/* Sign-in methods. Telegram is the one with a job beyond convenience —
+          the EWC giveaway is gated on it — so the section earns its place on
+          the page rather than hiding in a settings screen. */}
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
+          <KeyRound className="size-4 text-ink-subtle" /> Способи входу
+        </h2>
+        <Suspense fallback={null}>
+          <AuthMethods
+            email={user.email ?? undefined}
+            provider={provider}
+            telegramLinked={telegramLinked}
+            telegramUsername={telegramUsername}
+          />
+        </Suspense>
+      </section>
 
       {/* Inventory — always shown, because an empty case here is the whole
           point: it tells a new player there's something to win. */}
