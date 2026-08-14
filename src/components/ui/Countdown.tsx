@@ -89,9 +89,7 @@ export function Countdown({
           <div
             className={cn(
               "flex min-w-[3.25rem] flex-col items-center rounded-lg border px-2 py-2",
-              ewc
-                ? "border-[rgb(var(--ewc-ring)/0.28)] bg-black/35"
-                : "border-border bg-surface-2",
+              ewc ? "ewc-hairline bg-black/35" : "border-border bg-surface-2",
             )}
           >
             <span

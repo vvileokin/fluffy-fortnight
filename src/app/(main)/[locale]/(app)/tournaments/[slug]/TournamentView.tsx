@@ -251,9 +251,7 @@ export function TournamentView({
                 "divide-y overflow-hidden rounded-xl",
                 // White hairlines are the only cool thing on an ember plate and
                 // read as scratches across it; warm them into the same family.
-                ewc
-                  ? "ewc-aura-card divide-[rgb(var(--ewc-ring)/0.16)]"
-                  : "surface-1 divide-white/[0.06]",
+                ewc ? "ewc-aura-card ewc-divide" : "surface-1 divide-white/[0.06]",
               )}
             >
               <MetaRow icon={DateGlyph} label="Дати" value={t.dateLabel} />

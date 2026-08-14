@@ -650,6 +650,25 @@ body {
   pointer-events: none;
 }
 
+/* Hairlines on ember plates.
+   The design tokens carry chroma at hue ~246, so every "neutral" border on the
+   event's near-black floor comes out cold and reads as a scratch across it.
+   These are real classes rather than Tailwind arbitrary values because a
+   slash inside `rgb(… / …)` is parsed as the opacity-modifier separator, which
+   silently produced an invalid declaration — the border then fell back to the
+   default cold colour, or to zero width in the `divide-*` case. */
+/* Every child, not a positional subset. `divide-y` owns which edge gets the
+   width — v4 puts it on the bottom of all but the last child, v3 put it on the
+   top of all but the first — so colouring one shape leaves the other drawing
+   in the default cold blue. Colouring all four edges of every row is
+   indifferent to that choice, and edges with no width cost nothing. */
+.ewc-divide > * {
+  border-color: rgb(var(--ewc-ring) / 0.22);
+}
+.ewc-hairline {
+  border-color: rgb(var(--ewc-ring) / 0.3);
+}
+
 /* Card. Same base, one long diagonal sweep so the ramp has no visible edge,
    and the ember ring that a match plate now shares. */
 .ewc-aura-card {

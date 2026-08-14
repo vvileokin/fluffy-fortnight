@@ -116,7 +116,7 @@ export default async function GiveawayPage({
                 // reads as a scratch rather than a division — it's the only
                 // cool-toned thing on the panel. Warm it to the same family.
                 g.skin === "ewc"
-                  ? "ewc-aura-card divide-[rgb(var(--ewc-ring)/0.16)]"
+                  ? "ewc-aura-card ewc-divide"
                   : "surface-1 divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]",
               )}
             >
