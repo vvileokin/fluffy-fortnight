@@ -294,7 +294,7 @@ insert into public.giveaways (
 )
 values (
   'ewc-ak-ice-coal',
-  '7х AK | Крижане вугілля',
+  '7х AK-47 | Крижане вугілля',
   'CS2UA',
   0,
   'до 24 серпня',
