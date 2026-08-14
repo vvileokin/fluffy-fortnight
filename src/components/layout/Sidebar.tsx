@@ -34,11 +34,14 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
           className="group relative mx-3 mb-1 block h-[120px] overflow-hidden rounded-lg border border-border"
           aria-label="Promo"
         >
+          {/* Artwork, so it gets the same treatment as the covers and the hero
+              rather than the default 75 the icons are happy with. */}
           <Image
             src={promo.image}
             alt=""
             width={448}
             height={240}
+            quality={90}
             className="h-full w-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
           />
           <span className="absolute inset-0 ring-1 ring-inset ring-white/5" />
