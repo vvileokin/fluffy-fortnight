@@ -36,7 +36,6 @@ export async function POST(request: Request) {
   // results must not land in `bounty_points` and quietly inflate it.
   // The match label also goes into the notification so it names the game,
   // not just the question.
-  let isEvent = false;
   let eventColumns: "bounty" | "ewc" | null = null;
   let matchLabel = "";
   if (q?.match_id) {
@@ -53,10 +52,8 @@ export async function POST(request: Request) {
     // display hint that an admin sets by hand and forgets; the slug is a fact
     // about which tournament the match belongs to. Read the fact.
     if (match?.tournament_slug === "ewc-2026") {
-      isEvent = true;
       eventColumns = "ewc";
     } else if (match?.is_event) {
-      isEvent = true;
       eventColumns = "bounty";
     }
     if (match) {
@@ -110,45 +107,79 @@ export async function POST(request: Request) {
   }
   const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
 
+  // Winners are paid in one atomic statement rather than a read-add-write per
+  // player. The old shape read every profile up front and wrote back
+  // `read value + reward`, so two questions resolved moments apart both
+  // started from the same totals and the second write erased the first —
+  // players who won both were credited once. `award_predictions` increments
+  // the columns in place, under Postgres' own row locks.
+  const winners = (preds ?? [])
+    .filter((p) => p.option_id === correct_option_id && byId.has(p.user_id))
+    .map((p) => p.user_id);
+
   let awarded = 0;
-  const notifs: { user_id: string; kind: string; title: string }[] = [];
-  for (const p of preds ?? []) {
-    const prof = byId.get(p.user_id);
-    if (!prof) continue;
-    const won = p.option_id === correct_option_id;
-    // Points and correct-counts accrue here; streaks are recomputed below,
-    // since a match's questions resolve one at a time and the rule looks at
-    // the match as a whole.
-    if (won) {
-      await admin
-        .from("profiles")
-        .update({
-          points: prof.points + reward,
-          correct: prof.correct + 1,
-          ...(eventColumns === "bounty"
-            ? {
-                bounty_points: prof.bounty_points + reward,
-                bounty_correct: prof.bounty_correct + 1,
-              }
-            : {}),
-          ...(eventColumns === "ewc"
-            ? {
-                ewc_points: (prof.ewc_points ?? 0) + reward,
-                ewc_correct: (prof.ewc_correct ?? 0) + 1,
-              }
-            : {}),
-        })
-        .eq("id", p.user_id);
-      awarded++;
-    }
-    notifs.push({
-      user_id: p.user_id,
-      kind: "reward",
-      title: won
-        ? `${prefix}прогноз «${title}» зіграв — +${reward} поінтів`
-        : `${prefix}прогноз «${title}» не зіграв`,
+  if (winners.length > 0) {
+    const { data: touched, error: awardErr } = await admin.rpc("award_predictions", {
+      p_users: winners,
+      p_reward: reward,
+      p_columns: eventColumns,
     });
+    if (awardErr) {
+      // The deploy can land before migration 0036 is run, and resolving a match
+      // must not be blocked in that window. Fall back to the old per-player
+      // write — it is what shipped before, races and all, and one match settled
+      // slightly wrong beats a settle button that errors. Anything else is a
+      // real failure: return before recording, so the question stays retryable.
+      const missing = awardErr.code === "PGRST202" || awardErr.code === "42883";
+      if (!missing) {
+        return NextResponse.json({ ok: false, error: awardErr.message }, { status: 500 });
+      }
+      console.error("[resolve] award_predictions missing — run migration 0036");
+      for (const id of winners) {
+        const prof = byId.get(id)!;
+        await admin
+          .from("profiles")
+          .update({
+            points: prof.points + reward,
+            correct: prof.correct + 1,
+            ...(eventColumns === "bounty"
+              ? {
+                  bounty_points: prof.bounty_points + reward,
+                  bounty_correct: prof.bounty_correct + 1,
+                }
+              : {}),
+            ...(eventColumns === "ewc"
+              ? {
+                  ewc_points: (prof.ewc_points ?? 0) + reward,
+                  ewc_correct: (prof.ewc_correct ?? 0) + 1,
+                }
+              : {}),
+          })
+          .eq("id", id);
+      }
+      awarded = winners.length;
+    } else {
+      awarded = Number(touched ?? 0);
+    }
+    if (awarded !== winners.length) {
+      console.error(
+        `[resolve] ${question_id}: paid ${awarded} of ${winners.length} winners`,
+      );
+    }
   }
+
+  const notifs = (preds ?? [])
+    .filter((p) => byId.has(p.user_id))
+    .map((p) => {
+      const won = p.option_id === correct_option_id;
+      return {
+        user_id: p.user_id,
+        kind: "reward",
+        title: won
+          ? `${prefix}прогноз «${title}» зіграв — +${reward} поінтів`
+          : `${prefix}прогноз «${title}» не зіграв`,
+      };
+    });
   if (notifs.length > 0) await admin.from("notifications").insert(notifs);
 
   // Record the result only now — awards are done, so this can't lock out a retry.
