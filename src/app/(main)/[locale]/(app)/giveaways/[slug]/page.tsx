@@ -63,29 +63,11 @@ export default async function GiveawayPage({
                   }
             }
           >
-            {g.image && (
-              <>
-                <Image
-                  src={g.image}
-                  alt=""
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 1024px"
-                  className="object-cover"
-                />
-                {/* Enough floor for the title to sit on without burying the
-                    artwork — heavier at the bottom, where the words are. */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/20" />
-              </>
-            )}
-
-            <div
-              className={cn(
-                "relative flex flex-col justify-end p-5 sm:p-6",
-                // Only reserve banner height when there is artwork to show.
-                g.image && "aspect-[3/1] min-h-44",
-              )}
-            >
+            {/* The artwork stays on the card in the listings and doesn't get
+                repeated here: at full page width it needed a scrim heavy
+                enough to bury the skin, which made the hero worse at both
+                jobs. This block is the title, and the title only. */}
+            <div className="relative flex flex-col justify-end p-5 sm:p-6">
               <div className="mb-2 flex flex-wrap items-center gap-1.5">
                 {g.winners.length > 0 || g.status === "finished" ? (
                   <Badge tone="neutral">
@@ -124,8 +106,13 @@ export default async function GiveawayPage({
             </h2>
             <ul
               className={cn(
-                "divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-lg",
-                g.skin === "ewc" ? "ewc-aura-card" : "surface-1",
+                "divide-y overflow-hidden rounded-lg",
+                // A white hairline across an ember plate is the one seam that
+                // reads as a scratch rather than a division — it's the only
+                // cool-toned thing on the panel. Warm it to the same family.
+                g.skin === "ewc"
+                  ? "ewc-aura-card divide-[rgb(var(--ewc-ring)/0.16)]"
+                  : "surface-1 divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]",
               )}
             >
               {g.conditions.map((c) => (

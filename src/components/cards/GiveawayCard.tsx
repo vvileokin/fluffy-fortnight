@@ -43,21 +43,16 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
         }
       >
         {g.image ? (
-          <>
-            <Image
-              src={g.image}
-              alt=""
-              fill
-              sizes="(max-width:640px) 100vw, 480px"
-              className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
-            />
-            <div
-              className={cn(
-                "absolute inset-0 bg-gradient-to-t to-transparent",
-                ewc ? "from-black/70" : "from-surface/80",
-              )}
-            />
-          </>
+          /* No scrim. It existed to seat the chips, but both of them carry
+             their own opaque plate, so all the gradient did was mute artwork
+             that is the entire reason someone looks at this card. */
+          <Image
+            src={g.image}
+            alt=""
+            fill
+            sizes="(max-width:640px) 100vw, 480px"
+            className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
+          />
         ) : (
           <Gift
             className="size-10 text-ink opacity-80 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5"
@@ -65,7 +60,10 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
             style={{ color: ewc ? "rgb(255 138 24)" : g.cover }}
           />
         )}
-        <div className="absolute left-3 top-3">
+        {/* `flex`, not a bare block: the badge is inline-flex, so inside a block
+            it sits on a text baseline and picks up ~3px of leading above it —
+            which is exactly how far it hung below the price chip on the right. */}
+        <div className="absolute left-3 top-3 flex">
           {/* A drawn giveaway is a different thing from an open one, and the
               card is where most people meet it — showing "Активний" on a prize
               that already has a winner is the one wrong answer here. */}
@@ -86,7 +84,9 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
         {g.entryCost > 0 && g.winners.length === 0 && g.status !== "finished" && (
           <span
             className={cn(
-              "tnum absolute right-3 top-3 flex items-center gap-1 rounded-md px-2 py-1 font-mono text-xs font-bold",
+              // Same 22px box as Badge, so the price and the status chip sit on
+              // one line across the card instead of each finding its own centre.
+              "tnum absolute right-3 top-3 flex h-[1.375rem] items-center gap-1 rounded-md px-2 font-mono text-xs font-bold",
               "bg-black/45 backdrop-blur-[2px]",
               ewc ? "text-[rgb(255_154_64)]" : "text-accent",
             )}

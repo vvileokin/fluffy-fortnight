@@ -62,9 +62,15 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [sub, setSub] = React.useState<SubState>({ phase: "idle" });
-  // Set on a successful purchase so the balance on screen doesn't sit one
-  // transaction behind until the profile hook happens to refetch.
-  const [spent, setSpent] = React.useState(0);
+  // The balance the purchase route reported back, which is authoritative.
+  //
+  // This used to be a running total of what had been spent, subtracted from
+  // whatever the profile hook held. That double-counts the moment the hook
+  // refetches — it re-reads on any auth change, so a session that bought two
+  // tickets could end up subtracting 200 from an already-reduced balance and
+  // render -125 for someone holding 75. Take the number the server just
+  // returned instead of trying to compute it.
+  const [paidBalance, setPaidBalance] = React.useState<number | null>(null);
 
   const drawn = !!giveaway.drawnAt || giveaway.winners.length > 0;
   const closed = drawn || giveaway.status === "finished";
@@ -101,9 +107,10 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
   // someone who has the points, for as long as the profile query takes.
   const loadingProfile = profile === undefined;
   const balance =
+    paidBalance ??
     (giveaway.entryCurrency === "ewc"
       ? (profile?.ewc_points ?? 0)
-      : (profile?.points ?? 0)) - spent;
+      : (profile?.points ?? 0));
 
   const left = Math.max(0, cap - tickets);
   const shortSeason = Math.max(0, giveaway.minPoints - (profile?.points ?? 0));
@@ -167,7 +174,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
     }
 
     setBought(data.tickets ?? tickets + safeQty);
-    setSpent((s) => s + (data.spent ?? 0));
+    if (typeof data.balance === "number") setPaidBalance(data.balance);
     setQty(1);
     router.refresh();
   }

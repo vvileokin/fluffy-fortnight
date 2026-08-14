@@ -77,7 +77,10 @@ export function Countdown({
   const ewc = tone === "ewc";
 
   return (
-    <div className={cn("flex items-stretch gap-2", className)}>
+    /* Centred, not left-aligned: the four wells have a fixed minimum width, so
+       in any container wider than they need — a phone card especially — the
+       clock used to hug the left edge with a hole beside it. */
+    <div className={cn("flex items-stretch justify-center gap-2", className)}>
       {units.map((u, i) => (
         <React.Fragment key={u.label}>
           {/* On the event the wells are cut into the ember floor rather than

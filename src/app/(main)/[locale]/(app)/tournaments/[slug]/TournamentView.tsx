@@ -248,8 +248,12 @@ export function TournamentView({
                 the old lucide icons, so the two read as different products. */}
             <dl
               className={cn(
-                "divide-y divide-white/[0.06] overflow-hidden rounded-xl",
-                t.skin === "ewc" ? "ewc-aura-card" : "surface-1",
+                "divide-y overflow-hidden rounded-xl",
+                // White hairlines are the only cool thing on an ember plate and
+                // read as scratches across it; warm them into the same family.
+                ewc
+                  ? "ewc-aura-card divide-[rgb(var(--ewc-ring)/0.16)]"
+                  : "surface-1 divide-white/[0.06]",
               )}
             >
               <MetaRow icon={DateGlyph} label="Дати" value={t.dateLabel} />
@@ -474,7 +478,13 @@ function MetaRow({
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-3">
       <dt className="flex shrink-0 items-center gap-2.5 text-sm text-ink-muted">
-        <Icon className="size-4 shrink-0 text-ink-subtle" />
+        {/* Geometrically these are already centred — measured, the cap band of
+            the label and the icon box share a midpoint. The unevenness is in
+            the glyphs: each fills its viewBox edge to edge while its solid mass
+            sits in the lower two thirds (the calendar body under two hairline
+            ticks, the pin head over a point). Centring the box therefore hangs
+            the weight low. One pixel up puts the mass on the line. */}
+        <Icon className="size-4 shrink-0 -translate-y-px text-ink-subtle" />
         {label}
       </dt>
       <dd
