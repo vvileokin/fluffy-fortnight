@@ -56,10 +56,11 @@ export function TournamentCard({ t }: { t: Tournament }) {
               quality={90}
               className="object-cover transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out-soft)] will-change-transform group-hover:scale-[1.04] motion-reduce:transform-none"
             />
-            {/* Just enough to seat the Tier/LIVE chips; the artwork stays visible. */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
           </>
         )}
+        {/* The chips sit straight on the artwork now — no scrim under them.
+            Each carries its own opaque plate and border, so the gradient was
+            only ever dimming the cover it sat on. */}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
           <Badge tone={t.skin === "ewc" ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
             Tier {t.tier}
