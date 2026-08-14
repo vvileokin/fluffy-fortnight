@@ -122,7 +122,9 @@ export function Topbar() {
       )}
 
       {user && (
-      <div className="flex items-center gap-2 sm:gap-2.5">
+      /* Phones carry three stat capsules, an avatar and a bell across ~360px,
+         so each one is a size down there and returns to full at `sm`. */
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
         {/* The BLAST event is over, so its bounty chip is off the bar. The
             points themselves are untouched — they still count on the profile
             and in the event leaderboard. */}
@@ -139,10 +141,10 @@ export function Topbar() {
         <Link
           href="/profile"
           aria-label={`${formatInt(points)} ${t("points")}`}
-          className="flex h-10 items-center gap-1.5 rounded-full bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] pl-2 pr-3.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_28%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_18%,transparent)]"
+          className="flex h-8 items-center gap-1 rounded-full bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_28%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_18%,transparent)] sm:h-10 sm:gap-1.5 sm:pl-2 sm:pr-3.5"
         >
-          <BrandIcon name="points" className="size-5" priority />
-          <span className="tnum font-mono text-sm font-extrabold leading-none text-accent">
+          <BrandIcon name="points" className="size-4 sm:size-5" priority />
+          <span className="tnum font-mono text-xs font-extrabold leading-none text-accent sm:text-sm">
             {formatInt(points)}
           </span>
         </Link>
@@ -156,10 +158,10 @@ export function Topbar() {
           <Link
             href="/tournaments/ewc-2026"
             aria-label={`${formatInt(eventPoints)} EWC`}
-            className="flex h-9 items-center gap-1 rounded-full bg-[color-mix(in_oklch,rgb(255_88_16)_14%,transparent)] pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,rgb(255_88_16)_30%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,rgb(255_88_16)_22%,transparent)]"
+            className="flex h-8 items-center gap-1 rounded-full bg-[color-mix(in_oklch,rgb(255_88_16)_14%,transparent)] pl-1 pr-2 shadow-[0_0_0_1px_color-mix(in_oklch,rgb(255_88_16)_30%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,rgb(255_88_16)_22%,transparent)] sm:h-9 sm:pl-1.5 sm:pr-2.5"
           >
-            <BrandIcon name="points-ewc" className="size-[1.125rem]" priority />
-            <span className="tnum font-mono text-[0.8125rem] font-bold leading-none text-[rgb(255_154_64)]">
+            <BrandIcon name="points-ewc" className="size-4 sm:size-[1.125rem]" priority />
+            <span className="tnum font-mono text-xs font-bold leading-none text-[rgb(255_154_64)] sm:text-[0.8125rem]">
               {formatInt(eventPoints)}
             </span>
           </Link>
@@ -168,10 +170,10 @@ export function Topbar() {
         <Link
           href="/profile"
           aria-label={`${t("streak")}: ${streak}`}
-          className="flex h-9 items-center gap-1 rounded-full bg-fill-2 pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] transition-colors hover:bg-fill-3"
+          className="flex h-8 items-center gap-1 rounded-full bg-fill-2 pl-1 pr-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] transition-colors hover:bg-fill-3 sm:h-9 sm:pl-1.5 sm:pr-2.5"
         >
-          <BrandIcon name="streak" className="size-[1.125rem]" priority />
-          <span className="tnum font-mono text-[0.8125rem] font-bold leading-none text-accent/85">
+          <BrandIcon name="streak" className="size-4 sm:size-[1.125rem]" priority />
+          <span className="tnum font-mono text-xs font-bold leading-none text-accent/85 sm:text-[0.8125rem]">
             {streak}
           </span>
         </Link>

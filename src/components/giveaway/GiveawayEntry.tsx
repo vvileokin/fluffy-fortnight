@@ -193,7 +193,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl p-5",
+        "relative h-full overflow-hidden rounded-xl p-5",
         ewc ? "ewc-aura-card" : "surface-1",
       )}
     >
@@ -435,10 +435,7 @@ function Gate({
 
     if (sub.phase === "unlinked") {
       return (
-        <Note
-          tone="warn"
-          text="Цей розіграш тільки для верифікованих через Telegram. Прив'яжи Telegram у профілі — це займе 10 секунд."
-        >
+        <Note tone="warn" text="Потрібна верифікація через Telegram.">
           <Link
             href="/profile"
             className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-info text-sm font-bold text-white transition-opacity hover:opacity-90"
@@ -452,7 +449,7 @@ function Gate({
 
     if (sub.phase === "linked" && !sub.member) {
       return (
-        <Note tone="warn" text="Умова участі — підписка на Telegram-канал CS2UA.">
+        <Note tone="warn" text="Підпишись на Telegram-канал CS2UA.">
           <div className="grid grid-cols-2 gap-2">
             <a
               href={process.env.NEXT_PUBLIC_TELEGRAM_CHANNEL_URL ?? "#"}

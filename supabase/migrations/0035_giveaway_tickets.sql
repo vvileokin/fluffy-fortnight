@@ -303,7 +303,10 @@ values (
   'open',
   'oklch(0.68 0.19 45)',
   'ewc',
-  'Розігруємо сім AK-47 | Крижане вугілля серед тих, хто грає прогнози на Esports World Cup 2026. Квиток коштує 100 EWC поінтів — тих самих помаранчевих, що капають за вгадані матчі івенту. Більше квитків — більший шанс, але один переможець забирає рівно один скін.',
+  -- Deliberately one sentence: the price, the ticket cap and the one-skin rule
+  -- are all in `conditions` directly below it, so spelling them out here was a
+  -- paragraph of duplication that ate a phone screen.
+  'Сім AK-47 | Крижане вугілля розігруємо серед тих, хто грає прогнози на Esports World Cup 2026. Умови — нижче.',
   '["Підписка на Telegram-канал CS2UA","100 EWC поінтів за квиток","До 5 квитків на людину","Один переможець — один скін"]'::jsonb,
   7,
   100,

@@ -30,9 +30,12 @@ export default async function GiveawayPage({
 
   return (
     <div className="space-y-6">
+      {/* Same back link as the tournament and match pages: no plate on hover,
+          no left inset. It was the only one styled as a button, which made the
+          page look like it belonged to a different site. */}
       <Link
         href="/giveaways"
-        className="-ml-2 inline-flex h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        className="-mt-2 inline-flex min-h-11 items-center gap-1 py-2 pr-2 text-sm font-semibold text-ink-subtle transition-colors hover:text-ink"
       >
         <ChevronLeft className="size-4" />
         Усі розіграші
@@ -95,7 +98,9 @@ export default async function GiveawayPage({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
         {/* Left: details */}
         <div className="space-y-6">
-          <p className="text-pretty leading-relaxed text-ink-muted">
+          {/* Smaller on phones, where this paragraph sat above the fold and
+              pushed the entry card off it. */}
+          <p className="text-pretty text-sm leading-relaxed text-ink-muted sm:text-base">
             {g.description}
           </p>
 
@@ -137,8 +142,12 @@ export default async function GiveawayPage({
           </section>
         </div>
 
-        {/* Right: entry / status */}
-        <div className="lg:sticky lg:top-20 lg:self-start">
+        {/* Right: entry / status.
+            It used to be `self-start` so it could stick, which left its plate
+            ending 25px short of the conditions beside it — a step with nothing
+            to explain it. The page is one short paragraph and four rules long,
+            so there was never enough scroll for sticky to earn that. */}
+        <div className="flex flex-col">
           <GiveawayEntry giveaway={g} />
         </div>
       </div>
