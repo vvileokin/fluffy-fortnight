@@ -94,18 +94,43 @@ export async function POST(request: Request) {
   }
 
   const userIds = [...new Set(preds.map((p) => p.user_id))];
-  const { data: profiles, error: profErr } = await admin
-    .from("profiles")
-    .select(
-      "id, points, bounty_points, correct, streak, bounty_correct, bounty_streak, ewc_points, ewc_correct",
-    )
-    .in("id", userIds);
-  // Fail before recording the result so a missing column (migration not applied)
-  // stays retryable instead of locking the question with no awards.
-  if (profErr) {
-    return NextResponse.json({ ok: false, error: profErr.message }, { status: 500 });
+
+  // Paged and chunked, for the same reason `predictions` is paged above.
+  // `predictions` could already exceed PostgREST's 1000-row cap — that is why
+  // it pages — but this read did not, so on a question that popular the map
+  // came back truncated and every player past the cap was dropped from both
+  // the award and the notification, with nothing to show for it.
+  const PROFILE_COLUMNS =
+    "id, points, bounty_points, correct, streak, bounty_correct, bounty_streak, ewc_points, ewc_correct";
+  type ProfileRow = {
+    id: string;
+    points: number;
+    bounty_points: number;
+    correct: number;
+    bounty_correct: number;
+    ewc_points: number | null;
+    ewc_correct: number | null;
+  };
+  const profiles: ProfileRow[] = [];
+  const CHUNK = 500;
+  for (let i = 0; i < userIds.length; i += CHUNK) {
+    const slice = userIds.slice(i, i + CHUNK);
+    const { rows, error } = await fetchAllRows<ProfileRow>((from, to) =>
+      admin
+        .from("profiles")
+        .select(PROFILE_COLUMNS)
+        .in("id", slice)
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
+    // Fail before recording the result so a missing column (migration not
+    // applied) stays retryable instead of locking the question with no awards.
+    if (error) {
+      return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    }
+    profiles.push(...rows);
   }
-  const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const byId = new Map(profiles.map((p) => [p.id, p]));
 
   // Winners are paid in one atomic statement rather than a read-add-write per
   // player. The old shape read every profile up front and wrote back
