@@ -30,16 +30,20 @@ export default async function GiveawayPage({
 
   return (
     <div className="space-y-6">
-      {/* Same back link as the tournament and match pages: no plate on hover,
-          no left inset. It was the only one styled as a button, which made the
-          page look like it belonged to a different site. */}
-      <Link
-        href="/giveaways"
-        className="-mt-2 inline-flex min-h-11 items-center gap-1 py-2 pr-2 text-sm font-semibold text-ink-subtle transition-colors hover:text-ink"
-      >
-        <ChevronLeft className="size-4" />
-        Усі розіграші
-      </Link>
+      {/* The link and the banner it introduces are one group, on 8px, exactly
+          as on the tournament and match pages. As a bare child of `space-y-6`
+          it stood 24px clear of the banner and the header read as further down
+          the page than everywhere else. */}
+      <div className="space-y-2">
+        {/* Same back link as those pages too: no plate on hover, no left inset.
+            It was the only one styled as a button. */}
+        <Link
+          href="/giveaways"
+          className="-mt-2 inline-flex min-h-11 items-center gap-1 py-2 pr-2 text-sm font-semibold text-ink-subtle transition-colors hover:text-ink"
+        >
+          <ChevronLeft className="size-4" />
+          Усі розіграші
+        </Link>
 
       {/* Prize hero — the same banner language the tournament and match pages
           use, so a giveaway run for the event is dressed by the event rather
@@ -94,6 +98,7 @@ export default async function GiveawayPage({
           </div>
         );
       })()}
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
         {/* Left: details */}

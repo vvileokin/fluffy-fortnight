@@ -212,7 +212,12 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
       )}
 
       <div className="relative">
-        <div className="flex items-baseline justify-between gap-3">
+        {/* `items-center`, not `items-baseline`. The right-hand side is itself a
+            flex row whose first item is an icon, and a flex container with no
+            text as its first item has no real baseline to share — the browser
+            falls back to its bottom edge, which dropped the entrant count out
+            of line with the label opposite it. */}
+        <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
             {closed ? "Завершено" : "Завершується"}
           </span>

@@ -154,8 +154,11 @@ export const getGiveawayBySlug = cache(async function getGiveawayBySlug(
       g.myTickets = row?.tickets ?? (row ? 1 : 0);
     }
     return g;
-  } catch {
-    /* fall through */
+  } catch (e) {
+    // Returning undefined here makes the page call notFound(), so a swallowed
+    // fault presents as "this giveaway does not exist" — with nothing in the
+    // log to say otherwise. Say otherwise.
+    console.error("[giveaways] lookup failed for", slug, e);
   }
   return undefined;
 });
