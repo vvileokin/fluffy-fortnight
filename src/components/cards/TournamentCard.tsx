@@ -52,7 +52,8 @@ export function TournamentCard({ t }: { t: Tournament }) {
               src={t.coverImage}
               alt=""
               fill
-              sizes="(max-width:640px) 100vw, 380px"
+              sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 440px"
+              quality={90}
               className="object-cover transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out-soft)] will-change-transform group-hover:scale-[1.04] motion-reduce:transform-none"
             />
             {/* Just enough to seat the Tier/LIVE chips; the artwork stays visible. */}

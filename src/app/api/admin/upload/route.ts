@@ -14,8 +14,12 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ ok: false, error: "no file" }, { status: 400 });
   }
-  if (file.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ ok: false, error: "too large (max 5MB)" }, { status: 400 });
+  // 20MB, not 5. Nothing here re-encodes — the file is stored exactly as
+  // uploaded and Next resizes on the way out — so the cap was the one thing
+  // standing between an admin and a full-resolution banner. A 3200px PNG of a
+  // skin render is already ~3MB; a 4K one doesn't fit in 5.
+  if (file.size > 20 * 1024 * 1024) {
+    return NextResponse.json({ ok: false, error: "too large (max 20MB)" }, { status: 400 });
   }
 
   const folder = String(form?.get("folder") ?? "misc").replace(/[^a-z0-9-]/gi, "");

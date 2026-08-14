@@ -33,12 +33,16 @@ export function Hero({ image, href }: { image?: string; href?: string }) {
         <h1 className="sr-only">
           {t("heroTitleStart")} {t("heroTitleAccent")}
         </h1>
+        {/* `sizes` tracks the container's max width — it went 1180 → 1320, and
+            a stale hint understates what the browser needs, landing a softer
+            file than the slot deserves. */}
         <Image
           src={image}
           alt=""
           fill
           priority
-          sizes="(min-width: 1024px) 1180px, 100vw"
+          sizes="(min-width: 1024px) 1320px, 100vw"
+          quality={90}
           className="object-cover object-center"
         />
       </Link>

@@ -50,7 +50,8 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
             src={g.image}
             alt=""
             fill
-            sizes="(max-width:640px) 100vw, 480px"
+            sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 440px"
+            quality={90}
             className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
           />
         ) : (
