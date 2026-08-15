@@ -137,10 +137,10 @@ export const EWC_GROUPS: EwcGroup[] = [
 export type EwcPlayoffRound = { id: string; label: string; format: string; matches: number };
 
 export const EWC_PLAYOFFS: EwcPlayoffRound[] = [
-  { id: "ro16", label: "Round of 16", format: "BO3", matches: 8 },
-  { id: "qf", label: "Quarter-finals", format: "BO3", matches: 4 },
-  { id: "sf", label: "Semi-finals", format: "BO3", matches: 2 },
-  { id: "gf", label: "Grand final", format: "BO5", matches: 1 },
+  { id: "ro16", label: "1/8 фіналу", format: "BO3", matches: 8 },
+  { id: "qf", label: "1/4 фіналу", format: "BO3", matches: 4 },
+  { id: "sf", label: "1/2 фіналу", format: "BO3", matches: 2 },
+  { id: "gf", label: "Гранд фінал", format: "BO5", matches: 1 },
 ];
 
 export const EWC_THIRD_PLACE: EwcPlayoffRound = {

@@ -13,7 +13,7 @@ import {
   type EwcMatchNode,
   type SlotSource,
 } from "@/lib/ewc-bracket";
-import { getTeam, type Match } from "@/lib/data";
+import { getTeam, slotTimeLabel, type Match } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 /**
@@ -154,15 +154,19 @@ function BracketMatch({ r }: { r: Resolved }) {
     m && done && m.scoreA !== m.scoreB ? (m.scoreA > m.scoreB ? m.a : m.b) : undefined;
   const aWon = winner !== undefined && winner === r.a;
   const bWon = winner !== undefined && winner === r.b;
-  const time = m?.startISO
-    ? new Date(m.startISO).toLocaleTimeString("uk-UA", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
+  // Same relative-day phrasing every other time label on the site uses
+  // ("Сьогодні 18:00", "Завтра 18:00", "12 сер 18:00") — a bare HH:mm told a
+  // reader the kickoff time but not which of the tournament's many days it
+  // fell on, so every card looked like it could be happening right now.
+  const time = m?.startISO ? slotTimeLabel(m.startISO) : null;
 
   const body = (
-    <div className="overflow-hidden rounded-lg bg-black/35 shadow-[0_0_0_1px_rgb(255_120_50/0.16)]">
+    // `shadow-inset`, not a plain spread shadow: on the same element as
+    // `overflow-hidden` + `rounded-lg`, a non-inset box-shadow paints outside
+    // the border box and gets clipped unevenly right at the rounded corners —
+    // the outline reads as broken there instead of continuous. Inset paints
+    // inside the box, where the clip never reaches it.
+    <div className="overflow-hidden rounded-lg bg-black/35 shadow-[inset_0_0_0_1px_rgb(255_120_50/0.16)]">
       <div className="flex items-center justify-between gap-2 bg-white/[0.04] px-2.5 py-1 text-[0.625rem] font-semibold uppercase tracking-wide text-white/45">
         <span>{time ?? "TBD"}</span>
         <span>{m?.format ?? r.node.format}</span>
@@ -269,7 +273,7 @@ function GroupPanel({
 
 function PlayoffSlot() {
   return (
-    <div className="overflow-hidden rounded-lg bg-black/35 shadow-[0_0_0_1px_rgb(255_120_50/0.12)]">
+    <div className="overflow-hidden rounded-lg bg-black/35 shadow-[inset_0_0_0_1px_rgb(255_120_50/0.12)]">
       <div className="flex items-center justify-between gap-2 bg-white/[0.03] px-2.5 py-1 text-[0.625rem] font-semibold uppercase tracking-wide text-white/30">
         <span>TBD</span>
       </div>
@@ -322,11 +326,21 @@ function PlayoffsPanel() {
               {Array.from({ length: r.matches }, (_, i) => (
                 <PlayoffSlot key={i} />
               ))}
+              {/* The decider sits under the final it shadows, not beside it as
+                  a fifth round — that's the empty space every earlier column
+                  leaves as the ladder narrows, and it's where a bracket
+                  conventionally puts this match. Same column as Grand final,
+                  so it lines up under it rather than floating off to the side. */}
+              {r.id === "gf" && (
+                <div className="mt-4 border-t border-white/10 pt-4">
+                  <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-wide text-white/40">
+                    {EWC_THIRD_PLACE.label}
+                  </p>
+                  <PlayoffSlot />
+                </div>
+              )}
             </Column>
           ))}
-          <Column title={EWC_THIRD_PLACE.label}>
-            <PlayoffSlot />
-          </Column>
         </div>
       )}
     </div>
