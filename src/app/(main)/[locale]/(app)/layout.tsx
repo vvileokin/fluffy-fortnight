@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { DailyReward } from "@/components/daily/DailyReward";
 import { getSiteSettings } from "@/lib/db/settings";
 
 export default async function AppLayout({
@@ -28,6 +29,10 @@ export default async function AppLayout({
         </main>
       </div>
       <BottomNav />
+      {/* Opens itself, and only when there is something to take. Mounted at the
+          layout so it greets a returning player on whatever page they land on,
+          not just the home page. */}
+      <DailyReward />
     </>
   );
 }
