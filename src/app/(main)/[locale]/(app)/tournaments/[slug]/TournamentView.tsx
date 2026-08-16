@@ -29,6 +29,7 @@ import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { BracketPredictor } from "@/components/tournament/BracketPredictor";
 import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import { EwcBracket } from "@/components/tournament/EwcBracket";
+import { PlayoffBracketEntry } from "@/components/tournament/PlayoffBracketEntry";
 import type { CSSProperties } from "react";
 import {
   getTeam,
@@ -275,6 +276,10 @@ export function TournamentView({
                 <EwcMark className="h-2.5 w-auto shrink-0 translate-y-[0.5px] text-[rgb(var(--ewc-ring))]" />
                 Сітка турніру
               </h2>
+              {/* Above the ladder, not below it: the call has to be made before
+                  the playoff starts, so it belongs where a reader meets it on
+                  the way in rather than after scrolling past four groups. */}
+              <PlayoffBracketEntry />
               <EwcBracket matches={matches} />
             </section>
           )}

@@ -11,7 +11,9 @@ export type AuditArea =
   | "content"
   | "users"
   | "upload"
-  | "import";
+  | "import"
+  /** One-shot playoff bracket payouts. */
+  | "bracket";
 
 /**
  * Record one admin action. Called after the change lands, so the log only shows
