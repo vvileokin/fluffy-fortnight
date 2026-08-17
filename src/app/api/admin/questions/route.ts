@@ -3,7 +3,13 @@ import { isAdmin } from "@/lib/admin-auth";
 import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-type OptionInput = { id?: string; label?: string; sublabel?: string; reward?: number };
+type OptionInput = {
+  id?: string;
+  label?: string;
+  sublabel?: string;
+  reward?: number;
+  odds?: number;
+};
 
 // Create / update a prediction question tied to a match. Admin only.
 export async function POST(request: Request) {
@@ -15,6 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Вкажи матч і формулювання" }, { status: 400 });
   }
 
+  const betting = !!q.betting;
   const rawOptions: OptionInput[] = Array.isArray(q.options) ? q.options : [];
   const options = rawOptions
     .filter((o) => (o.label ?? "").trim().length > 0)
@@ -23,10 +30,22 @@ export async function POST(request: Request) {
       label: String(o.label).trim(),
       ...(o.sublabel ? { sublabel: String(o.sublabel).trim() } : {}),
       reward: Number(o.reward ?? 0),
+      // Odds are kept only on betting questions. Leaving a stale coefficient on
+      // a question that was switched back to flat rewards would let `place_bet`
+      // price a stake on a question the UI no longer offers stakes for.
+      ...(betting ? { odds: Number(o.odds ?? 0) } : {}),
     }));
   if (options.length < 2) {
     return NextResponse.json(
       { ok: false, error: "Потрібно щонайменше два варіанти" },
+      { status: 400 },
+    );
+  }
+  // A coefficient below 1 would return less than the stake, which is not a
+  // price — it's a way to lose points by being right.
+  if (betting && options.some((o) => !o.odds || o.odds < 1)) {
+    return NextResponse.json(
+      { ok: false, error: "У ставках кожен варіант потребує коефіцієнта від 1.00" },
       { status: 400 },
     );
   }
@@ -41,6 +60,7 @@ export async function POST(request: Request) {
     status: String(q.status ?? "open"),
     deadline_label: q.deadline_label ? String(q.deadline_label) : null,
     options,
+    betting,
     updated_at: new Date().toISOString(),
   };
 

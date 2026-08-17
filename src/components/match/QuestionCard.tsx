@@ -11,6 +11,7 @@ import { useUser } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import { applyStreak, streakMultiplier } from "@/lib/streak";
+import { BetSlip, type Bet } from "@/components/match/BetSlip";
 import { cn } from "@/lib/utils";
 
 export function QuestionCard({
@@ -30,6 +31,13 @@ export function QuestionCard({
   const multiplier = streakMultiplier(streak);
   const [picked, setPicked] = React.useState<string | undefined>();
   const [justSaved, setJustSaved] = React.useState(false);
+  const [bet, setBet] = React.useState<Bet | null>(null);
+  const [betNonce, setBetNonce] = React.useState(0);
+
+  // A betting question stakes points instead of handing them out, so the two
+  // never mix on one card: odds replace the flat payout, and the slip replaces
+  // the "you can change this until the deadline" footer.
+  const betting = !!question.betting;
 
   const locked = question.status === "locked" || question.status === "resolved";
   const upcoming = question.status === "upcoming";
@@ -58,10 +66,33 @@ export function QuestionCard({
     };
   }, [user, question.id]);
 
+  // A betting question's slip is the record, so there is nothing to load from
+  // `predictions` and nothing to write there either.
+  React.useEffect(() => {
+    if (!betting || !user) return;
+    let cancelled = false;
+    fetch(`/api/bets?question=${encodeURIComponent(question.id)}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled && d.ok) setBet(d.bet as Bet | null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [betting, user, question.id, betNonce]);
+
   async function choose(id: string) {
     if (locked || upcoming) return;
     if (!user) {
       router.push("/login");
+      return;
+    }
+    // Selecting an option on a betting question commits nothing — the stake
+    // does. Writing a prediction row here would record an answer the player
+    // never actually paid for.
+    if (betting) {
+      if (!bet) setPicked(id);
       return;
     }
     setPicked(id);
@@ -325,16 +356,29 @@ export function QuestionCard({
                           : "text-accent/80",
                     )}
                   >
-                    <BrandIcon name={isEwc ? "points-ewc" : "points"} className="size-4" />
-                    {/* The multiplied figure, not the base one with an asterisk.
-                        The player is choosing between options on what each pays
-                        *them*, so the number has to already be their number —
-                        the ×N chip beside it explains where it came from. */}
-                    +{applyStreak(opt.reward, streak)}
-                    {multiplier > 1 && (
-                      <span className="rounded bg-current/15 px-1 py-px text-[0.625rem] font-bold leading-none">
-                        ×{multiplier}
-                      </span>
+                    {betting ? (
+                      // On a betting question the coefficient *is* the payout
+                      // line — there is no flat figure to show, because what
+                      // this option pays depends on what the player stakes.
+                      <>×{(opt.odds ?? 1).toFixed(2)}</>
+                    ) : (
+                      <>
+                        <BrandIcon
+                          name={isEwc ? "points-ewc" : "points"}
+                          className="size-4"
+                        />
+                        {/* The multiplied figure, not the base one with an
+                            asterisk. The player is choosing between options on
+                            what each pays *them*, so the number has to already
+                            be their number — the ×N chip explains where it
+                            came from. */}
+                        +{applyStreak(opt.reward, streak)}
+                        {multiplier > 1 && (
+                          <span className="rounded bg-current/15 px-1 py-px text-[0.625rem] font-bold leading-none">
+                            ×{multiplier}
+                          </span>
+                        )}
+                      </>
                     )}
                   </span>
                 </span>
@@ -344,15 +388,34 @@ export function QuestionCard({
           })}
         </div>
 
-        {/* Footer — one line of status, and only when there is one. It used to
-            hold a reserved min-height so every card measured the same, but once
-            the idle prompt went the reserved strip was pure dead space under
-            every unanswered question. Cards in a grid already stretch to the
-            tallest in their row, so nothing needs padding out by hand. */}
-        {footer && (
-          <div className="mt-2 flex items-center justify-center text-xs">
-            {footer}
-          </div>
+        {betting ? (
+          user ? (
+            <BetSlip
+              questionId={question.id}
+              optionId={bet?.option_id ?? picked}
+              optionLabel={
+                question.options.find((o) => o.id === (bet?.option_id ?? picked))?.label
+              }
+              odds={question.options.find((o) => o.id === picked)?.odds}
+              balance={profile?.ewc_points ?? 0}
+              locked={locked || upcoming}
+              bet={bet}
+              onPlaced={() => setBetNonce((n) => n + 1)}
+            />
+          ) : (
+            <p className="mt-2 text-center text-xs text-ink-subtle">
+              Увійди, щоб зробити ставку.
+            </p>
+          )
+        ) : (
+          /* Footer — one line of status, and only when there is one. It used to
+             hold a reserved min-height so every card measured the same, but once
+             the idle prompt went the reserved strip was pure dead space under
+             every unanswered question. Cards in a grid already stretch to the
+             tallest in their row, so nothing needs padding out by hand. */
+          footer && (
+            <div className="mt-2 flex items-center justify-center text-xs">{footer}</div>
+          )
         )}
       </div>
     </div>

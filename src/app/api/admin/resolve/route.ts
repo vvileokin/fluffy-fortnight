@@ -206,6 +206,24 @@ export async function POST(request: Request) {
     console.error(`[resolve] ${question_id}: paid ${awarded} of ${winners.length} winners`);
   }
 
+  // Bets settle alongside the flat awards. `settle_bets` pays stake × the odds
+  // the slip was accepted at, and skips anything already settled — so a
+  // re-resolved question tops up what it missed rather than paying twice. A
+  // question with no bets on it simply touches nothing.
+  const { error: betErr } = await admin.rpc("settle_bets", {
+    p_question: question_id,
+    p_correct: correct_option_id,
+  });
+  if (betErr) {
+    // Migration 0040 may not have run yet, and that must not block settling the
+    // ordinary predictions this route exists for.
+    const missing = betErr.code === "PGRST202" || betErr.code === "42883";
+    if (!missing) {
+      return NextResponse.json({ ok: false, error: betErr.message }, { status: 500 });
+    }
+    console.error("[resolve] settle_bets missing — run migration 0040");
+  }
+
   const notifs = (preds ?? [])
     .filter((p) => byId.has(p.user_id))
     .map((p) => {

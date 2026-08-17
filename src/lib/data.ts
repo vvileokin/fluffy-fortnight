@@ -877,6 +877,12 @@ export type Option = {
   label: string;
   sublabel?: string;
   reward: number;
+  /**
+   * Coefficient, on betting questions only. Payout is stake × this, so it is
+   * what the option is worth rather than `reward`, which stays the flat rate an
+   * ordinary question hands out.
+   */
+  odds?: number;
   picked?: boolean;
 };
 
@@ -890,6 +896,8 @@ export type Question = {
   deadlineISO: string;
   deadlineLabel: string;
   options: Option[];
+  /** Players stake EWC points at odds instead of collecting a flat reward. */
+  betting?: boolean;
   answered?: string; // option id
   result?: "correct" | "wrong" | "pending";
 };

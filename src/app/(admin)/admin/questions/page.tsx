@@ -20,7 +20,7 @@ const statusMeta: Record<string, { tone: "success" | "info" | "neutral"; label: 
   resolved: { tone: "neutral", label: "Розраховано" },
 };
 
-type Opt = { id: string; label: string; sublabel: string; reward: number };
+type Opt = { id: string; label: string; sublabel: string; reward: number; odds: number };
 type MatchLite = {
   id: string;
   team_a: string;
@@ -37,6 +37,7 @@ type QForm = {
   status: string;
   deadline_label: string;
   options: Opt[];
+  betting: boolean;
   isNew?: boolean;
 };
 type QRow = { id: string; match_id: string; title: string; status: string; options: Opt[] };
@@ -46,7 +47,15 @@ function teamTag(slug: string, name: string | null): string {
 }
 
 function blankOpt(): Opt {
-  return { id: `o${Math.random().toString(36).slice(2, 7)}`, label: "", sublabel: "", reward: 50 };
+  return {
+    id: `o${Math.random().toString(36).slice(2, 7)}`,
+    label: "",
+    sublabel: "",
+    reward: 50,
+    // Even money by default: a coefficient has to be typed deliberately, and
+    // 1.00 at least never pays out more than was staked by accident.
+    odds: 1,
+  };
 }
 
 export default function QuestionsAdmin() {
@@ -90,6 +99,7 @@ export default function QuestionsAdmin() {
       status: "open",
       deadline_label: "до старту матчу",
       options: [blankOpt(), blankOpt()],
+      betting: false,
       isNew: true,
     });
   }
@@ -111,7 +121,9 @@ export default function QuestionsAdmin() {
         label: o.label ?? "",
         sublabel: o.sublabel ?? "",
         reward: o.reward ?? 0,
+        odds: o.odds ?? 1,
       })),
+      betting: !!data.betting,
     });
   }
 
@@ -309,10 +321,33 @@ export default function QuestionsAdmin() {
               </Field>
             </div>
 
+            {/* Betting turns the question from "answer this and collect a flat
+                reward" into "stake EWC points at these odds". The two are
+                mutually exclusive on one question, so the toggle also decides
+                which number the rows below are asking for. */}
+            <label className="flex items-start gap-2.5 rounded-lg border border-border bg-surface-2 px-3 py-2.5">
+              <input
+                type="checkbox"
+                checked={editing.betting}
+                onChange={(e) => up({ betting: e.target.checked })}
+                className="mt-0.5 size-4 shrink-0 accent-[rgb(255_122_44)]"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-ink">
+                  Ставки на EWC поінти
+                </span>
+                <span className="block text-xs text-ink-subtle">
+                  Гравець ставить свої EWC поінти, виграш = ставка × коефіцієнт.
+                  Мінімальна ставка 50, змінити ставку не можна.
+                </span>
+              </span>
+            </label>
+
             {/* Options editor */}
             <div>
               <span className="mb-1.5 block text-xs font-semibold text-ink-muted">
-                Варіанти відповіді (мін. 2)
+                Варіанти відповіді (мін. 2) ·{" "}
+                {editing.betting ? "коефіцієнт" : "поінти за вгаданий варіант"}
               </span>
               <div className="space-y-2">
                 {editing.options.map((o, i) => (
@@ -333,14 +368,29 @@ export default function QuestionsAdmin() {
                         up({ options: editing.options.map((x, j) => (j === i ? { ...x, sublabel: e.target.value } : x)) })
                       }
                     />
-                    <input
-                      type="number"
-                      className={cn(inputCls, "w-20 tnum font-mono")}
-                      value={o.reward}
-                      onChange={(e) =>
-                        up({ options: editing.options.map((x, j) => (j === i ? { ...x, reward: Number(e.target.value) } : x)) })
-                      }
-                    />
+                    {editing.betting ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="1"
+                        title="Коефіцієнт — виграш = ставка × це число"
+                        className={cn(inputCls, "w-20 tnum font-mono")}
+                        value={o.odds}
+                        onChange={(e) =>
+                          up({ options: editing.options.map((x, j) => (j === i ? { ...x, odds: Number(e.target.value) } : x)) })
+                        }
+                      />
+                    ) : (
+                      <input
+                        type="number"
+                        title="Поінти за вгаданий варіант"
+                        className={cn(inputCls, "w-20 tnum font-mono")}
+                        value={o.reward}
+                        onChange={(e) =>
+                          up({ options: editing.options.map((x, j) => (j === i ? { ...x, reward: Number(e.target.value) } : x)) })
+                        }
+                      />
+                    )}
                     <button
                       onClick={() => up({ options: editing.options.filter((_, j) => j !== i) })}
                       className="grid size-9 shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-danger/15 hover:text-danger"

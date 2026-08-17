@@ -17,6 +17,8 @@ type Row = {
   status: string;
   deadline_label: string | null;
   options: Option[] | null;
+  /** Absent until migration 0040 runs, which reads as an ordinary question. */
+  betting?: boolean | null;
 };
 
 function toQuestion(r: Row): Question {
@@ -30,6 +32,7 @@ function toQuestion(r: Row): Question {
     deadlineISO: "",
     deadlineLabel: r.deadline_label ?? "",
     options: Array.isArray(r.options) ? r.options : [],
+    betting: !!r.betting,
   };
 }
 
