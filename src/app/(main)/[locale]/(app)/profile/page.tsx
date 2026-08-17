@@ -191,9 +191,9 @@ export default async function ProfilePage() {
       {/* Sign-in methods. Telegram is the one with a job beyond convenience —
           the EWC giveaway is gated on it — so the section earns its place on
           the page rather than hiding in a settings screen. */}
-      {/* Event money, above the account plumbing: it's the part of the profile
-          that changes week to week. Renders nothing when there's neither a bet
-          nor a team, so it can't leave an empty heading on a fresh account. */}
+      {/* Above the account plumbing: it's the part of the profile that changes
+          week to week. Renders nothing until there's a bet to show, so a fresh
+          account doesn't carry an empty drawer. */}
       <BetHistory />
 
       <section className="space-y-3">

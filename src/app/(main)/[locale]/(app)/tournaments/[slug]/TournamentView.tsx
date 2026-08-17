@@ -81,7 +81,10 @@ export function TournamentView({
           // wide and read as a banner wedged into a tab. Set to the cap height
           // of the label beside it, the same inline size the bracket heading
           // already uses, it sits as a mark rather than a second headline.
-          iconClass: "h-2.5 w-auto shrink-0",
+          // 8px, matching the mark on the match card. At the label's cap height
+          // it out-weighed the word beside it — a 5:1 lockup carries far more
+          // ink across than a letter does, so equal height reads as bigger.
+          iconClass: "h-2 w-auto shrink-0",
         }
       : { id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork },
     { id: "leaderboard", label: "Лідерборд", icon: CrownGlyph },
