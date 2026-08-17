@@ -23,11 +23,6 @@ const SOURCES = {
   streak: "/brand/streak.webp",
   /** Event currency for EWC 2026 — same solid, the event's fire palette. */
   "points-ewc": "/brand/points-ewc.webp",
-  // Daily-reward tiers: the same gem in fours and sevens. They share the single
-  // gem's optical box, so a tier reads as a denser pile rather than a bigger
-  // icon — measured at 54% and 49% ink against the single gem's 47%.
-  "points-stack": "/brand/points-stack.webp",
-  "points-pile": "/brand/points-pile.webp",
 } as const;
 
 export type BrandIconName = keyof typeof SOURCES;

@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Swords,
   DatabaseZap,
+  GitFork,
 } from "lucide-react";
 import { Brand } from "@/components/layout/Brand";
 import { createClient } from "@/lib/supabase/client";
@@ -27,6 +28,7 @@ const nav: { href: string; label: string; icon: IconType; adminOnly?: boolean }[
   { href: "/admin/import", label: "Імпорт матчів", icon: DatabaseZap },
   { href: "/admin/questions", label: "Питання", icon: Target },
   { href: "/admin/resolve", label: "Розрахунок", icon: Calculator },
+  { href: "/admin/bracket", label: "Сітка плей-офу", icon: GitFork },
   { href: "/admin/giveaways", label: "Розіграші", icon: Gift },
   { href: "/admin/content", label: "Контент", icon: LayoutTemplate },
   { href: "/admin/users", label: "Користувачі та ролі", icon: Users, adminOnly: true },

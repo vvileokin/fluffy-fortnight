@@ -65,9 +65,10 @@ export function TournamentView({
     { id: "teams", label: "Команди", icon: TeamGlyph },
     { id: "matches" as Tab, label: "Матчі", icon: SwordsGlyph },
     { id: "results", label: "Результати", icon: ResultsGlyph },
-    ...(t.isEvent
-      ? []
-      : [{ id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork }]),
+    // The event gets a predictor too, it just plays a different game: one
+    // one-shot playoff bracket for real EWC points instead of the sandbox
+    // simulator a regular tournament shows.
+    { id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork },
     { id: "leaderboard", label: "Лідерборд", icon: CrownGlyph },
   ];
 
@@ -276,10 +277,6 @@ export function TournamentView({
                 <EwcMark className="h-2.5 w-auto shrink-0 translate-y-[0.5px] text-[rgb(var(--ewc-ring))]" />
                 Сітка турніру
               </h2>
-              {/* Above the ladder, not below it: the call has to be made before
-                  the playoff starts, so it belongs where a reader meets it on
-                  the way in rather than after scrolling past four groups. */}
-              <PlayoffBracketEntry />
               <EwcBracket matches={matches} />
             </section>
           )}
@@ -320,17 +317,23 @@ export function TournamentView({
         </div>
       )}
 
-      {tab === "predictor" && (
-        <div className="rounded-xl surface-1 p-5">
-          <h2 className="text-base font-bold text-ink">Прогнозатор плейоф</h2>
-          <p className="mt-1 text-sm text-ink-subtle">
-            Версія прогнозу зберігається та блокується після дедлайну стадії.
-          </p>
-          <div className="mt-5">
-            <BracketPredictor teamSlugs={t.teamSlugs} />
+      {/* Two different things share the tab. The event's is a real, scored,
+          one-shot entry; every other tournament gets the sandbox simulator,
+          which saves nothing and pays nothing. */}
+      {tab === "predictor" &&
+        (ewc ? (
+          <PlayoffBracketEntry />
+        ) : (
+          <div className="rounded-xl surface-1 p-5">
+            <h2 className="text-base font-bold text-ink">Прогнозатор плейоф</h2>
+            <p className="mt-1 text-sm text-ink-subtle">
+              Версія прогнозу зберігається та блокується після дедлайну стадії.
+            </p>
+            <div className="mt-5">
+              <BracketPredictor teamSlugs={t.teamSlugs} />
+            </div>
           </div>
-        </div>
-      )}
+        ))}
 
       {tab === "leaderboard" && (
         <div className="space-y-3">

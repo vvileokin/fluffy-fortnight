@@ -126,31 +126,82 @@ export const EWC_GROUPS: EwcGroup[] = [
 ];
 
 /**
- * Playoffs — a 16-team single elimination plus a third-place decider.
+ * Playoffs — a 16-team single elimination.
  *
- * Every slot is TBD: the sixteen qualifiers aren't known until all four groups
- * finish, and the organiser hasn't published the seeding. Rendering the shape
- * now is still useful — it tells a player how far the event runs and what the
- * ladder looks like — so the rounds exist with empty slots rather than being
- * hidden entirely.
+ * The organiser has published the seeding, so the round of 16 is fixed team
+ * pairs exactly like a group's opening round. Everything above it is
+ * winner-of edges, which means the ladder fills itself in as an admin resolves
+ * matches — same mechanism the groups already use, no second data store.
  */
-export type EwcPlayoffRound = { id: string; label: string; format: string; matches: number };
+export type EwcPlayoffRound = {
+  id: string;
+  label: string;
+  format: "BO1" | "BO3" | "BO5";
+  matches: EwcMatchNode[];
+};
 
-export const EWC_PLAYOFFS: EwcPlayoffRound[] = [
-  { id: "ro16", label: "1/8 фіналу", format: "BO3", matches: 8 },
-  { id: "qf", label: "1/4 фіналу", format: "BO3", matches: 4 },
-  { id: "sf", label: "1/2 фіналу", format: "BO3", matches: 2 },
-  { id: "gf", label: "Гранд фінал", format: "BO5", matches: 1 },
+/** The published round-of-16 draw, top to bottom. Fixed — never re-seeded. */
+const PLAYOFF_RO16: [string, string][] = [
+  ["g2", "astralis"],
+  ["furia", "aurora"],
+  ["fut", "magic"],
+  ["gamerlegion", "mouz"],
+  ["natus", "legacy"],
+  ["falcons", "mongolz"],
+  ["faze", "vitality"],
+  ["b8", "spirit"],
 ];
 
-export const EWC_THIRD_PLACE: EwcPlayoffRound = {
-  id: "third",
-  label: "Матч за 3-тє місце",
+const ro16: EwcMatchNode[] = PLAYOFF_RO16.map(([x, y], i) => ({
+  id: `po-r${i + 1}`,
+  round: "1/8 фіналу",
   format: "BO3",
-  matches: 1,
+  a: team(x),
+  b: team(y),
+}));
+
+// Adjacent pairs feed each round, which is what makes the ladder narrow the way
+// the published bracket draws it: r1/r2 meet in the top quarter, r3/r4 below it.
+const quarters: EwcMatchNode[] = [0, 2, 4, 6].map((i, n) => ({
+  id: `po-qf${n + 1}`,
+  round: "1/4 фіналу",
+  format: "BO3",
+  a: win(ro16[i].id),
+  b: win(ro16[i + 1].id),
+}));
+
+const semis: EwcMatchNode[] = [0, 2].map((i, n) => ({
+  id: `po-sf${n + 1}`,
+  round: "1/2 фіналу",
+  format: "BO3",
+  a: win(quarters[i].id),
+  b: win(quarters[i + 1].id),
+}));
+
+const grandFinal: EwcMatchNode = {
+  id: "po-gf",
+  round: "Гранд фінал",
+  format: "BO5",
+  a: win(semis[0].id),
+  b: win(semis[1].id),
 };
+
+export const EWC_PLAYOFFS: EwcPlayoffRound[] = [
+  { id: "ro16", label: "1/8 фіналу", format: "BO3", matches: ro16 },
+  { id: "qf", label: "1/4 фіналу", format: "BO3", matches: quarters },
+  { id: "sf", label: "1/2 фіналу", format: "BO3", matches: semis },
+  { id: "gf", label: "Гранд фінал", format: "BO5", matches: [grandFinal] },
+];
+
+/** The sixteen in the playoff draw, in bracket order. */
+export const EWC_PLAYOFF_TEAMS: string[] = PLAYOFF_RO16.flat();
 
 /** All node ids in a group, in bracket order — used to look up admin matches. */
 export function groupNodes(g: EwcGroup): EwcMatchNode[] {
   return [...g.upper.opening, ...g.upper.semis, ...g.lower.round1, ...g.lower.semis];
+}
+
+/** Every playoff node, shallowest round first — feeders before their consumers. */
+export function playoffNodes(): EwcMatchNode[] {
+  return EWC_PLAYOFFS.flatMap((r) => r.matches);
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCompleteBracket, type BracketPicks } from "@/lib/bracket-scoring";
+import { EWC_PLAYOFF_TEAMS } from "@/lib/ewc-bracket";
 import { getMatches } from "@/lib/db/matches";
 
 const SLUG = "ewc-2026";
@@ -9,22 +10,24 @@ const SLUG = "ewc-2026";
 /**
  * The playoff shuts the moment the first playoff match starts.
  *
- * Read from the matches themselves rather than a date typed into a config: the
- * schedule moves, and a hardcoded deadline that drifts past the first game
- * would let someone submit a bracket with a result already on the board.
+ * The field is the published draw, not whatever fixtures an admin happens to
+ * have created — the sixteen are known and the form should be fillable now,
+ * rather than waiting on eight rows being typed in to unlock itself.
+ *
+ * The deadline still reads from the matches rather than a date in a config:
+ * the schedule moves, and a hardcoded deadline that drifts past the first game
+ * would let someone submit a bracket with a result already on the board. No
+ * playoff fixture existing yet simply means nothing has started.
  */
 async function playoffLock() {
   const matches = await getMatches();
-  const playoff = matches.filter(
-    (m) => m.tournamentSlug === SLUG && /playoff|плей|1\/8|1\/4|1\/2|фінал/i.test(m.stage ?? ""),
+  const started = matches.some(
+    (m) =>
+      m.tournamentSlug === SLUG &&
+      m.status !== "upcoming" &&
+      /playoff|плей|1\/8|1\/4|1\/2|фінал/i.test(m.stage ?? ""),
   );
-  if (playoff.length === 0) return { open: false, started: false, teams: [] as string[] };
-
-  const started = playoff.some((m) => m.status !== "upcoming");
-  // The sixteen names come from the playoff fixtures an admin has created, so
-  // the form can't be filled before the field is actually known.
-  const teams = [...new Set(playoff.flatMap((m) => [m.a, m.b]))].filter(Boolean);
-  return { open: !started && teams.length >= 16, started, teams };
+  return { open: !started, started, teams: EWC_PLAYOFF_TEAMS };
 }
 
 export async function GET() {

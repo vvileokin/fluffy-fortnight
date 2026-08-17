@@ -48,27 +48,6 @@ const ICONS = [
     out: "public/brand/points-ewc.webp",
     optical: 0.86,
   },
-  // Daily-reward tiers. These two arrived rendered on black with a glow rather
-  // than on transparency, so they need lifting before the usual treatment —
-  // see `liftFromBlack`.
-  //
-  // Same 0.86 box as the single gem, deliberately. Measured, a cluster fills
-  // 73% of the artboard against the single gem's 47%, so letting them fill
-  // would have made a tier icon read nearly twice as heavy as the currency it
-  // is counting. Sharing the box lets the extra gems carry the tier on their
-  // own — denser, not bigger.
-  {
-    src: "C:/Users/LNU/Downloads/ChatGPT Image 16. Aug. 2026, 22_36_55.png",
-    out: "public/brand/points-stack.webp",
-    optical: 0.86,
-    liftFromBlack: true,
-  },
-  {
-    src: "C:/Users/LNU/Downloads/ChatGPT Image 16. Aug. 2026, 22_45_34.png",
-    out: "public/brand/points-pile.webp",
-    optical: 0.86,
-    liftFromBlack: true,
-  },
 ];
 
 /**

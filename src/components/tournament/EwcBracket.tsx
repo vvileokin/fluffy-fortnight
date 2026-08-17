@@ -7,8 +7,8 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import {
   EWC_GROUPS,
   EWC_PLAYOFFS,
-  EWC_THIRD_PLACE,
   groupNodes,
+  playoffNodes,
   type EwcGroup,
   type EwcMatchNode,
   type SlotSource,
@@ -62,11 +62,12 @@ function useResolver(matches: Match[]) {
     }
     const byNode = new Map<string, Match>();
 
-    // Two passes: the first fills every slot whose teams are already known
-    // (the opening round), the second uses those results to resolve the rounds
-    // that depend on them. Two is enough for a group — nothing here is deeper.
-    const all = EWC_GROUPS.flatMap(groupNodes);
-    for (let pass = 0; pass < 3; pass++) {
+    // Repeated passes: the first fills every slot whose teams are already known
+    // (the opening rounds), each later one uses those results to resolve the
+    // rounds that depend on them. The playoff ladder is four deep, so it needs
+    // one pass per round to reach the grand final.
+    const all = [...EWC_GROUPS.flatMap(groupNodes), ...playoffNodes()];
+    for (let pass = 0; pass < 5; pass++) {
       for (const node of all) {
         if (byNode.has(node.id)) continue;
         const a = resolveSlot(node.a, byNode);
@@ -189,17 +190,27 @@ function BracketMatch({ r }: { r: Resolved }) {
 
 function Column({
   title,
+  spread,
   children,
 }: {
   title: string;
+  /** Spread the cards down the column instead of stacking them at the top. */
+  spread?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-w-[11.5rem] flex-1">
+    <div className="flex min-w-[11.5rem] flex-1 flex-col">
       <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-wide text-white/40">
         {title}
       </p>
-      <div className="flex flex-col gap-2.5">{children}</div>
+      <div
+        className={cn(
+          "flex flex-1 flex-col gap-2.5",
+          spread && "justify-around",
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -271,20 +282,6 @@ function GroupPanel({
   );
 }
 
-function PlayoffSlot() {
-  return (
-    <div className="overflow-hidden rounded-lg bg-black/35 shadow-[inset_0_0_0_1px_rgb(255_120_50/0.12)]">
-      <div className="flex items-center justify-between gap-2 bg-white/[0.03] px-2.5 py-1 text-[0.625rem] font-semibold uppercase tracking-wide text-white/30">
-        <span>TBD</span>
-      </div>
-      <div className="[&>*+*]:shadow-[0_-1px_0_0_rgb(255_255_255/0.07)]">
-        <Side />
-        <Side />
-      </div>
-    </div>
-  );
-}
-
 export function EwcBracket({ matches }: { matches: Match[] }) {
   const resolve = useResolver(matches);
 
@@ -293,17 +290,15 @@ export function EwcBracket({ matches }: { matches: Match[] }) {
       {EWC_GROUPS.map((g) => (
         <GroupPanel key={g.id} group={g} resolve={resolve} defaultOpen={false} />
       ))}
-
-      {/* Playoffs — collapsed like the groups. Every slot is TBD: the sixteen
-          qualifiers aren't known until all four groups finish. Showing the
-          ladder anyway tells a player how far the event runs. */}
-      <PlayoffsPanel />
+      {/* Open by default now that the draw is published — the playoff ladder is
+          the part of the event a visitor came to look at. */}
+      <PlayoffsPanel resolve={resolve} />
     </div>
   );
 }
 
-function PlayoffsPanel() {
-  const [open, setOpen] = React.useState(false);
+function PlayoffsPanel({ resolve }: { resolve: (n: EwcMatchNode) => Resolved }) {
+  const [open, setOpen] = React.useState(true);
   return (
     <div className="ewc-aura-card overflow-hidden rounded-xl">
       <button
@@ -321,24 +316,14 @@ function PlayoffsPanel() {
       </button>
       {open && (
         <div className="no-scrollbar flex gap-4 overflow-x-auto px-4 pb-4">
+          {/* Each round holds half as many cards as the one before it, so
+              spreading them keeps a match sitting between the two it feeds on
+              from — the read a bracket lives or dies by. */}
           {EWC_PLAYOFFS.map((r) => (
-            <Column key={r.id} title={r.label}>
-              {Array.from({ length: r.matches }, (_, i) => (
-                <PlayoffSlot key={i} />
+            <Column key={r.id} title={r.label} spread={r.id !== "ro16"}>
+              {r.matches.map((n) => (
+                <BracketMatch key={n.id} r={resolve(n)} />
               ))}
-              {/* The decider sits under the final it shadows, not beside it as
-                  a fifth round — that's the empty space every earlier column
-                  leaves as the ladder narrows, and it's where a bracket
-                  conventionally puts this match. Same column as Grand final,
-                  so it lines up under it rather than floating off to the side. */}
-              {r.id === "gf" && (
-                <div className="mt-4 border-t border-white/10 pt-4">
-                  <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-wide text-white/40">
-                    {EWC_THIRD_PLACE.label}
-                  </p>
-                  <PlayoffSlot />
-                </div>
-              )}
             </Column>
           ))}
         </div>

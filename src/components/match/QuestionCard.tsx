@@ -74,6 +74,30 @@ export function QuestionCard({
   // (PandaScore, admin-created) exist on the match but not in the static
   // catalog — fnatic is one of them.
   const sides = match ? [matchTeam(match, "a"), matchTeam(match, "b")] : [];
+
+  /**
+   * Which side(s) a scoreline belongs to — "2:0" is the home team, "0:2" the
+   * away one, "2:1 / 1:2" is either.
+   *
+   * A score option names a team just as plainly as a winner option does, it
+   * just spells it with digits. Reading it back out means the exact-score card
+   * can wear the same crests as the winner card above it, instead of three
+   * identical grey dots that make the reader map "2:0" onto a side themselves.
+   */
+  function scoreCrests(label: string) {
+    if (sides.length !== 2) return null;
+    const legs = label.split("/").map((s) => s.trim());
+    const sidesHit = new Set<0 | 1>();
+    for (const leg of legs) {
+      const m = /^(\d+)\s*[:\-–]\s*(\d+)$/.exec(leg);
+      if (!m) return null; // not a scoreline at all — leave it to the dot
+      const [x, y] = [Number(m[1]), Number(m[2])];
+      if (x === y) return null; // a draw names nobody
+      sidesHit.add(x > y ? 0 : 1);
+    }
+    if (sidesHit.size === 0) return null;
+    return [...sidesHit].sort().map((i) => sides[i]);
+  }
   function resolveTeam(label: string) {
     const key = label.trim().toLowerCase();
     // First check exact match in match sides
@@ -159,6 +183,16 @@ export function QuestionCard({
           {question.options.map((opt) => {
             const selected = picked === opt.id;
             const optTeam = resolveTeam(opt.label);
+            // Only for exact-score questions: a "2:0" on a map-count or
+            // over/under question isn't naming a side and must keep its dot.
+            const crests =
+              !optTeam && question.kind === "exact_score"
+                ? scoreCrests(opt.label)
+                : null;
+            // The plate is tinted by whichever side the option backs. Split
+            // scorelines back both, so they stay neutral rather than picking
+            // one team's colour to stand for a two-team answer.
+            const tint = optTeam ?? (crests?.length === 1 ? crests[0] : undefined);
             return (
               <button
                 key={opt.id}
@@ -166,9 +200,9 @@ export function QuestionCard({
                 disabled={locked || upcoming}
                 aria-pressed={selected}
                 style={
-                  optTeam
+                  tint
                     ? ({
-                        backgroundImage: `linear-gradient(100deg, color-mix(in oklch, ${optTeam.brand} ${selected ? 26 : 13}%, transparent), transparent 68%)`,
+                        backgroundImage: `linear-gradient(100deg, color-mix(in oklch, ${tint.brand} ${selected ? 26 : 13}%, transparent), transparent 68%)`,
                       } as CSSProperties)
                     : undefined
                 }
@@ -200,6 +234,29 @@ export function QuestionCard({
               >
                 {optTeam ? (
                   <TeamLogo team={optTeam} size="cardCrest" />
+                ) : crests ? (
+                  // Same 34px crest as a winner option — a split scoreline just
+                  // shows both, overlapped, so the pair still reads as one mark
+                  // in the slot rather than two separate logos competing with
+                  // the label for the row's width.
+                  <span className="flex shrink-0 items-center">
+                    {crests.map((t, i) => (
+                      <span
+                        key={t.slug}
+                        className={cn(
+                          "inline-flex rounded-[8px]",
+                          // Two dark brands overlapping would read as one
+                          // blob, so the upper crest casts a hard edge onto
+                          // the one behind it. A shadow, not a fake plate
+                          // colour — it sits right on whichever plate is
+                          // under it, event or season.
+                          i > 0 && "-ml-3.5 shadow-[-2px_0_0_0_rgb(0_0_0/0.55)]",
+                        )}
+                      >
+                        <TeamLogo team={t} size="cardCrest" />
+                      </span>
+                    ))}
+                  </span>
                 ) : (
                   <span
                     className={cn(
@@ -228,7 +285,12 @@ export function QuestionCard({
                     >
                       {opt.label}
                     </span>
-                    {opt.sublabel && (
+                    {/* A score option's sublabel is the team tags ("MOUZ /
+                        PARI") — which the crests beside it now say in full, so
+                        keeping it would repeat the answer and, being
+                        `shrink-0`, squeeze the scoreline itself down to an
+                        ellipsis. */}
+                    {opt.sublabel && !crests && (
                       <span className="shrink-0 text-[0.6875rem] text-ink-subtle">
                         {opt.sublabel}
                       </span>
