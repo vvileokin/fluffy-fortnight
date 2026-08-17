@@ -46,6 +46,7 @@ export function QuestionCard({
   const multiplier = streakMultiplier(streak);
   const [picked, setPicked] = React.useState<string | undefined>();
   const [justSaved, setJustSaved] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
   const [bet, setBet] = React.useState<Bet | null>(null);
   const [betNonce, setBetNonce] = React.useState(0);
 
@@ -117,14 +118,31 @@ export function QuestionCard({
       if (!bet) setPicked(id);
       return;
     }
+    const previous = picked;
     setPicked(id);
     setJustSaved(true);
-    await createClient()
+    const { error } = await createClient()
       .from("predictions")
       .upsert(
         { user_id: user.id, question_id: question.id, option_id: id, updated_at: new Date().toISOString() },
         { onConflict: "user_id,question_id" },
       );
+    // The window is enforced by a trigger now, so a refusal arrives here rather
+    // than being prevented by the disabled state. Claiming "Збережено" over a
+    // write the database threw out is the one outcome worse than refusing:
+    // the player walks away believing they answered.
+    if (error) {
+      setPicked(previous);
+      setJustSaved(false);
+      setSaveError(
+        /почався|закрито|розрахован/i.test(error.message)
+          ? error.message
+          : "Не вдалося зберегти",
+      );
+      window.setTimeout(() => setSaveError(null), 2600);
+      return;
+    }
+    setSaveError(null);
     window.setTimeout(() => setJustSaved(false), 1600);
   }
 
@@ -190,7 +208,11 @@ export function QuestionCard({
       </span>
     ) : null;
 
-  const footer = justSaved ? (
+  const footer = saveError ? (
+    <span role="alert" className="font-semibold text-danger">
+      {saveError}
+    </span>
+  ) : justSaved ? (
     <span className="flex items-center gap-1 font-semibold text-success">
       <Check className="size-3.5" strokeWidth={3} /> Збережено
     </span>

@@ -36,6 +36,7 @@ export function BountyPredictor() {
   const [picks, setPicks] = React.useState<Picks>({});
   const [stages, setStages] = React.useState<Record<string, StageState>>({});
   const [saved, setSaved] = React.useState(false);
+  const [pickError, setPickError] = React.useState<string | null>(null);
 
   const meta = bountyStages.find((s) => s.id === active)!;
   const state = stages[active];
@@ -122,15 +123,31 @@ export function BountyPredictor() {
       router.push("/login");
       return;
     }
+    const previous = picks[active]?.[low];
     setPicks((prev) => ({ ...prev, [active]: { ...(prev[active] ?? {}), [low]: high } }));
     setSaved(false);
+    setPickError(null);
     createClient()
       .from("bounty_picks")
       .upsert(
         { user_id: user.id, stage_id: active, low_slug: low, high_slug: high },
         { onConflict: "user_id,stage_id,low_slug" },
       )
-      .then(() => {});
+      .then(({ error }) => {
+        // The stage window is enforced in the database now, so a refusal lands
+        // here instead of being headed off by the disabled state. Leaving the
+        // pick on screen would tell the player they had drafted something the
+        // database never accepted.
+        if (!error) return;
+        setPicks((prev) => {
+          const stage = { ...(prev[active] ?? {}) };
+          if (previous) stage[low] = previous;
+          else delete stage[low];
+          return { ...prev, [active]: stage };
+        });
+        setPickError(error.message || "Не вдалося зберегти");
+        window.setTimeout(() => setPickError(null), 2600);
+      });
   }
 
   /** Un-pick one pair — frees that opponent for the other pairs. */
@@ -323,6 +340,11 @@ export function BountyPredictor() {
                 {saved ? <><Check className="size-4" strokeWidth={3} /> Прогноз збережено</> : "Зберегти bounty-прогноз"}
               </button>
               </div>
+              {pickError && (
+                <p role="alert" className="mt-2 text-right text-xs font-semibold text-danger">
+                  {pickError}
+                </p>
+              )}
             </div>
           )}
           </>
