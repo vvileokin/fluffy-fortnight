@@ -62,9 +62,13 @@ export function BetSlip({
     const won = settled && (bet.payout ?? 0) > 0;
     return (
       <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-black/30 px-2.5 py-2">
-        <span className="tnum flex items-center gap-1.5 text-xs font-semibold text-white/70">
-          <Check className="size-3.5 shrink-0 text-[rgb(255_154_64)]" strokeWidth={3} />
-          {formatInt(bet.stake)} × {bet.odds}
+        {/* What it cost, in silver, carrying the same ember type as the top
+            bar's balance — the figure is points, so it is written the way
+            points are written everywhere else on the site. */}
+        <span className="tnum flex items-center gap-1 font-mono text-xs font-bold leading-none text-[rgb(255_154_64)]">
+          <BrandIcon name="points-stake" className="size-4" />
+          {formatInt(bet.stake)}
+          <span className="ml-0.5 text-white/45">× {bet.odds}</span>
         </span>
         <span
           className={cn(
@@ -217,8 +221,13 @@ export function BetSlip({
           // player can already see is dark.
           "Обери варіант"
         ) : (
+          // Silver in, ember out. The two figures on this button are not the
+          // same kind of thing — one leaves your balance for certain, the other
+          // only might arrive — and two identical gems either side of an arrow
+          // said they were. The metal now carries the difference, so the button
+          // is readable without reading it.
           <span className="tnum flex items-center gap-1.5 font-mono">
-            <BrandIcon name="points-ewc" className="size-4" />
+            <BrandIcon name="points-stake" className="size-4" />
             {formatInt(stake)}
             <ArrowRight className="size-3.5 opacity-60" strokeWidth={3} />
             <BrandIcon name="points-ewc" className="size-4" />

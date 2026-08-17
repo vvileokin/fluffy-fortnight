@@ -48,6 +48,17 @@ const ICONS = [
     out: "public/brand/points-ewc.webp",
     optical: 0.86,
   },
+  {
+    // The stake gem: the same solid as the EWC one, desaturated to silver. On a
+    // bet slip the points you put in and the points you can win are two
+    // different propositions, and colour is the fastest way to say so — silver
+    // spends, ember returns. Identical geometry to `points-ewc`, so it takes
+    // the identical optical inset and the pair line up wherever they sit
+    // together, which on the slip is side by side across an arrow.
+    src: "C:/Users/LNU/Downloads/Untitled - 11. August 2026 um 23.18.53 2.png",
+    out: "public/brand/points-stake.webp",
+    optical: 0.86,
+  },
 ];
 
 /**

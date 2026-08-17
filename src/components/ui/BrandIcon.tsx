@@ -23,6 +23,12 @@ const SOURCES = {
   streak: "/brand/streak.webp",
   /** Event currency for EWC 2026 — same solid, the event's fire palette. */
   "points-ewc": "/brand/points-ewc.webp",
+  /**
+   * The same solid in silver — what a bet *costs*, against the ember of what it
+   * returns. Identical geometry to `points-ewc`, so the two line up when they
+   * sit either side of an arrow.
+   */
+  "points-stake": "/brand/points-stake.webp",
 } as const;
 
 export type BrandIconName = keyof typeof SOURCES;
