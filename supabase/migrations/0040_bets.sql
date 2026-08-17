@@ -68,10 +68,10 @@ begin
     return jsonb_build_object('ok', false, 'error', 'forbidden');
   end if;
 
-  -- No floor beyond "a positive number of points". A minimum only ever bites
-  -- the players with the least to stake, which is exactly the group a small
-  -- bet is worth the most to.
-  if p_stake is null or p_stake < 1 then
+  -- Superseded by 0046, which drops this floor to 1. Left as it shipped:
+  -- editing an applied migration changes nothing in a database that already
+  -- ran it, and only hides what that database actually contains.
+  if p_stake is null or p_stake < 50 then
     return jsonb_build_object('ok', false, 'error', 'min_stake');
   end if;
 
