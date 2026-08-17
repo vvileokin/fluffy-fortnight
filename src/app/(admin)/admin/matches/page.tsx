@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { ImageField } from "@/components/admin/ImageField";
 import { teams, allTournaments, getTeam, inkForColor, type Team } from "@/lib/data";
+import { EWC_STAGES } from "@/lib/ewc-bracket";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -557,7 +558,32 @@ export default function MatchesAdmin() {
                 </select>
               </Field>
               <Field label="Стадія">
-                <input className={inputCls} value={editing.stage} onChange={(e) => up({ stage: e.target.value })} placeholder="Півфінал" />
+                {/* A closed list on the event, free text everywhere else. The
+                    favourite-team payout is looked up by round, and above the
+                    round of 16 there are no fixed pairs to fall back on — so a
+                    hand-typed "Плей-оф" pays nobody and reports nothing wrong.
+                    Kept as a datalist rather than a select so an existing
+                    off-list value stays visible instead of being silently
+                    rewritten to the first option. */}
+                <input
+                  className={inputCls}
+                  list={editing.tournament_slug === "ewc-2026" ? "ewc-stages" : undefined}
+                  value={editing.stage}
+                  onChange={(e) => up({ stage: e.target.value })}
+                  placeholder={editing.tournament_slug === "ewc-2026" ? "обери зі списку" : "Півфінал"}
+                />
+                <datalist id="ewc-stages">
+                  {EWC_STAGES.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+                {editing.tournament_slug === "ewc-2026" &&
+                  editing.stage.trim() !== "" &&
+                  !(EWC_STAGES as readonly string[]).includes(editing.stage) && (
+                    <p className="mt-1 text-xs font-semibold text-warning">
+                      Не зі списку — виплати за улюблену команду не спрацюють.
+                    </p>
+                  )}
               </Field>
             </div>
 

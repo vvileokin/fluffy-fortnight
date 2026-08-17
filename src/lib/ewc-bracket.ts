@@ -196,6 +196,26 @@ export const EWC_PLAYOFFS: EwcPlayoffRound[] = [
 /** The sixteen in the playoff draw, in bracket order. */
 export const EWC_PLAYOFF_TEAMS: string[] = PLAYOFF_RO16.flat();
 
+/**
+ * The only stage labels an EWC match may carry.
+ *
+ * Free text here is a money bug, not a tidiness one. Payouts for the favourite
+ * team are looked up by round, and above the round of 16 there are no fixed
+ * pairs to fall back on — so a fixture typed as "Плей-оф" (which is what all
+ * eight currently say) or "QF" resolves to no round, pays nobody, and raises no
+ * error while doing it. A closed list is what makes the label answerable.
+ */
+export const EWC_STAGES = [
+  "Group A",
+  "Group B",
+  "Group C",
+  "Group D",
+  "1/8 фіналу",
+  "1/4 фіналу",
+  "1/2 фіналу",
+  "Гранд фінал",
+] as const;
+
 /** All node ids in a group, in bracket order — used to look up admin matches. */
 export function groupNodes(g: EwcGroup): EwcMatchNode[] {
   return [...g.upper.opening, ...g.upper.semis, ...g.lower.round1, ...g.lower.semis];

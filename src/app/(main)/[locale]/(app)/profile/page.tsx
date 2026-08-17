@@ -9,6 +9,7 @@ import { ProfileEditButton } from "@/components/profile/ProfileEditButton";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { PredictionHistory, type HistoryItem } from "@/components/profile/PredictionHistory";
 import { Inventory } from "@/components/profile/Inventory";
+import { BetHistory } from "@/components/profile/BetHistory";
 import { getInventory } from "@/lib/db/inventory";
 import { createClient } from "@/lib/supabase/server";
 import { getQuestion } from "@/lib/data";
@@ -190,6 +191,11 @@ export default async function ProfilePage() {
       {/* Sign-in methods. Telegram is the one with a job beyond convenience —
           the EWC giveaway is gated on it — so the section earns its place on
           the page rather than hiding in a settings screen. */}
+      {/* Event money, above the account plumbing: it's the part of the profile
+          that changes week to week. Renders nothing when there's neither a bet
+          nor a team, so it can't leave an empty heading on a fresh account. */}
+      <BetHistory />
+
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
           <KeyRound className="size-4 text-ink-subtle" /> Способи входу

@@ -5,17 +5,53 @@ import { createAdminClient } from "@/lib/supabase/admin";
 /** Any positive whole number of points. Mirrored in `place_bet`. */
 export const MIN_STAKE = 1;
 
-/** This player's slip for one question, so the card can render it back. */
+/**
+ * One slip, or the whole history.
+ *
+ * `?question=` is the card asking about itself; no parameter is the profile
+ * asking for everything, newest first, with the question titles joined on so a
+ * settled slip still says what it was a bet on.
+ */
 export async function GET(request: Request) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ ok: true, signedIn: false, bet: null });
+  if (!user) return NextResponse.json({ ok: true, signedIn: false, bet: null, bets: [] });
 
   const questionId = new URL(request.url).searchParams.get("question");
   if (!questionId) {
-    return NextResponse.json({ ok: false, error: "missing_question" }, { status: 400 });
+    const { data } = await createAdminClient()
+      .from("bets")
+      .select("question_id, option_id, stake, odds, payout, settled_at, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    const rows = data ?? [];
+
+    // Titles and option labels live on the question, and a slip outlives the
+    // card it was placed from — without this the history reads as bare ids.
+    const ids = [...new Set(rows.map((b) => b.question_id))];
+    const { data: qs } = ids.length
+      ? await createAdminClient().from("questions").select("id, title, options").in("id", ids)
+      : { data: [] };
+    const byId = new Map((qs ?? []).map((q) => [q.id, q]));
+
+    return NextResponse.json({
+      ok: true,
+      signedIn: true,
+      bets: rows.map((b) => {
+        const q = byId.get(b.question_id) as
+          | { title: string; options: { id: string; label: string }[] }
+          | undefined;
+        return {
+          ...b,
+          title: q?.title ?? b.question_id,
+          option: (Array.isArray(q?.options) ? q.options : []).find((o) => o.id === b.option_id)
+            ?.label,
+        };
+      }),
+    });
   }
 
   const { data } = await createAdminClient()

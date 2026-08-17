@@ -7,6 +7,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { getTeam } from "@/lib/data";
 import { EWC_PLAYOFF_TEAMS } from "@/lib/ewc-bracket";
 import { BRACKET_SCORING, BRACKET_ROUND_SIZES } from "@/lib/bracket-scoring";
+import { underdogTier } from "@/lib/favourite-team";
 import { cn } from "@/lib/utils";
 
 /**
@@ -30,6 +31,7 @@ export default function BracketAdmin() {
     total: number;
     scored: number;
     closed: boolean;
+    favourites: Record<string, number>;
   } | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [locking, setLocking] = React.useState(false);
@@ -37,7 +39,13 @@ export default function BracketAdmin() {
   const load = React.useCallback(async () => {
     const res = await fetch("/api/admin/bracket/score", { cache: "no-store" });
     const j = await res.json().catch(() => ({}));
-    if (j.ok) setStats({ total: j.total, scored: j.scored, closed: j.closed });
+    if (j.ok)
+      setStats({
+        total: j.total,
+        scored: j.scored,
+        closed: j.closed,
+        favourites: j.favourites ?? {},
+      });
   }, []);
 
   async function toggleLock() {
@@ -151,6 +159,48 @@ export default function BracketAdmin() {
             </div>
           </div>
         </Panel>
+
+        {/* Who backed whom. Sorted by weight of money rather than by seed: the
+            question an admin actually has is "where is the exposure", and the
+            underdog band means a handful of picks on a ×2 can outweigh a crowd
+            on a favourite. */}
+        {stats && Object.keys(stats.favourites).length > 0 && (
+          <Panel>
+            <div className="flex items-center justify-between gap-3 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-4 py-3">
+              <p className="text-sm font-bold text-ink">Улюблені команди</p>
+              <p className="text-xs text-ink-subtle">
+                обрали{" "}
+                <span className="tnum font-bold">
+                  {Object.values(stats.favourites).reduce((a, b) => a + b, 0)}
+                </span>{" "}
+                гравців
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5 p-4">
+              {Object.entries(stats.favourites)
+                .sort((a, b) => b[1] - a[1])
+                .map(([slug, n]) => {
+                  const t = getTeam(slug);
+                  const band = underdogTier(slug);
+                  return (
+                    <span
+                      key={slug}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2 py-1 text-xs font-semibold text-ink"
+                    >
+                      <TeamLogo team={t} size="xs" />
+                      {t.tag}
+                      <span className="tnum text-ink-muted">{n}</span>
+                      {band && band.multiplier > 1 && (
+                        <span className="tnum rounded bg-accent/15 px-1 py-px font-mono text-[0.625rem] font-bold text-accent">
+                          ×{band.multiplier}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
+            </div>
+          </Panel>
+        )}
 
         {ROUNDS.map((r) => {
           // Each round is chosen out of the one before it, so a name can't

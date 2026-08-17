@@ -57,11 +57,23 @@ export async function GET() {
       .eq("tournament_slug", "ewc-2026")
       .not("scored_at", "is", null),
   ]);
+  // Who backed whom, so an admin can see the spread before the playoff runs —
+  // and afterwards, work out what the underdog band actually cost.
+  const { data: favs } = await admin
+    .from("favourite_teams")
+    .select("team_slug")
+    .eq("tournament_slug", "ewc-2026");
+  const favourites: Record<string, number> = {};
+  for (const f of (favs ?? []) as { team_slug: string }[]) {
+    favourites[f.team_slug] = (favourites[f.team_slug] ?? 0) + 1;
+  }
+
   return NextResponse.json({
     ok: true,
     total: total ?? 0,
     scored: scored ?? 0,
     closed: !!settings?.bracket_closed,
+    favourites,
   });
 }
 
@@ -90,6 +102,22 @@ export async function POST(request: Request) {
   }
 
   const scored = Number(data ?? 0);
+
+  // Everything else that pays tells the player it paid; the bracket was the one
+  // silent payout, which is the worst kind — points appear and nothing accounts
+  // for them. Read back after scoring so the figure quoted is the one banked.
+  const { data: paid } = await admin
+    .from("bracket_predictions")
+    .select("user_id, points")
+    .eq("tournament_slug", slug)
+    .not("scored_at", "is", null);
+  const notifs = (paid ?? []).map((b: { user_id: string; points: number | null }) => ({
+    user_id: b.user_id,
+    kind: "reward",
+    title: `Сітка плей-офу розрахована — +${b.points ?? 0} EWC`,
+  }));
+  if (notifs.length > 0) await admin.from("notifications").insert(notifs);
+
   await logAdmin("bracket", `Розрахував сітки ${slug} — ${scored} гравцям`);
   return NextResponse.json({ ok: true, scored });
 }
