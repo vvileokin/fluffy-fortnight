@@ -8,7 +8,9 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
+import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
+import { applyStreak, streakMultiplier } from "@/lib/streak";
 import { cn } from "@/lib/utils";
 
 export function QuestionCard({
@@ -21,7 +23,11 @@ export function QuestionCard({
   match?: Match;
 }) {
   const user = useUser();
+  const { profile } = useProfile();
   const router = useRouter();
+  // Signed out, everyone sees the base rate — there's no run to multiply yet.
+  const streak = profile?.streak ?? 0;
+  const multiplier = streakMultiplier(streak);
   const [picked, setPicked] = React.useState<string | undefined>();
   const [justSaved, setJustSaved] = React.useState(false);
 
@@ -320,7 +326,16 @@ export function QuestionCard({
                     )}
                   >
                     <BrandIcon name={isEwc ? "points-ewc" : "points"} className="size-4" />
-                    +{opt.reward}
+                    {/* The multiplied figure, not the base one with an asterisk.
+                        The player is choosing between options on what each pays
+                        *them*, so the number has to already be their number —
+                        the ×N chip beside it explains where it came from. */}
+                    +{applyStreak(opt.reward, streak)}
+                    {multiplier > 1 && (
+                      <span className="rounded bg-current/15 px-1 py-px text-[0.625rem] font-bold leading-none">
+                        ×{multiplier}
+                      </span>
+                    )}
                   </span>
                 </span>
 

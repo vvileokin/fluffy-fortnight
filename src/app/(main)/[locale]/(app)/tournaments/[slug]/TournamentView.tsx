@@ -60,6 +60,8 @@ export function TournamentView({
     id: Tab;
     label: string;
     icon: React.ComponentType<{ className?: string }>;
+    /** Overrides the default height for marks that aren't roughly square. */
+    iconClass?: string;
   }[] = [
     { id: "overview", label: "Огляд", icon: TrophyGlyph },
     { id: "teams", label: "Команди", icon: TeamGlyph },
@@ -67,8 +69,20 @@ export function TournamentView({
     { id: "results", label: "Результати", icon: ResultsGlyph },
     // The event gets a predictor too, it just plays a different game: one
     // one-shot playoff bracket for real EWC points instead of the sandbox
-    // simulator a regular tournament shows.
-    { id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork },
+    // simulator a regular tournament shows — so on the event it flies the
+    // event's own mark rather than a generic bracket glyph.
+    t.skin === "ewc"
+      ? {
+          id: "predictor" as Tab,
+          label: "Прогнозатор",
+          icon: EwcMark,
+          // The wordmark is a 5:1 lockup: at the row's 16px it would run 80px
+          // wide and read as a banner wedged into a tab. Set to the cap height
+          // of the label beside it, the same inline size the bracket heading
+          // already uses, it sits as a mark rather than a second headline.
+          iconClass: "h-2.5 w-auto shrink-0",
+        }
+      : { id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork },
     { id: "leaderboard", label: "Лідерборд", icon: CrownGlyph },
   ];
 
@@ -237,7 +251,7 @@ export function TournamentView({
                   the square trophy beside them, which is why Команди read as a
                   smaller icon. Matching on height is what makes a row of mixed
                   shapes look the same size. */}
-              <tb.icon className="h-4 w-auto shrink-0" />
+              <tb.icon className={tb.iconClass ?? "h-4 w-auto shrink-0"} />
               {tb.label}
             </button>
           );

@@ -87,23 +87,35 @@ export async function recomputeStreaks(admin: unknown, userIds: string[]): Promi
   }
 
   const playedAt = (id: string) => matchById.get(id)?.start_at ?? "";
+  // Returns the run the player is on now and the longest one they ever put
+  // together. The record falls out of the same replay for free — and because
+  // the replay covers their whole resolved history, it is a true all-time
+  // best, not "the best since we started recording".
   const replay = (perMatch: Map<string, boolean[]>, eventOnly: boolean) => {
     const ids = [...perMatch.keys()]
       .filter((id) => (eventOnly ? !!matchById.get(id)?.is_event : true))
       .sort((a, b) => playedAt(a).localeCompare(playedAt(b)) || a.localeCompare(b));
     let streak = 0;
+    let best = 0;
     for (const id of ids) {
       const outcomes = perMatch.get(id)!;
       streak = outcomes.every(Boolean) ? streak + outcomes.length : 0;
+      if (streak > best) best = streak;
     }
-    return streak;
+    return { streak, best };
   };
 
   for (const userId of userIds) {
     const perMatch = byUser.get(userId) ?? new Map<string, boolean[]>();
+    const all = replay(perMatch, false);
+    const bounty = replay(perMatch, true);
     await db
       .from("profiles")
-      .update({ streak: replay(perMatch, false), bounty_streak: replay(perMatch, true) })
+      .update({
+        streak: all.streak,
+        best_streak: all.best,
+        bounty_streak: bounty.streak,
+      })
       .eq("id", userId);
   }
 }

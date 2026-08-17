@@ -26,7 +26,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("handle, avatar_url, points, bounty_points, streak")
+    .select("handle, avatar_url, points, bounty_points, streak, best_streak")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -47,6 +47,9 @@ export default async function ProfilePage() {
     "гравець";
   const points = profile?.points ?? 0;
   const streak = profile?.streak ?? 0;
+  // A record can't be behind the run currently going, even if the backfill
+  // hasn't been pressed yet — so the live streak floors it.
+  const bestStreak = Math.max(profile?.best_streak ?? 0, streak);
 
   // Season rank = players strictly above me, + 1.
   const { count: above } = await supabase
@@ -116,6 +119,10 @@ export default async function ProfilePage() {
     { label: "Місце", value: `#${rank}`, tone: "var(--accent)" },
     { label: "Поінтів", value: formatInt(points), tone: "var(--accent)", icon: "points" },
     { label: "Серія", value: String(streak), tone: "var(--accent)", icon: "streak" },
+    // The record goes next to the live run, not instead of it. A streak that
+    // has just broken reads as zero, and zero is the whole history the player
+    // had until now — the number worth keeping is the one they reached.
+    { label: "Рекорд", value: String(bestStreak), tone: "var(--accent)", icon: "streak" },
   ] as const;
 
   return (

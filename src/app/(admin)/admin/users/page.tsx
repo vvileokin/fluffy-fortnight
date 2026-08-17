@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, ShieldAlert, Loader2 } from "lucide-react";
+import { Search, ShieldAlert, Loader2, Flame } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatInt, cn } from "@/lib/utils";
@@ -29,6 +29,16 @@ export default function UsersAdmin() {
   const [loading, setLoading] = React.useState(true);
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [backfilling, setBackfilling] = React.useState(false);
+
+  async function backfillStreaks() {
+    setBackfilling(true);
+    const res = await fetch("/api/admin/streaks/backfill", { method: "POST" }).catch(() => null);
+    const j = await res?.json().catch(() => null);
+    setBackfilling(false);
+    if (j?.ok) alert(`Перераховано стріки: ${j.profiles} профілів.`);
+    else alert(j?.error || "Не вдалося перерахувати стріки");
+  }
 
   const load = React.useCallback(async (search: string) => {
     setLoading(true);
@@ -83,14 +93,27 @@ export default function UsersAdmin() {
         </div>
       )}
 
-      <div className="relative mb-4 max-w-xs">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-subtle" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Пошук за ніком"
-          className="h-10 w-full rounded-lg surface-1 pl-10 pr-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="relative max-w-xs flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-subtle" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Пошук за ніком"
+            className="h-10 w-full rounded-lg surface-1 pl-10 pr-3 text-sm text-ink placeholder:text-ink-subtle focus:border-accent focus:outline-none"
+          />
+        </div>
+        {/* Safe to press at any time: the replay derives both the current run
+            and the record from the whole resolved history, so it converges on
+            the same answer however many times it runs. */}
+        <button
+          onClick={backfillStreaks}
+          disabled={backfilling}
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-border-strong px-3 text-sm font-semibold text-ink transition-colors hover:bg-surface-2 disabled:opacity-60"
+        >
+          {backfilling ? <Loader2 className="size-4 animate-spin" /> : <Flame className="size-4" />}
+          Перерахувати стріки
+        </button>
       </div>
 
       {staff.length > 0 && (

@@ -4,6 +4,7 @@ import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/db/paginate";
 import { recomputeStreaks } from "@/lib/db/streaks";
+import { applyStreak } from "@/lib/streak";
 import { getTeam } from "@/lib/data";
 
 type OptionRow = { id: string; reward: number };
@@ -107,6 +108,8 @@ export async function POST(request: Request) {
     points: number;
     bounty_points: number;
     correct: number;
+    /** The run they came in on — this is what sets their multiplier. */
+    streak: number;
     bounty_correct: number;
     ewc_points: number | null;
     ewc_correct: number | null;
@@ -142,11 +145,23 @@ export async function POST(request: Request) {
     .filter((p) => p.option_id === correct_option_id && byId.has(p.user_id))
     .map((p) => p.user_id);
 
+  // Winners are bucketed by the multiplier they carry, so each bucket is still
+  // one atomic statement. `award_predictions` pays a single figure to a whole
+  // list, and a streak bonus is per-player — grouping is what lets both be true
+  // at once, and there are only ever three or four distinct rates.
+  const byRate = new Map<number, string[]>();
+  for (const id of winners) {
+    const paid = applyStreak(reward, byId.get(id)?.streak ?? 0);
+    const list = byRate.get(paid);
+    if (list) list.push(id);
+    else byRate.set(paid, [id]);
+  }
+
   let awarded = 0;
-  if (winners.length > 0) {
+  for (const [paid, group] of byRate) {
     const { data: touched, error: awardErr } = await admin.rpc("award_predictions", {
-      p_users: winners,
-      p_reward: reward,
+      p_users: group,
+      p_reward: paid,
       p_columns: eventColumns,
     });
     if (awardErr) {
@@ -160,37 +175,35 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: false, error: awardErr.message }, { status: 500 });
       }
       console.error("[resolve] award_predictions missing — run migration 0036");
-      for (const id of winners) {
+      for (const id of group) {
         const prof = byId.get(id)!;
         await admin
           .from("profiles")
           .update({
-            points: prof.points + reward,
+            points: prof.points + paid,
             correct: prof.correct + 1,
             ...(eventColumns === "bounty"
               ? {
-                  bounty_points: prof.bounty_points + reward,
+                  bounty_points: prof.bounty_points + paid,
                   bounty_correct: prof.bounty_correct + 1,
                 }
               : {}),
             ...(eventColumns === "ewc"
               ? {
-                  ewc_points: (prof.ewc_points ?? 0) + reward,
+                  ewc_points: (prof.ewc_points ?? 0) + paid,
                   ewc_correct: (prof.ewc_correct ?? 0) + 1,
                 }
               : {}),
           })
           .eq("id", id);
       }
-      awarded = winners.length;
+      awarded += group.length;
     } else {
-      awarded = Number(touched ?? 0);
+      awarded += Number(touched ?? 0);
     }
-    if (awarded !== winners.length) {
-      console.error(
-        `[resolve] ${question_id}: paid ${awarded} of ${winners.length} winners`,
-      );
-    }
+  }
+  if (winners.length > 0 && awarded !== winners.length) {
+    console.error(`[resolve] ${question_id}: paid ${awarded} of ${winners.length} winners`);
   }
 
   const notifs = (preds ?? [])
