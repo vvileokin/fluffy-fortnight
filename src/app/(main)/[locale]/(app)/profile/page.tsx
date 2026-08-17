@@ -178,7 +178,12 @@ export default async function ProfilePage() {
               fourth live number, which is the one thing it isn't: rank, points
               and the current run all move week to week, while this is the high
               water mark. Different kind of fact, different treatment. */}
-          <div className="ms-auto flex items-center gap-1.5 rounded-lg bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] px-2.5 py-1.5 shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--accent)_30%,transparent)]">
+          {/* Pushed to the far end only where there is an end to push to. The
+              rail wraps on a phone, so `ms-auto` stranded the plate alone on a
+              second line, hard right, with nothing across from it — which read
+              as a mistake rather than as emphasis. Wrapped inline it simply
+              follows the run it belongs to. */}
+          <div className="flex items-center gap-1.5 rounded-lg bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] px-2.5 py-1.5 shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--accent)_30%,transparent)] sm:ms-auto">
             <BrandIcon name="streak" className="order-1 size-4" />
             <dt className="order-3 text-xs leading-none text-ink-muted">Рекорд</dt>
             <dd className="tnum order-2 font-mono text-sm font-extrabold leading-none text-accent">

@@ -125,10 +125,12 @@ export default async function MatchPage({
             48px of empty plate around an 84px crest and made the header the
             tallest object on the page without carrying more information than
             the row of cards below it. */}
-        {/* Phones take the tighter inset. The hero is the tallest object on the
-            page and on a 360px screen it was pushing the first prediction card
-            below the fold; desktop keeps its full padding. */}
-        <div className="relative px-4 py-2.5 sm:px-6 sm:py-4">
+        {/* Equal on all four sides, at both sizes. It was 16/10 on phones and
+            24/16 above, so the crests sat closer to the top and bottom edges
+            than to the left and right ones and the block read as squashed
+            rather than inset. One value per breakpoint is the only way that
+            stays true as the contents change. */}
+        <div className="relative p-4 sm:p-6">
           {/* The scoreboard says this visually; the page still needs one real
               heading, and duplicating the names on screen would be noise. */}
           <h1 className="sr-only">

@@ -18,17 +18,16 @@ type Row = {
 };
 
 /**
- * Impeccable: Crafted Ledger — folded shut, with the total on the lid.
+ * Impeccable: Crafted Ledger — the three numbers, then the receipts.
  *
- * A profile is read for its headline numbers; a full list of every slip is
- * reference material, and reference material that is always open competes with
- * the things people actually came for. Closed, the row still answers the only
- * question most visits have — how am I doing — by carrying the count and the
- * running total, so opening it is a choice rather than a chore.
+ * A single net figure on a closed drawer was honest and nearly useless: −40
+ * reads the same whether it came off one unlucky call or thirty, and it can't
+ * say whether the player is bad at this or simply hasn't finished yet. Staked,
+ * returned and settled-record are the three facts that answer that, and they
+ * are cheap enough to keep on screen permanently.
  *
- * No event mark here. On the tournament page it says "this section belongs to
- * the event", but a profile has no other tournament to be confused with, so it
- * was decoration standing in a heading's light.
+ * The list stays folded. It is reference material — worth having, not worth
+ * the room it takes on a page read for its headline numbers.
  */
 export function BetHistory() {
   const [bets, setBets] = React.useState<Row[] | null>(null);
@@ -49,91 +48,119 @@ export function BetHistory() {
 
   if (!bets || bets.length === 0) return null;
 
-  // Won minus staked: the only figure worth putting on a closed drawer, since
-  // it says whether the whole exercise has been worth it. Pending slips count
-  // as neither yet.
-  const net = bets.reduce(
-    (sum, b) => (b.settled_at ? sum + (b.payout ?? 0) - b.stake : sum),
-    0,
-  );
-  const pending = bets.filter((b) => !b.settled_at).length;
+  const settled = bets.filter((b) => b.settled_at);
+  const staked = bets.reduce((s, b) => s + b.stake, 0);
+  const returned = settled.reduce((s, b) => s + (b.payout ?? 0), 0);
+  const won = settled.filter((b) => (b.payout ?? 0) > 0).length;
+  const live = bets.length - settled.length;
+  const net = returned - settled.reduce((s, b) => s + b.stake, 0);
 
   return (
-    <section>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-center gap-2.5 rounded-xl surface-1 px-3.5 py-3 text-left transition-colors hover:bg-surface-2"
-      >
-        <span className="text-sm font-bold text-ink">Ставки</span>
-        <span className="tnum text-xs text-ink-subtle">
-          {bets.length}
-          {pending > 0 && ` · ${pending} в грі`}
-        </span>
-        <span
-          className={cn(
-            "tnum ms-auto flex items-center gap-1 font-mono text-sm font-extrabold",
-            net > 0 ? "text-success" : net < 0 ? "text-ink-faint" : "text-ink-muted",
-          )}
-        >
-          {net > 0 ? "+" : ""}
-          {formatInt(net)}
-          <BrandIcon name="points-ewc" className="size-4" />
-        </span>
-        <ChevronDown
-          className={cn(
-            "size-4 shrink-0 text-ink-subtle transition-transform duration-200",
-            open && "rotate-180",
-          )}
-        />
-      </button>
+    <section className="space-y-3">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">Ставки</h2>
 
-      {open && (
-        <div className="mt-1.5 overflow-hidden rounded-xl surface-1">
-          {bets.map((b, i) => {
-            const settled = !!b.settled_at;
-            const won = settled && (b.payout ?? 0) > 0;
-            return (
-              <div
-                key={b.question_id}
-                className={cn(
-                  "flex items-center gap-3 px-3.5 py-2",
-                  i > 0 &&
-                    "shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]",
-                )}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-ink">{b.title}</p>
-                  <p className="tnum truncate text-[0.6875rem] text-ink-subtle">
-                    {b.option ? `${b.option} · ` : ""}
-                    {formatInt(b.stake)} × {b.odds}
-                  </p>
-                </div>
-                <span
-                  className={cn(
-                    "tnum flex shrink-0 items-center gap-1 font-mono text-xs font-extrabold",
-                    !settled ? "text-ink-muted" : won ? "text-success" : "text-ink-faint",
-                  )}
-                >
-                  {!settled ? (
-                    <>
-                      {formatInt(Math.floor(b.stake * b.odds))}
-                      <BrandIcon name="points-ewc" className="size-3.5" />
-                    </>
-                  ) : won ? (
-                    <>
-                      +{formatInt(b.payout ?? 0)}
-                      <BrandIcon name="points-ewc" className="size-3.5" />
-                    </>
-                  ) : (
-                    <span className="text-[0.6875rem] font-semibold">не зіграла</span>
-                  )}
+      <div className="overflow-hidden rounded-xl surface-1">
+        {/* Staked and returned are the whole story; the record underneath says
+            how it was arrived at. Pending stakes are counted as spent, because
+            they are — they have left the balance. */}
+        <div className="grid grid-cols-3 divide-x divide-[color-mix(in_oklch,var(--ink)_7%,transparent)]">
+          <Figure label="Поставлено" value={staked} />
+          <Figure label="Повернулось" value={returned} tone={net >= 0 ? "up" : "down"} />
+          <div className="px-3 py-2.5">
+            <p className="text-[0.6875rem] leading-none text-ink-subtle">Зіграло</p>
+            <p className="tnum mt-1.5 font-mono text-sm font-extrabold leading-none text-ink">
+              {won}
+              <span className="text-ink-subtle">/{settled.length || 0}</span>
+              {live > 0 && (
+                <span className="ml-1.5 font-sans text-[0.6875rem] font-semibold text-ink-subtle">
+                  +{live} в грі
                 </span>
-              </div>
-            );
-          })}
+              )}
+            </p>
+          </div>
         </div>
-      )}
+
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex w-full items-center justify-center gap-1 px-3 py-2 text-[0.6875rem] font-semibold text-ink-subtle shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          {open ? "Згорнути" : `Усі ставки · ${bets.length}`}
+          <ChevronDown
+            className={cn("size-3.5 transition-transform duration-200", open && "rotate-180")}
+          />
+        </button>
+
+        {open && (
+          <div className="shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)_inset]">
+            {bets.map((b) => {
+              const done = !!b.settled_at;
+              const win = done && (b.payout ?? 0) > 0;
+              return (
+                <div
+                  key={b.question_id}
+                  className="flex items-center gap-3 px-3.5 py-2 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_6%,transparent)]"
+                >
+                  <span
+                    className={cn(
+                      "size-1.5 shrink-0 rounded-full",
+                      !done ? "bg-accent" : win ? "bg-success" : "bg-ink-faint",
+                    )}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-ink">{b.title}</p>
+                    <p className="tnum truncate text-[0.6875rem] text-ink-subtle">
+                      {b.option ? `${b.option} · ` : ""}
+                      {formatInt(b.stake)} × {b.odds}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      "tnum flex shrink-0 items-center gap-1 font-mono text-xs font-extrabold",
+                      !done ? "text-ink-muted" : win ? "text-success" : "text-ink-faint",
+                    )}
+                  >
+                    {done && !win ? (
+                      <span className="text-[0.6875rem] font-semibold">—</span>
+                    ) : (
+                      <>
+                        {done ? "+" : ""}
+                        {formatInt(done ? (b.payout ?? 0) : Math.floor(b.stake * b.odds))}
+                        <BrandIcon name="points-ewc" className="size-3.5" />
+                      </>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
+  );
+}
+
+function Figure({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone?: "up" | "down";
+}) {
+  return (
+    <div className="px-3 py-2.5">
+      <p className="text-[0.6875rem] leading-none text-ink-subtle">{label}</p>
+      <p
+        className={cn(
+          "tnum mt-1.5 flex items-center gap-1 font-mono text-sm font-extrabold leading-none",
+          tone === "up" ? "text-success" : tone === "down" ? "text-ink" : "text-ink",
+        )}
+      >
+        {formatInt(value)}
+        <BrandIcon name="points-ewc" className="size-3.5" />
+      </p>
+    </div>
   );
 }

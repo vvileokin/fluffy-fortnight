@@ -17,10 +17,31 @@ export type Profile = {
   is_admin: boolean;
 };
 
+/**
+ * Ask every mounted `useProfile` to read the row again.
+ *
+ * Anything that moves a balance from the client — placing a bet, taking one
+ * back — calls this. Without it the deduction lands in the database and the
+ * screen goes on showing the old figure until a navigation happens, which
+ * reads exactly like the points weren't taken.
+ */
+export function refreshProfile() {
+  window.dispatchEvent(new Event(PROFILE_REFRESH));
+}
+
+const PROFILE_REFRESH = "profile:refresh";
+
 /** Current user's profile row (points, bounty, etc.), reactive to auth. */
 export function useProfile() {
   const user = useUser();
   const [profile, setProfile] = React.useState<Profile | null | undefined>(undefined);
+  const [nonce, setNonce] = React.useState(0);
+
+  React.useEffect(() => {
+    const bump = () => setNonce((n) => n + 1);
+    window.addEventListener(PROFILE_REFRESH, bump);
+    return () => window.removeEventListener(PROFILE_REFRESH, bump);
+  }, []);
 
   React.useEffect(() => {
     if (user === undefined) return; // still resolving auth
@@ -51,7 +72,7 @@ export function useProfile() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, nonce]);
 
   return { user, profile };
 }

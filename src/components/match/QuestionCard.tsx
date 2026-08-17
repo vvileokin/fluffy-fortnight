@@ -234,7 +234,12 @@ export function QuestionCard({
        page has one way of saying "this one is selected". */
     <div
       className={cn(
-        "overflow-hidden rounded-2xl",
+        // A column that fills its grid cell. Cards stretch to the tallest in
+        // their row, and with the children stacked normally the leftover
+        // height fell *below* the last one — which since the sponsor plate
+        // arrived meant a white strip stranded mid-card with empty ground
+        // under it. As a column the slack can be handed to the body instead.
+        "flex h-full flex-col overflow-hidden rounded-2xl",
         isEwc ? "ewc-match" : "surface-1",
       )}
     >
@@ -256,7 +261,9 @@ export function QuestionCard({
         </Link>
       )}
 
-      <div className="p-3">
+      {/* The body takes the slack, so the sponsor plate stays welded to the
+          bottom edge instead of floating wherever the content happened to end. */}
+      <div className="flex-1 p-3">
         {/* Just the question. The deadline chip that used to sit here read
             "до старту матчу" — a restatement of the rule every question follows,
             not a time — so it cost a rail and told nobody anything. */}

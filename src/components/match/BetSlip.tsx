@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ArrowRight, ChevronLeft, Loader2, Plus, X } from "lucide-react";
 import { BrandIcon } from "@/components/ui/BrandIcon";
+import { refreshProfile } from "@/lib/supabase/use-profile";
 import { cn, formatInt } from "@/lib/utils";
 
 /**
@@ -73,6 +74,7 @@ export function BetSlip({
       setError(out.error === "closed" ? "Прийом уже закрито" : "Не вдалося скасувати");
       return;
     }
+    refreshProfile();
     onPlaced();
   }
 
@@ -130,11 +132,15 @@ export function BetSlip({
             className="flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[0.6875rem] font-semibold leading-none text-white/45 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-50"
           >
             {busy ? (
-              <Loader2 className="size-3 shrink-0 animate-spin" />
+              <Loader2 className="size-3.5 shrink-0 animate-spin" />
             ) : (
-              <X className="size-3 shrink-0" strokeWidth={2.5} />
+              // 14px, not 12. A lucide glyph is drawn inset in its own box, so
+              // at the label's exact size its ink comes out visibly smaller
+              // than the letters and the pair reads as mismatched rather than
+              // as an icon with a word.
+              <X className="size-3.5 shrink-0" strokeWidth={2.5} />
             )}
-            Скасувати
+            <span className="leading-none">Скасувати</span>
           </button>
         )}
       </div>
@@ -174,6 +180,9 @@ export function BetSlip({
       );
       return;
     }
+    // The stake has left the balance in the database; the top bar and this
+    // slip are both reading a figure fetched before that happened.
+    refreshProfile();
     onPlaced();
   }
 
