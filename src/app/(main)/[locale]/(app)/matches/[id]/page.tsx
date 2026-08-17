@@ -125,7 +125,10 @@ export default async function MatchPage({
             48px of empty plate around an 84px crest and made the header the
             tallest object on the page without carrying more information than
             the row of cards below it. */}
-        <div className="relative px-4 py-3 sm:px-6 sm:py-4">
+        {/* Phones take the tighter inset. The hero is the tallest object on the
+            page and on a 360px screen it was pushing the first prediction card
+            below the fold; desktop keeps its full padding. */}
+        <div className="relative px-4 py-2.5 sm:px-6 sm:py-4">
           {/* The scoreboard says this visually; the page still needs one real
               heading, and duplicating the names on screen would be noise. */}
           <h1 className="sr-only">
@@ -160,7 +163,7 @@ export default async function MatchPage({
           {/* Mobile: vertical scoreboard */}
           {/* Impeccable: Crafted Mobile Header — the rows are stacked tight;
               the block should read as one object, not four floating lines. */}
-          <div className="mt-2.5 space-y-2 md:hidden">
+          <div className="mt-2 space-y-2 md:hidden">
             <div className="space-y-1.5">
               <MobileTeamRow team={a} score={match.scoreA} leading={match.scoreA > match.scoreB} showScore={showScore} />
               <MobileTeamRow team={b} score={match.scoreB} leading={match.scoreB > match.scoreA} showScore={showScore} />
@@ -500,7 +503,7 @@ function MobileTeamRow({
     /* Impeccable: Crafted Mobile Scoreline — a recessed slot in the arena
        floor, tinted by the team's own colour, instead of an outlined row. */
     <div
-      className="relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2.5 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_9%,transparent)_inset,0_0_0_1px_color-mix(in_oklch,var(--ink)_7%,transparent)]"
+      className="relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_9%,transparent)_inset,0_0_0_1px_color-mix(in_oklch,var(--ink)_7%,transparent)]"
       style={{
         backgroundImage: `linear-gradient(90deg, color-mix(in oklch, ${team.brand} 22%, transparent), transparent 62%)`,
         backgroundColor: "color-mix(in oklch, var(--ink) 5%, transparent)",

@@ -44,7 +44,9 @@ export function BottomNav() {
                     : "text-ink-subtle",
                 )}
               >
-                <Icon className="size-[21px]" />
+                {/* Matched on height — see the tournament tab bar. A square box
+                    renders the wide glyphs (team, crown) a third short. */}
+                <Icon className="h-[21px] w-auto" />
               </span>
             </Link>
           );

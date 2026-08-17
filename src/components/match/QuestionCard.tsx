@@ -177,7 +177,11 @@ export function QuestionCard({
         <div
           className={cn(
             "mt-2 grid gap-2",
-            question.options.length > 2 ? "grid-cols-3" : "grid-cols-2",
+            // Three across only once there's width for it. On a phone a third
+            // of the card leaves ~40px for the label, so "2:1 / 1:2" came out
+            // as "2:1…" — the option couldn't say what it was. Stacked, each
+            // one gets the full width and the crests stay full size.
+            question.options.length > 2 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2",
           )}
         >
           {question.options.map((opt) => {
@@ -245,12 +249,16 @@ export function QuestionCard({
                         key={t.slug}
                         className={cn(
                           "inline-flex rounded-[8px]",
-                          // Two dark brands overlapping would read as one
-                          // blob, so the upper crest casts a hard edge onto
-                          // the one behind it. A shadow, not a fake plate
-                          // colour — it sits right on whichever plate is
-                          // under it, event or season.
-                          i > 0 && "-ml-3.5 shadow-[-2px_0_0_0_rgb(0_0_0/0.55)]",
+                          // Overlapped, the near crest has to look like it is
+                          // *in front of* the far one, not fused to it. Two
+                          // dark brands touching read as one blob, so the near
+                          // tile carries a hard cut on its leading edge and a
+                          // soft shadow falling back over the tile behind —
+                          // the same pair of cues a stacked deck gives. Both
+                          // are shadows rather than a matched plate colour, so
+                          // it works on the event floor and the season one.
+                          i > 0 &&
+                            "-ml-3 shadow-[-2px_0_0_0_rgb(0_0_0/0.7),-6px_0_10px_-3px_rgb(0_0_0/0.65)]",
                         )}
                       >
                         <TeamLogo team={t} size="cardCrest" />

@@ -69,7 +69,7 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
             >
               <Icon
                 className={cn(
-                  "size-[18px] shrink-0",
+                  "h-[18px] w-auto shrink-0",
                   active ? "text-accent-ink" : "text-ink-subtle group-hover:text-ink-muted",
                 )}
               />

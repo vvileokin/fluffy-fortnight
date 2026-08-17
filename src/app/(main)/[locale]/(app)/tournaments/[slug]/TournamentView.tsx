@@ -230,7 +230,14 @@ export function TournamentView({
                   : "text-ink-muted hover:bg-surface-2 hover:text-ink",
               )}
             >
-              <tb.icon className="size-4" />
+              {/* Height, not a square box. These glyphs are cropped to their
+                  real ink, so their boxes have honestly different ratios — the
+                  team mark is 20:14, the crown 202:144. Forced into `size-4`
+                  they were width-constrained and came out a third shorter than
+                  the square trophy beside them, which is why Команди read as a
+                  smaller icon. Matching on height is what makes a row of mixed
+                  shapes look the same size. */}
+              <tb.icon className="h-4 w-auto shrink-0" />
               {tb.label}
             </button>
           );
