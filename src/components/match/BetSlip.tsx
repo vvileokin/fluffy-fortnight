@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, Check, ChevronLeft, Loader2, Plus } from "lucide-react";
+import { ChevronLeft, Loader2, Plus } from "lucide-react";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { cn, formatInt } from "@/lib/utils";
 
@@ -93,7 +93,6 @@ export function BetSlip({
 
   const affordable = stake >= MIN_STAKE && stake <= balance;
   const valid = affordable && !!optionId && !!odds;
-  const ret = odds ? Math.floor(stake * odds) : 0;
 
   async function place() {
     if (!optionId) return;
@@ -142,7 +141,7 @@ export function BetSlip({
             type="text"
             inputMode="numeric"
             value={stake || ""}
-            placeholder="багатій..."
+            placeholder="EWC Points"
             aria-label="Своя сума"
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
@@ -159,7 +158,13 @@ export function BetSlip({
               // controls on flat surfaces; on a recessed pill inside a card it
               // reads as a stray highlight. The fill already brightens on focus,
               // which keeps the state visible without drawing a box round it.
-              "outline-none focus:bg-white/[0.12] focus-visible:outline-none",
+              //
+              // Forced. The global rule is `:where(…):focus-visible`, which is
+              // zero-specificity and so should already lose to a utility — but
+              // it kept winning in practice, and one element opting out of a
+              // site-wide default is exactly what the important modifier is
+              // for. Scoped to this input; every other control keeps its ring.
+              "outline-none focus:bg-white/[0.12] focus-visible:outline-none!",
             )}
           />
         </div>
@@ -221,18 +226,10 @@ export function BetSlip({
           // player can already see is dark.
           "Обери варіант"
         ) : (
-          // Silver in, ember out. The two figures on this button are not the
-          // same kind of thing — one leaves your balance for certain, the other
-          // only might arrive — and two identical gems either side of an arrow
-          // said they were. The metal now carries the difference, so the button
-          // is readable without reading it.
-          <span className="tnum flex items-center gap-1.5 font-mono">
-            <BrandIcon name="points-stake" className="size-4" />
-            {formatInt(stake)}
-            <ArrowRight className="size-3.5 opacity-60" strokeWidth={3} />
-            <BrandIcon name="points-ewc" className="size-4" />
-            {formatInt(ret)}
-          </span>
+          // Just the verb. The stake is on the row above and the coefficient is
+          // on the option itself, so spelling the arithmetic out again on the
+          // button restated two numbers the player had already chosen.
+          "Підтвердити"
         )}
       </button>
 
