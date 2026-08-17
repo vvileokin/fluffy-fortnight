@@ -7,7 +7,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { useUser } from "@/lib/supabase/use-user";
 import { getTeam } from "@/lib/data";
-import { BRACKET_MAX, type BracketPicks } from "@/lib/bracket-scoring";
+import { BRACKET_MAX, BRACKET_SCORING, type BracketPicks } from "@/lib/bracket-scoring";
 import { cn, formatInt } from "@/lib/utils";
 
 type Api = {
@@ -251,6 +251,17 @@ export function PlayoffBracketEntry() {
           );
         })}
       </div>
+
+      {/* What this round pays, stated only for the round you're standing in.
+          A full price table would need four lines and a header to explain a
+          rule the player meets one step at a time — this way the rate is
+          simply there when it's relevant, and doubles as the reason the later
+          steps matter more. Kept muted: it's a footnote, not a headline. */}
+      <p className="tnum text-[0.6875rem] text-white/40">
+        {current.key === "champion"
+          ? `+${BRACKET_SCORING.champion} за вгаданого чемпіона`
+          : `+${BRACKET_SCORING[current.key]} за кожну вгадану команду`}
+      </p>
 
       {/* Fixtures. Two across from `sm` so the later rounds don't leave a
           near-empty card floating in a wide column. */}
