@@ -26,7 +26,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("handle, avatar_url, points, bounty_points, streak, best_streak")
+    .select("handle, avatar_url, points, bounty_points, streak")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -40,6 +40,15 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .maybeSingle();
 
+  // Same reasoning again: `best_streak` arrives with migration 0039, and until
+  // it runs this select simply comes back null instead of taking the whole
+  // profile page down with it.
+  const { data: rec } = await supabase
+    .from("profiles")
+    .select("best_streak")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const handle =
     profile?.handle ||
     (user.user_metadata?.name as string) ||
@@ -49,7 +58,10 @@ export default async function ProfilePage() {
   const streak = profile?.streak ?? 0;
   // A record can't be behind the run currently going, even if the backfill
   // hasn't been pressed yet — so the live streak floors it.
-  const bestStreak = Math.max(profile?.best_streak ?? 0, streak);
+  const bestStreak = Math.max(
+    (rec?.best_streak as number | null | undefined) ?? 0,
+    streak,
+  );
 
   // Season rank = players strictly above me, + 1.
   const { count: above } = await supabase
@@ -119,10 +131,6 @@ export default async function ProfilePage() {
     { label: "Місце", value: `#${rank}`, tone: "var(--accent)" },
     { label: "Поінтів", value: formatInt(points), tone: "var(--accent)", icon: "points" },
     { label: "Серія", value: String(streak), tone: "var(--accent)", icon: "streak" },
-    // The record goes next to the live run, not instead of it. A streak that
-    // has just broken reads as zero, and zero is the whole history the player
-    // had until now — the number worth keeping is the one they reached.
-    { label: "Рекорд", value: String(bestStreak), tone: "var(--accent)", icon: "streak" },
   ] as const;
 
   return (
@@ -163,6 +171,19 @@ export default async function ProfilePage() {
               </dd>
             </div>
           ))}
+
+          {/* The record sits apart from the three running totals, pushed to the
+              far end and given its own plate. Lined up with them it read as a
+              fourth live number, which is the one thing it isn't: rank, points
+              and the current run all move week to week, while this is the high
+              water mark. Different kind of fact, different treatment. */}
+          <div className="ms-auto flex items-center gap-1.5 rounded-lg bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] px-2.5 py-1.5 shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--accent)_30%,transparent)]">
+            <BrandIcon name="streak" className="order-1 size-4" />
+            <dt className="order-3 text-xs leading-none text-ink-muted">Рекорд</dt>
+            <dd className="tnum order-2 font-mono text-sm font-extrabold leading-none text-accent">
+              {bestStreak}
+            </dd>
+          </div>
         </dl>
       </div>
 

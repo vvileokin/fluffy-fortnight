@@ -105,17 +105,31 @@ export async function recomputeStreaks(admin: unknown, userIds: string[]): Promi
     return { streak, best };
   };
 
+  // `best_streak` arrives with migration 0039. Until it runs, writing it fails
+  // the whole update — which would take the current streak down with it and,
+  // since this runs inside resolve, quietly stop settling matches from
+  // recording streaks at all. One probe decides for the whole batch rather than
+  // a failed round trip per player.
+  let hasRecord = true;
+
   for (const userId of userIds) {
     const perMatch = byUser.get(userId) ?? new Map<string, boolean[]>();
     const all = replay(perMatch, false);
     const bounty = replay(perMatch, true);
-    await db
-      .from("profiles")
-      .update({
-        streak: all.streak,
-        best_streak: all.best,
-        bounty_streak: bounty.streak,
-      })
-      .eq("id", userId);
+    const base = { streak: all.streak, bounty_streak: bounty.streak };
+
+    if (hasRecord) {
+      const { error } = await db
+        .from("profiles")
+        .update({ ...base, best_streak: all.best })
+        .eq("id", userId);
+      if (!error) continue;
+      const code = (error as { code?: string })?.code;
+      if (code !== "42703" && code !== "PGRST204") throw error;
+      hasRecord = false;
+      console.error("[streaks] best_streak missing — run migration 0039");
+    }
+
+    await db.from("profiles").update(base).eq("id", userId);
   }
 }
