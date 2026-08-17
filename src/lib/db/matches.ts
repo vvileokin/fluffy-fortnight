@@ -122,24 +122,44 @@ function toMatch(r: Row): Match {
 
 type SB = Awaited<ReturnType<typeof createClient>>;
 
-/** Overlay open-question count + max reward from the questions table onto matches. */
+/**
+ * Overlay open-question count, best reward and best coefficient onto matches.
+ *
+ * A match can carry both kinds at once, so the card is told about each
+ * separately rather than being handed one blended "value" it would have to
+ * guess the meaning of. `betting` is what lets it call them ставки and quote a
+ * coefficient instead of a flat payout.
+ */
 async function withQuestionStats(sb: SB, list: Match[]): Promise<Match[]> {
   try {
     const { data } = await sb
       .from("questions")
-      .select("match_id, status, options")
+      .select("match_id, status, options, betting")
       .in("status", ["open", "upcoming"]);
     if (!data) return list;
-    const stats = new Map<string, { count: number; max: number }>();
-    for (const q of data as { match_id: string; options: { reward?: number }[] | null }[]) {
+    type Row = {
+      match_id: string;
+      options: { reward?: number; odds?: number }[] | null;
+      betting?: boolean | null;
+    };
+    const stats = new Map<string, { count: number; max: number; odds: number; betting: boolean }>();
+    for (const q of data as Row[]) {
       const opts = Array.isArray(q.options) ? q.options : [];
-      const max = opts.reduce((m, o) => Math.max(m, Number(o.reward) || 0), 0);
-      const cur = stats.get(q.match_id) ?? { count: 0, max: 0 };
-      stats.set(q.match_id, { count: cur.count + 1, max: Math.max(cur.max, max) });
+      const cur = stats.get(q.match_id) ?? { count: 0, max: 0, odds: 0, betting: false };
+      cur.count += 1;
+      if (q.betting) {
+        cur.betting = true;
+        cur.odds = Math.max(cur.odds, ...opts.map((o) => Number(o.odds) || 0));
+      } else {
+        cur.max = Math.max(cur.max, ...opts.map((o) => Number(o.reward) || 0));
+      }
+      stats.set(q.match_id, cur);
     }
     return list.map((m) => {
       const s = stats.get(m.id);
-      return s ? { ...m, openQuestions: s.count, maxReward: s.max } : { ...m, openQuestions: 0, maxReward: 0 };
+      return s
+        ? { ...m, openQuestions: s.count, maxReward: s.max, maxOdds: s.odds, betting: s.betting }
+        : { ...m, openQuestions: 0, maxReward: 0, maxOdds: 0, betting: false };
     });
   } catch {
     return list;

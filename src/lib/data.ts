@@ -429,6 +429,10 @@ export type Match = {
   liveRoundB?: number;
   openQuestions: number;
   maxReward: number;
+  /** Best coefficient on offer, when the match has staking questions. */
+  maxOdds?: number;
+  /** At least one of the open questions takes stakes rather than paying flat. */
+  betting?: boolean;
   stage: string;
   isEvent?: boolean; // overrides tournament.isEvent for the neon skin
   // admin-editable detail (optional; falls back to demo when absent)

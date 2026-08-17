@@ -211,14 +211,34 @@ export function MatchCard({ match }: { match: Match }) {
                   skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
                 )}
               />
-              {t("questions", { count: match.openQuestions })}
+              {/* "Питання" was the admin's word for the row in the database,
+                  not the player's word for the thing they do with it — nobody
+                  answers a quiz here, they call a match. Staking matches say so
+                  outright, since what's on offer there is a different deal. */}
+              {match.betting
+                ? t("bets", { count: match.openQuestions })
+                : t("predictions", { count: match.openQuestions })}
             </span>
             <span className="flex items-center gap-1 text-xs">
               <span className="text-ink-subtle">{t("upTo")}</span>
-              <span className={cn("tnum flex items-center gap-1 font-mono font-bold leading-none", skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent")}>
-                <BrandIcon name={skin === "ewc" ? "points-ewc" : "points"} className="size-3.5" />
-                +{match.maxReward}
-              </span>
+              {match.betting && match.maxOdds ? (
+                // A coefficient, not a payout: what a staking question is worth
+                // depends on the stake, so quoting a points figure here would
+                // promise a number the card cannot know.
+                <span
+                  className={cn(
+                    "tnum font-mono font-bold leading-none",
+                    skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+                  )}
+                >
+                  ×{match.maxOdds.toFixed(2)}
+                </span>
+              ) : (
+                <span className={cn("tnum flex items-center gap-1 font-mono font-bold leading-none", skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent")}>
+                  <BrandIcon name={skin === "ewc" ? "points-ewc" : "points"} className="size-3.5" />
+                  +{match.maxReward}
+                </span>
+              )}
               <ChevronRight className="size-4 text-ink-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
             </span>
           </>
