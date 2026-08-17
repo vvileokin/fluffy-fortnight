@@ -68,7 +68,10 @@ begin
     return jsonb_build_object('ok', false, 'error', 'forbidden');
   end if;
 
-  if p_stake is null or p_stake < 50 then
+  -- No floor beyond "a positive number of points". A minimum only ever bites
+  -- the players with the least to stake, which is exactly the group a small
+  -- bet is worth the most to.
+  if p_stake is null or p_stake < 1 then
     return jsonb_build_object('ok', false, 'error', 'min_stake');
   end if;
 

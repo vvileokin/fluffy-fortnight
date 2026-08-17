@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const MIN_STAKE = 50;
+/** Any positive whole number of points. Mirrored in `place_bet`. */
+export const MIN_STAKE = 1;
 
 /** This player's slip for one question, so the card can render it back. */
 export async function GET(request: Request) {

@@ -5,7 +5,12 @@ import { Check, Loader2 } from "lucide-react";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { cn, formatInt } from "@/lib/utils";
 
-const MIN_STAKE = 50;
+/**
+ * Any positive whole number of points. There is deliberately no floor: a
+ * minimum only ever bites the players holding the least, which is precisely
+ * who a small stake matters most to.
+ */
+const MIN_STAKE = 1;
 /** Three shortcuts and a free field — the fourth slot is the player's own. */
 const CHIPS = [100, 200, 300];
 
@@ -102,7 +107,7 @@ export function BetSlip({
           insufficient: "Не вистачає поінтів",
           already_placed: "Ставку вже зроблено",
           closed: "Прийом закрито",
-          min_stake: `Мінімум ${MIN_STAKE}`,
+          min_stake: "Вкажи суму",
         }[out.error as string] ?? "Не вдалося",
       );
       return;
@@ -132,20 +137,26 @@ export function BetSlip({
             {c}
           </button>
         ))}
+        {/* `text` with a numeric inputMode, not `type="number"`. A number input
+            renders the browser's own spinner arrows inside a 9mm-wide cell,
+            which is both ugly and a hit target nobody wants — and no betting
+            product anywhere ships stake entry with steppers. This gives the
+            phone keypad and keeps the cell clean. */}
         <input
-          type="number"
+          type="text"
           inputMode="numeric"
-          min={MIN_STAKE}
-          max={Math.max(MIN_STAKE, balance)}
           value={CHIPS.includes(stake) ? "" : stake || ""}
           placeholder="своя"
           aria-label="Своя сума"
-          onChange={(e) => setStake(Math.floor(Number(e.target.value) || 0))}
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
+            setStake(digits ? Number(digits) : 0);
+          }}
           className={cn(
             "tnum h-9 w-full rounded-lg text-center font-mono text-xs font-bold outline-none transition-colors",
-            "placeholder:font-sans placeholder:font-semibold placeholder:text-white/40",
+            "placeholder:font-sans placeholder:font-semibold",
             CHIPS.includes(stake)
-              ? "bg-white/[0.06] text-white/70 focus:bg-white/[0.12]"
+              ? "bg-white/[0.06] text-white/70 placeholder:text-white/45 focus:bg-white/[0.12]"
               : "bg-[rgb(255_122_44)] text-[#1a0a0d] placeholder:text-[#1a0a0d]/50",
           )}
         />
@@ -164,6 +175,11 @@ export function BetSlip({
       >
         {busy ? (
           <Loader2 className="size-4 animate-spin" />
+        ) : !optionId ? (
+          // The prompt lives on the control it's about. As its own line under
+          // the slip it was a permanent row of chrome explaining a button the
+          // player can already see is dark.
+          "Обери варіант"
         ) : (
           <>
             Поставити
@@ -183,13 +199,11 @@ export function BetSlip({
           <span role="alert" className="font-semibold text-danger">
             {error}
           </span>
-        ) : !optionId ? (
-          "Обери варіант вище"
         ) : (
           <>
             баланс
             <BrandIcon name="points-ewc" className="size-3.5" />
-            {formatInt(balance)} · мін. {MIN_STAKE} · змінити не можна
+            {formatInt(balance)} · змінити не можна
           </>
         )}
       </p>
