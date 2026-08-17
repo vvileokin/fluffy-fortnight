@@ -80,10 +80,36 @@ export async function DELETE(request: Request) {
   const { id } = await request.json().catch(() => ({ id: "" }));
   if (!id) return NextResponse.json({ ok: false }, { status: 400 });
   const admin = createAdminClient();
+
+  // Hand the stakes back before the row goes. `bets.question_id` cascades, so
+  // deleting a question destroys every slip on it — and the stake left the
+  // player's balance at placement, so without this the points simply cease to
+  // exist, with no row left to show they ever did. This is what emptied real
+  // balances while the betting questions were being tested.
+  const { data: refunded, error: refundErr } = await admin.rpc("refund_bets", {
+    p_question: String(id),
+  });
+  if (refundErr) {
+    const missing = refundErr.code === "PGRST202" || refundErr.code === "42883";
+    // Refuse to delete rather than destroy stakes we can't give back. Migration
+    // 0043 is one SQL file; losing someone's points is not recoverable.
+    if (!missing) {
+      return NextResponse.json({ ok: false, error: refundErr.message }, { status: 500 });
+    }
+    return NextResponse.json(
+      { ok: false, error: "Спершу застосуй міграцію 0043 — інакше ставки згорять." },
+      { status: 409 },
+    );
+  }
+
   const { error } = await admin.from("questions").delete().eq("id", String(id));
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
-  await logAdmin("questions", `Видалив питання ${id}`);
-  return NextResponse.json({ ok: true });
+  const n = Number(refunded ?? 0);
+  await logAdmin(
+    "questions",
+    n > 0 ? `Видалив питання ${id} — повернуто ${n} ставок` : `Видалив питання ${id}`,
+  );
+  return NextResponse.json({ ok: true, refunded: n });
 }
