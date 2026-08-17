@@ -20,7 +20,15 @@ const statusMeta: Record<string, { tone: "success" | "info" | "neutral"; label: 
   resolved: { tone: "neutral", label: "Розраховано" },
 };
 
-type Opt = { id: string; label: string; sublabel: string; reward: number; odds: number };
+/**
+ * `odds` is held as the raw string, not a number.
+ *
+ * A controlled number field that parses on every keystroke cannot accept a
+ * decimal: typing "2.37" passes through "2." on the way, `Number("2.")` is 2,
+ * and the re-render drops the point the user just typed. Keeping the text and
+ * coercing once, at save, is what lets the field be typed into at all.
+ */
+type Opt = { id: string; label: string; sublabel: string; reward: number; odds: string };
 type MatchLite = {
   id: string;
   team_a: string;
@@ -54,7 +62,7 @@ function blankOpt(): Opt {
     reward: 50,
     // Even money by default: a coefficient has to be typed deliberately, and
     // 1.00 at least never pays out more than was staked by accident.
-    odds: 1,
+    odds: "1",
   };
 }
 
@@ -121,7 +129,7 @@ export default function QuestionsAdmin() {
         label: o.label ?? "",
         sublabel: o.sublabel ?? "",
         reward: o.reward ?? 0,
-        odds: o.odds ?? 1,
+        odds: String(o.odds ?? 1),
       })),
       betting: !!data.betting,
     });
@@ -370,15 +378,25 @@ export default function QuestionsAdmin() {
                     />
                     {editing.betting ? (
                       <input
-                        type="number"
-                        step="0.01"
-                        min="1"
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="2.37"
                         title="Коефіцієнт — виграш = ставка × це число"
                         className={cn(inputCls, "w-20 tnum font-mono")}
                         value={o.odds}
-                        onChange={(e) =>
-                          up({ options: editing.options.map((x, j) => (j === i ? { ...x, odds: Number(e.target.value) } : x)) })
-                        }
+                        onChange={(e) => {
+                          // Digits and a single point. Filtering the text keeps
+                          // "2." typeable on the way to "2.37"; parsing here
+                          // would collapse it back to "2" every keystroke.
+                          const v = e.target.value
+                            .replace(/[^\d.]/g, "")
+                            .replace(/^(\d*\.?\d*).*$/, "$1");
+                          up({
+                            options: editing.options.map((x, j) =>
+                              j === i ? { ...x, odds: v } : x,
+                            ),
+                          });
+                        }}
                       />
                     ) : (
                       <input
