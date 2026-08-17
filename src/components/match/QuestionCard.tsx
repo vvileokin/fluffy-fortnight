@@ -234,12 +234,15 @@ export function QuestionCard({
        page has one way of saying "this one is selected". */
     <div
       className={cn(
-        // A column that fills its grid cell. Cards stretch to the tallest in
-        // their row, and with the children stacked normally the leftover
-        // height fell *below* the last one — which since the sponsor plate
-        // arrived meant a white strip stranded mid-card with empty ground
-        // under it. As a column the slack can be handed to the body instead.
-        "flex h-full flex-col overflow-hidden rounded-2xl",
+        // Sized to its own contents, not to its neighbour. Grid children
+        // stretch by default, and a card whose bet is already placed is far
+        // shorter than one still showing the stake picker — so the taller one
+        // in the row dictated a height the shorter one had to pad out, and
+        // that padding was dead ground above the sponsor plate. Filling it
+        // would mean inventing content to cover a layout artefact; not
+        // stretching removes the artefact. Tops still line up, which is the
+        // alignment that actually reads.
+        "flex flex-col self-start overflow-hidden rounded-2xl",
         isEwc ? "ewc-match" : "surface-1",
       )}
     >
