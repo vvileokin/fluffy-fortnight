@@ -12,6 +12,7 @@ import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import { applyStreak, streakMultiplier } from "@/lib/streak";
 import { BetSlip, type Bet } from "@/components/match/BetSlip";
+import { SponsorStrip } from "@/components/ui/BetkingMark";
 import { cn } from "@/lib/utils";
 
 export function QuestionCard({
@@ -346,7 +347,12 @@ export function QuestionCard({
                       gem and the digits on one axis at this size. */}
                   <span
                     className={cn(
-                      "tnum flex items-center gap-1 font-mono text-xs font-extrabold leading-none",
+                      // Fixed 16px, the height of the currency mark. The
+                      // betting branch has no icon, so left to its content this
+                      // row measured 12px and the odds sat four pixels above
+                      // where the flat payout sits — against a 34px crest that
+                      // reads as the whole row being out of true.
+                      "tnum flex h-4 items-center gap-1 font-mono text-xs font-extrabold leading-none",
                       isEwc
                         ? selected
                           ? "text-[rgb(255_154_64)]"
@@ -393,9 +399,6 @@ export function QuestionCard({
             <BetSlip
               questionId={question.id}
               optionId={bet?.option_id ?? picked}
-              optionLabel={
-                question.options.find((o) => o.id === (bet?.option_id ?? picked))?.label
-              }
               odds={question.options.find((o) => o.id === picked)?.odds}
               balance={profile?.ewc_points ?? 0}
               locked={locked || upcoming}
@@ -418,6 +421,11 @@ export function QuestionCard({
           )
         )}
       </div>
+
+      {/* Outside the padded body on purpose: full-bleed across the bottom edge,
+          clipped to the card's own corners, so the card stands on the sponsor's
+          plate instead of carrying a sticker inside it. */}
+      {betting && <SponsorStrip />}
     </div>
   );
 }

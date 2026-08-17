@@ -33,27 +33,30 @@ export function BetkingMark({ className }: { className?: string }) {
 }
 
 /**
- * "Fueled by BETKING" — the sponsor plate that sits on anything you can stake
- * points on.
+ * "Fueled by BETKING" — the sponsor plate on anything you can stake points on.
  *
  * White ground, always. The mark is a fixed red (#FF0043) that has to hold its
  * own value to stay legible as the partner's colour, and the site's surfaces
  * run from near-black to the event's deep maroon — on any of them the red goes
  * muddy. Giving it its own white plate is what keeps it correct everywhere
  * rather than correct on one page.
+ *
+ * Meant as the last child of a card that clips its own corners: full-bleed
+ * across the bottom edge, so it reads as the card standing on the sponsor's
+ * plate rather than a sticker dropped inside the padding. That's the same
+ * device the tournament card already uses for its own partner strip.
  */
-export function SponsorBadge({ className }: { className?: string }) {
+export function SponsorStrip({ className }: { className?: string }) {
   return (
-    <span
+    <div
       className={
-        "inline-flex shrink-0 items-center gap-1.5 rounded-md bg-white px-2 py-1 " +
-        (className ?? "")
+        "flex items-center justify-center gap-1.5 bg-white py-1.5 " + (className ?? "")
       }
     >
-      <span className="text-[0.5625rem] font-bold uppercase tracking-wide text-black/55">
+      <span className="text-[0.5625rem] font-bold uppercase tracking-[0.08em] text-black/55">
         Fueled by
       </span>
       <BetkingMark className="h-2.5 w-auto text-[#FF0043]" />
-    </span>
+    </div>
   );
 }
