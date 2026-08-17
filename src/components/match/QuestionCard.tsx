@@ -250,6 +250,16 @@ export function QuestionCard({
           {streakChip}
         </div>
 
+        {/* One clause, and only the half a number can't carry: the multiplier
+            is stamped on every payout already, so all this adds is that it
+            lasts exactly as long as the run does. Anything longer here was
+            three lines of rule nobody finished reading. */}
+        {streakChip && (
+          <p className="mt-1 text-[0.625rem] leading-none text-white/40">
+            ×{multiplier} до виграшу — доки не схибиш
+          </p>
+        )}
+
         {/* Impeccable: Crafted Choice Row — the options wear the teams. Each
             one is raked with that side's real brand colour, the same light the
             match header, the veto ledger and the mobile scorelines already use,

@@ -24,9 +24,13 @@ const SOURCES = {
   /** Event currency for EWC 2026 — same solid, the event's fire palette. */
   "points-ewc": "/brand/points-ewc.webp",
   /**
-   * The same solid in silver — what a bet *costs*, against the ember of what it
-   * returns. Identical geometry to `points-ewc`, so the two line up when they
-   * sit either side of an arrow.
+   * The same solid in silver, identical geometry to `points-ewc`.
+   *
+   * Currently unused: it once marked the stake against the ember of the return,
+   * but on the slip the two figures are the same currency going one way and
+   * then the other, and a second metal read as a second kind of point rather
+   * than as a direction. Kept registered because the artwork exists and the
+   * distinction may be worth drawing somewhere it genuinely is one.
    */
   "points-stake": "/brand/points-stake.webp",
 } as const;

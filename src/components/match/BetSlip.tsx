@@ -83,14 +83,18 @@ export function BetSlip({
     return (
       <div className="mt-2 space-y-1.5">
       <div className="flex items-center justify-between gap-2 rounded-lg bg-black/30 px-2.5 py-2">
-        {/* Silver in, ember out, on one line: what it cost, the coefficient
-            between them, and what that comes to. The stake alone left the row
-            saying what was spent and never what for. */}
-        <span className="tnum flex items-center gap-1 font-mono text-xs font-bold leading-none text-[rgb(255_154_64)]">
-          <BrandIcon name="points-stake" className="size-4" />
+        {/* Both marks ember. They are the same currency going out and coming
+            back, and the silver read as a second kind of point rather than as
+            a direction — the arrow and the coefficient between them already
+            say which figure is which. */}
+        <span className="tnum flex min-w-0 items-center gap-1 font-mono text-xs font-bold leading-none text-[rgb(255_154_64)]">
+          <BrandIcon name="points-ewc" className="size-4" />
           {formatInt(bet.stake)}
-          <span className="mx-0.5 text-white/45">× {bet.odds}</span>
-          <ArrowRight className="size-3 shrink-0 text-white/35" strokeWidth={3} />
+          {/* Wider gaps around the arrow than inside either figure, so the row
+              parses as two amounts with a turn between them rather than one
+              run of numbers. */}
+          <span className="mx-1.5 text-white/45">× {bet.odds}</span>
+          <ArrowRight className="mr-1.5 size-3 shrink-0 text-white/35" strokeWidth={3} />
           <BrandIcon name="points-ewc" className="size-4" />
           {formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
         </span>
@@ -119,9 +123,17 @@ export function BetSlip({
           <button
             onClick={cancel}
             disabled={busy}
-            className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[0.6875rem] font-semibold text-white/45 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-50"
+            // Fixed height and `leading-none`: the label's own line box is
+            // taller than the 12px icon beside it, so left to flow the two sat
+            // on different centres and the whole control rode low against the
+            // figures opposite.
+            className="flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[0.6875rem] font-semibold leading-none text-white/45 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-50"
           >
-            {busy ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
+            {busy ? (
+              <Loader2 className="size-3 shrink-0 animate-spin" />
+            ) : (
+              <X className="size-3 shrink-0" strokeWidth={2.5} />
+            )}
             Скасувати
           </button>
         )}
