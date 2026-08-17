@@ -89,7 +89,14 @@ export function QuestionCard({
     fetch(`/api/bets?question=${encodeURIComponent(question.id)}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
-        if (!cancelled && d.ok) setBet(d.bet as Bet | null);
+        if (cancelled || !d.ok) return;
+        const found = d.bet as Bet | null;
+        setBet(found);
+        // Mirror the slip onto the selection, so the option it was placed on is
+        // lit on a fresh page load — and so cancelling drops the player back
+        // onto their own pick with it still highlighted, one tap from changing
+        // it, rather than onto a blank grid that hides what they just undid.
+        if (found) setPicked(found.option_id);
       })
       .catch(() => {});
     return () => {
@@ -168,16 +175,18 @@ export function QuestionCard({
 
   // Nothing to say on an untouched, open question — the options speak for
   // themselves — so the footer collapses rather than reserving a line.
-  // What the run is worth, and what dropping it costs. The multiplier is
-  // already on every option; this says the part a number can't — that it holds
-  // only while the streak does, and that a miss simply pays the base rate
-  // rather than taking anything away.
-  const streakNote =
+  // Just the count. The multiplier is already stamped on every payout beside
+  // it, so repeating it here would say the same thing twice on one card — and
+  // the full rule, which a number genuinely can't carry, goes in the tooltip
+  // rather than costing three lines under the options.
+  const streakChip =
     multiplier > 1 && !locked && !upcoming ? (
-      <span className="flex items-center gap-1 text-[rgb(255_154_64)]">
-        <Flame className="size-3.5 shrink-0" />
-        Серія {streak} — виграш ×{multiplier}. Схибиш — серія згорить і далі
-        рахуватиметься як звичайно.
+      <span
+        title={`Серія ${streak} — виграш ×${multiplier}. Схибиш — серія згорить і далі рахуватиметься як звичайно.`}
+        className="mt-px flex shrink-0 cursor-help items-center gap-1 rounded bg-[rgb(255_154_64/0.14)] px-1.5 py-0.5 text-[0.6875rem] font-bold leading-none text-[rgb(255_154_64)]"
+      >
+        <Flame className="size-3" />
+        {streak}
       </span>
     ) : null;
 
@@ -185,8 +194,6 @@ export function QuestionCard({
     <span className="flex items-center gap-1 font-semibold text-success">
       <Check className="size-3.5" strokeWidth={3} /> Збережено
     </span>
-  ) : streakNote ? (
-    streakNote
   ) : locked ? (
     picked ? <span className="text-ink-subtle">Твій вибір зафіксовано</span> : null
   ) : picked ? (
@@ -231,9 +238,17 @@ export function QuestionCard({
         {/* Just the question. The deadline chip that used to sit here read
             "до старту матчу" — a restatement of the rule every question follows,
             not a time — so it cost a rail and told nobody anything. */}
-        <h3 className="text-sm font-bold leading-snug text-ink text-balance">
-          {question.title}
-        </h3>
+        {/* The streak rides on the title's own line, in the space the heading
+            already leaves. As a full sentence under the options it was three
+            lines of rule restating what the ×N chips beside every payout
+            already show; the count is the one fact those chips don't carry, so
+            that is all this keeps. The rest lives in the tooltip. */}
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-bold leading-snug text-ink text-balance">
+            {question.title}
+          </h3>
+          {streakChip}
+        </div>
 
         {/* Impeccable: Crafted Choice Row — the options wear the teams. Each
             one is raked with that side's real brand colour, the same light the
@@ -435,25 +450,16 @@ export function QuestionCard({
 
         {betting ? (
           user ? (
-            <>
-              {/* Betting cards replace the footer with the slip, so the note
-                  rides above it instead of being lost with the footer. */}
-              {streakNote && (
-                <p className="mt-2 flex justify-center text-center text-[0.6875rem] leading-snug">
-                  {streakNote}
-                </p>
-              )}
-              <BetSlip
-                questionId={question.id}
-                optionId={bet?.option_id ?? picked}
-                odds={question.options.find((o) => o.id === picked)?.odds}
-                balance={profile?.ewc_points ?? 0}
-                locked={locked || upcoming}
-                bet={bet}
-                multiplier={multiplier}
-                onPlaced={() => setBetNonce((n) => n + 1)}
-              />
-            </>
+            <BetSlip
+              questionId={question.id}
+              optionId={bet?.option_id ?? picked}
+              odds={question.options.find((o) => o.id === picked)?.odds}
+              balance={profile?.ewc_points ?? 0}
+              locked={locked || upcoming}
+              bet={bet}
+              multiplier={multiplier}
+              onPlaced={() => setBetNonce((n) => n + 1)}
+            />
           ) : (
             <p className="mt-2 text-center text-xs text-ink-subtle">
               Увійди, щоб зробити ставку.

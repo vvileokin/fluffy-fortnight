@@ -105,3 +105,38 @@ export async function POST(request: Request) {
   // explain rather than a 500 it can only apologise for.
   return NextResponse.json(out, { status: out.ok ? 200 : 409 });
 }
+
+/**
+ * Take a bet back while the question is still open.
+ *
+ * Nothing is at stake for the house in allowing it — the question hasn't been
+ * resolved, so no coefficient has been proven right or wrong yet, and the stake
+ * returns to exactly where it came from. A mis-tap on the wrong option, or on a
+ * stake with an extra zero, otherwise stood for good.
+ */
+export async function DELETE(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => null);
+  const questionId = typeof body?.question === "string" ? body.question : "";
+  if (!questionId) {
+    return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
+  }
+
+  const { data, error } = await createAdminClient().rpc("cancel_bet", {
+    p_user: user.id,
+    p_question: questionId,
+  });
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+
+  const out = data as { ok: boolean; error?: string; refunded?: number };
+  return NextResponse.json(out, { status: out.ok ? 200 : 409 });
+}

@@ -87,7 +87,16 @@ export function TournamentView({
           iconClass: "h-2 w-auto shrink-0",
         }
       : { id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork },
-    { id: "leaderboard", label: "Лідерборд", icon: CrownGlyph },
+    {
+      id: "leaderboard",
+      label: "Лідерборд",
+      icon: CrownGlyph,
+      // The crown is a 1.4:1 shape, so at the row's 16px it runs 22px across
+      // and carries half again the ink of the square glyphs beside it. Height
+      // matching fixed the team mark reading small; the same rule overshoots on
+      // the widest shape in the set, and this is the trim that settles it.
+      iconClass: "h-3.5 w-auto shrink-0",
+    },
   ];
 
   const [tab, setTab] = React.useState<Tab>("overview");

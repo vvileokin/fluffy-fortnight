@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, Loader2, Plus } from "lucide-react";
+import { ArrowRight, ChevronLeft, Loader2, Plus, X } from "lucide-react";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { cn, formatInt } from "@/lib/utils";
 
@@ -59,40 +59,78 @@ export function BetSlip({
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  /* ---- already staked: one line, no controls ---- */
+  async function cancel() {
+    setBusy(true);
+    setError(null);
+    const res = await fetch("/api/bets", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: questionId }),
+    });
+    const out = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!out.ok) {
+      setError(out.error === "closed" ? "Прийом уже закрито" : "Не вдалося скасувати");
+      return;
+    }
+    onPlaced();
+  }
+
+  /* ---- already staked ---- */
   if (bet) {
     const settled = !!bet.settled_at;
     const won = settled && (bet.payout ?? 0) > 0;
     return (
-      <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-black/30 px-2.5 py-2">
-        {/* What it cost, in silver, carrying the same ember type as the top
-            bar's balance — the figure is points, so it is written the way
-            points are written everywhere else on the site. */}
+      <div className="mt-2 space-y-1.5">
+      <div className="flex items-center justify-between gap-2 rounded-lg bg-black/30 px-2.5 py-2">
+        {/* Silver in, ember out, on one line: what it cost, the coefficient
+            between them, and what that comes to. The stake alone left the row
+            saying what was spent and never what for. */}
         <span className="tnum flex items-center gap-1 font-mono text-xs font-bold leading-none text-[rgb(255_154_64)]">
           <BrandIcon name="points-stake" className="size-4" />
           {formatInt(bet.stake)}
-          <span className="ml-0.5 text-white/45">× {bet.odds}</span>
+          <span className="mx-0.5 text-white/45">× {bet.odds}</span>
+          <ArrowRight className="size-3 shrink-0 text-white/35" strokeWidth={3} />
+          <BrandIcon name="points-ewc" className="size-4" />
+          {formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
         </span>
-        <span
-          className={cn(
-            "tnum flex items-center gap-1 font-mono text-xs font-extrabold",
-            settled ? (won ? "text-success" : "text-white/40") : "text-[rgb(255_154_64)]",
-          )}
-        >
-          {settled && !won ? (
-            "не зіграла"
-          ) : (
-            <>
-              <BrandIcon name="points-ewc" className="size-4" />
-              {/* Settled shows what was actually paid. Pending shows what it is
-                  worth *now*, streak included — the same figure the button
-                  quoted when the slip was placed. */}
-              {settled
-                ? `+${formatInt(bet.payout ?? 0)}`
-                : formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
-            </>
-          )}
-        </span>
+        {/* Once settled, the outcome replaces the projection — what it is
+            worth stops mattering the moment it's decided. */}
+        {settled && (
+          <span
+            className={cn(
+              "tnum flex shrink-0 items-center gap-1 font-mono text-xs font-extrabold",
+              won ? "text-success" : "text-white/40",
+            )}
+          >
+            {won ? (
+              <>
+                <BrandIcon name="points-ewc" className="size-4" />+
+                {formatInt(bet.payout ?? 0)}
+              </>
+            ) : (
+              "не зіграла"
+            )}
+          </span>
+        )}
+        {/* Cancelling is only offered while the question is open — after that
+            the slip is live and taking it back would be a free look. */}
+        {!settled && !locked && (
+          <button
+            onClick={cancel}
+            disabled={busy}
+            className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[0.6875rem] font-semibold text-white/45 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="size-3 animate-spin" /> : <X className="size-3" />}
+            Скасувати
+          </button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="text-center text-[0.6875rem] font-semibold text-danger">
+          {error}
+        </p>
+      )}
       </div>
     );
   }
