@@ -294,8 +294,13 @@ export function TournamentView({
               the admin's matches — see EwcBracket — not a second copy of them. */}
           {t.skin === "ewc" && (
             <section className="space-y-3">
-              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-muted">
-                <EwcMark className="h-2.5 w-auto shrink-0 translate-y-[0.5px] text-[rgb(var(--ewc-ring))]" />
+              {/* No mark in front of the words. Every other section heading on
+                  this page starts its text at the container edge, and the mark
+                  pushed this one ~28px right of them — one heading indented
+                  against the rest is exactly the kind of unevenness the eye
+                  catches without being able to name. The page is already
+                  unmistakably the event's: hero badge, tab, palette. */}
+              <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
                 Сітка турніру
               </h2>
               <EwcBracket matches={matches} />

@@ -124,7 +124,7 @@ export function PlayoffBracketEntry() {
         <Head />
         <Link
           href="/login"
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[rgb(255_122_44)] text-sm font-bold text-[#1a0a0d] transition-colors hover:bg-[rgb(255_146_72)]"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[rgb(198_96_40)] text-sm font-bold text-[#1a0a0d] transition-colors hover:bg-[rgb(219_112_52)]"
         >
           <LogIn className="size-4" strokeWidth={2.5} />
           Увійти, щоб заповнити
@@ -238,9 +238,9 @@ export function PlayoffBracketEntry() {
               className={cn(
                 "flex h-7 flex-1 items-center justify-center gap-1 rounded-md text-xs font-bold transition-colors",
                 i === round
-                  ? "bg-[rgb(158_68_26)] text-white"
+                  ? "bg-[rgb(198_96_40)] text-[#1a0a0d]"
                   : ok
-                    ? "bg-[rgb(158_68_26/0.3)] text-[rgb(255_154_64)]"
+                    ? "bg-[rgb(198_96_40/0.28)] text-[rgb(255_178_112)]"
                     : "bg-black/30 text-white/35",
                 reachable(i) ? "cursor-pointer" : "cursor-not-allowed",
               )}
@@ -320,7 +320,7 @@ export function PlayoffBracketEntry() {
         disabled={!done || busy}
         className={cn(
           "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
-          "bg-[rgb(158_68_26)] text-white hover:bg-[rgb(184_82_34)]",
+          "bg-[rgb(198_96_40)] text-[#1a0a0d] hover:bg-[rgb(219_112_52)]",
           "disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(255_122_44)]",
         )}
       >

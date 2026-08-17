@@ -138,16 +138,24 @@ export function BetSlip({
             type="text"
             inputMode="numeric"
             value={stake || ""}
-            placeholder="скільки ставиш"
+            placeholder="багатій..."
             aria-label="Своя сума"
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
               setStake(digits ? Number(digits) : 0);
             }}
             className={cn(
-              "tnum h-9 min-w-0 flex-1 rounded-lg bg-white/[0.06] text-center font-mono text-sm font-bold text-white outline-none transition-colors",
-              "placeholder:font-sans placeholder:text-xs placeholder:font-semibold placeholder:text-white/40",
-              "focus:bg-white/[0.12]",
+              // `leading-none` on both the value and the placeholder: an input
+              // centres its text on the line box, so a placeholder inheriting a
+              // different size *and* the default line-height sat a hair above
+              // the digits it stands in for.
+              "tnum h-9 min-w-0 flex-1 rounded-lg bg-white/[0.06] text-center font-mono text-sm font-bold leading-none text-white transition-colors",
+              "placeholder:font-sans placeholder:text-sm placeholder:font-semibold placeholder:leading-none placeholder:text-white/40",
+              // No ring. The global focus outline is a 2px offset ring built for
+              // controls on flat surfaces; on a recessed pill inside a card it
+              // reads as a stray highlight. The fill already brightens on focus,
+              // which keeps the state visible without drawing a box round it.
+              "outline-none focus:bg-white/[0.12] focus-visible:outline-none",
             )}
           />
         </div>
@@ -161,7 +169,7 @@ export function BetSlip({
               className={cn(
                 "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
                 stake === c
-                  ? "bg-[rgb(158_68_26)] text-white"
+                  ? "bg-[rgb(198_96_40)] text-[#1a0a0d]"
                   : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
                 c > balance && "cursor-not-allowed opacity-35 hover:bg-white/[0.06]",
               )}
@@ -182,8 +190,6 @@ export function BetSlip({
         </div>
       )}
 
-      {/* The action carries the return, because that is the number the player
-          is actually choosing between. */}
       {/* The action says what you put in and what comes back, and nothing else.
           A verb plus "поверне" plus two figures was a sentence on a button; the
           arrow carries the same meaning wordlessly, and the accessible name
@@ -199,7 +205,7 @@ export function BetSlip({
         aria-label="Зробити ставку"
         className={cn(
           "flex h-11 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-bold transition-colors",
-          "bg-[rgb(158_68_26)] text-white hover:bg-[rgb(184_82_34)]",
+          "bg-[rgb(198_96_40)] text-[#1a0a0d] hover:bg-[rgb(219_112_52)]",
           "disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-white/35",
         )}
       >

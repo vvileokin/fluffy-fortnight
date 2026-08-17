@@ -225,12 +225,13 @@ export function QuestionCard({
           {question.options.map((opt) => {
             const selected = picked === opt.id;
             const optTeam = resolveTeam(opt.label);
-            // Only for exact-score questions: a "2:0" on a map-count or
-            // over/under question isn't naming a side and must keep its dot.
-            const crests =
-              !optTeam && question.kind === "exact_score"
-                ? scoreCrests(opt.label)
-                : null;
+            // Keyed off the label parsing as a scoreline, not off `kind`. The
+            // crests vanished on the betting cards because those are authored
+            // as `custom` — `kind` is a label an admin picks, so gating a
+            // visual on it means the crests appear or don't depending on a
+            // dropdown nobody connects to the outcome. A "2:0" against two
+            // known sides names one of them whatever the question is called.
+            const crests = !optTeam ? scoreCrests(opt.label) : null;
             // The plate is tinted by whichever side the option backs. Split
             // scorelines back both, so they stay neutral rather than picking
             // one team's colour to stand for a two-team answer.
