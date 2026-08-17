@@ -109,8 +109,7 @@ export function FavouriteTeam() {
           )}
         </p>
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {EWC_PLAYOFF_TEAMS.map((slug) => {
               const t = getTeam(slug);
               const band = underdogTier(slug);
@@ -154,11 +153,7 @@ export function FavouriteTeam() {
                 </button>
               );
             })}
-          </div>
-          <p className="text-[0.6875rem] text-white/40">
-            Що нижчий сід — то більший множник. Змінити можна, доки прийом відкритий.
-          </p>
-        </>
+        </div>
       )}
 
       {error && (
