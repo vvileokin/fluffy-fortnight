@@ -41,6 +41,7 @@ export function BetSlip({
   balance,
   locked,
   bet,
+  multiplier,
   onPlaced,
 }: {
   questionId: string;
@@ -49,6 +50,8 @@ export function BetSlip({
   balance: number;
   locked: boolean;
   bet: Bet | null;
+  /** Streak multiplier, applied to winnings exactly as it is to flat rewards. */
+  multiplier: number;
   onPlaced: () => void;
 }) {
   const [stake, setStake] = React.useState<number>(CHIPS[0]);
@@ -81,7 +84,12 @@ export function BetSlip({
           ) : (
             <>
               <BrandIcon name="points-ewc" className="size-4" />
-              {settled ? `+${formatInt(bet.payout ?? 0)}` : formatInt(Math.floor(bet.stake * bet.odds))}
+              {/* Settled shows what was actually paid. Pending shows what it is
+                  worth *now*, streak included — the same figure the button
+                  quoted when the slip was placed. */}
+              {settled
+                ? `+${formatInt(bet.payout ?? 0)}`
+                : formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
             </>
           )}
         </span>

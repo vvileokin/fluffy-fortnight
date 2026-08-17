@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getTeam } from "@/lib/data";
+import {
+  favouritePayout,
+  playoffRoundOf,
+  roundFromStage,
+} from "@/lib/favourite-team";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 function slugify(s: string) {
@@ -144,8 +150,55 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
-  await logAdmin("matches", `Зберіг матч ${id}`);
-  return NextResponse.json({ ok: true, id });
+
+  // Favourite-team payouts ride the match finishing, not a question resolving —
+  // backing a team is a bet on the team, and it pays whether or not anyone
+  // wrote a question about that fixture. `pay_favourite_team` is idempotent per
+  // player per match, which matters because every re-save of a finished match
+  // runs this again.
+  let favourites = 0;
+  if (isEventTournament && derived.status === "finished" && derived.score_a !== derived.score_b) {
+    const winner = derived.score_a > derived.score_b ? row.team_a : row.team_b;
+    const round = playoffRoundOf(row.team_a, row.team_b) ?? roundFromStage(row.stage);
+    const amount = round ? favouritePayout(round, winner) : 0;
+    if (amount > 0) {
+      const { data, error: payErr } = await admin.rpc("pay_favourite_team", {
+        p_match: id,
+        p_slug: tournamentSlug,
+        p_team: winner,
+        p_amount: amount,
+      });
+      // Migration 0042 may not have run yet, and saving a match must not fail
+      // because a bonus feature isn't deployed.
+      if (payErr && payErr.code !== "PGRST202" && payErr.code !== "42883") {
+        console.error("[matches] pay_favourite_team:", payErr.message);
+      }
+      // The RPC returns only the players it actually credited, so a re-save
+      // that pays nobody notifies nobody.
+      const paidIds = ((data ?? []) as { id?: string }[] | string[])
+        .map((r) => (typeof r === "string" ? r : r.id))
+        .filter(Boolean) as string[];
+      favourites = paidIds.length;
+      if (favourites > 0) {
+        const name = getTeam(winner)?.name ?? winner;
+        await admin.from("notifications").insert(
+          paidIds.map((uid) => ({
+            user_id: uid,
+            kind: "reward",
+            title: `${name} виграли — +${amount} EWC за улюблену команду`,
+          })),
+        );
+      }
+    }
+  }
+
+  await logAdmin(
+    "matches",
+    favourites > 0
+      ? `Зберіг матч ${id} — улюблена команда: ${favourites} виплат`
+      : `Зберіг матч ${id}`,
+  );
+  return NextResponse.json({ ok: true, id, favourites });
 }
 
 export async function DELETE(request: Request) {

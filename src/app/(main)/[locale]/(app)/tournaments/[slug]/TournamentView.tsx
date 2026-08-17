@@ -30,6 +30,7 @@ import { BracketPredictor } from "@/components/tournament/BracketPredictor";
 import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import { EwcBracket } from "@/components/tournament/EwcBracket";
 import { PlayoffBracketEntry } from "@/components/tournament/PlayoffBracketEntry";
+import { FavouriteTeam } from "@/components/tournament/FavouriteTeam";
 import type { CSSProperties } from "react";
 import {
   getTeam,
@@ -348,7 +349,13 @@ export function TournamentView({
           which saves nothing and pays nothing. */}
       {tab === "predictor" &&
         (ewc ? (
-          <PlayoffBracketEntry />
+          <div className="space-y-3">
+            {/* Above the bracket: it's one tap against sixteen, so it's the
+                thing a player can finish before deciding whether to fill in a
+                whole ladder. */}
+            <FavouriteTeam />
+            <PlayoffBracketEntry />
+          </div>
         ) : (
           <div className="rounded-xl surface-1 p-5">
             <h2 className="text-base font-bold text-ink">Прогнозатор плейоф</h2>

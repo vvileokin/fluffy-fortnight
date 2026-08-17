@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { CSSProperties } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { Check } from "lucide-react";
+import { Check, Flame } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match } from "@/lib/data";
@@ -14,6 +14,20 @@ import { applyStreak, streakMultiplier } from "@/lib/streak";
 import { BetSlip, type Bet } from "@/components/match/BetSlip";
 import { SponsorStrip } from "@/components/ui/BetkingMark";
 import { cn } from "@/lib/utils";
+
+/**
+ * The streak badge, worn by whichever number the streak is currently lifting —
+ * a flat payout or a coefficient. Same mark on both, because it is the same
+ * multiplier: a player should not have to work out that the thing boosting
+ * their points also boosts their winnings.
+ */
+function StreakChip({ multiplier }: { multiplier: number }) {
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded bg-current/15 px-1 py-px text-[0.625rem] font-bold leading-none">
+      <Flame className="size-2.5" />×{multiplier}
+    </span>
+  );
+}
 
 export function QuestionCard({
   question,
@@ -154,10 +168,25 @@ export function QuestionCard({
 
   // Nothing to say on an untouched, open question — the options speak for
   // themselves — so the footer collapses rather than reserving a line.
+  // What the run is worth, and what dropping it costs. The multiplier is
+  // already on every option; this says the part a number can't — that it holds
+  // only while the streak does, and that a miss simply pays the base rate
+  // rather than taking anything away.
+  const streakNote =
+    multiplier > 1 && !locked && !upcoming ? (
+      <span className="flex items-center gap-1 text-[rgb(255_154_64)]">
+        <Flame className="size-3.5 shrink-0" />
+        Серія {streak} — виграш ×{multiplier}. Схибиш — серія згорить і далі
+        рахуватиметься як звичайно.
+      </span>
+    ) : null;
+
   const footer = justSaved ? (
     <span className="flex items-center gap-1 font-semibold text-success">
       <Check className="size-3.5" strokeWidth={3} /> Збережено
     </span>
+  ) : streakNote ? (
+    streakNote
   ) : locked ? (
     picked ? <span className="text-ink-subtle">Твій вибір зафіксовано</span> : null
   ) : picked ? (
@@ -367,7 +396,20 @@ export function QuestionCard({
                       // On a betting question the coefficient *is* the payout
                       // line — there is no flat figure to show, because what
                       // this option pays depends on what the player stakes.
-                      <>×{(opt.odds ?? 1).toFixed(2)}</>
+                      // The streak rides on top of it exactly as it does on a
+                      // flat reward, so the effective number is shown with the
+                      // raw coefficient struck through behind it: a player on a
+                      // run is not choosing against 2.10, they're choosing
+                      // against 4.20.
+                      <>
+                        {multiplier > 1 && (
+                          <span className="font-normal text-current/45 line-through">
+                            ×{(opt.odds ?? 1).toFixed(2)}
+                          </span>
+                        )}
+                        ×{((opt.odds ?? 1) * multiplier).toFixed(2)}
+                        {multiplier > 1 && <StreakChip multiplier={multiplier} />}
+                      </>
                     ) : (
                       <>
                         <BrandIcon
@@ -380,11 +422,7 @@ export function QuestionCard({
                             be their number — the ×N chip explains where it
                             came from. */}
                         +{applyStreak(opt.reward, streak)}
-                        {multiplier > 1 && (
-                          <span className="rounded bg-current/15 px-1 py-px text-[0.625rem] font-bold leading-none">
-                            ×{multiplier}
-                          </span>
-                        )}
+                        {multiplier > 1 && <StreakChip multiplier={multiplier} />}
                       </>
                     )}
                   </span>
@@ -397,15 +435,25 @@ export function QuestionCard({
 
         {betting ? (
           user ? (
-            <BetSlip
-              questionId={question.id}
-              optionId={bet?.option_id ?? picked}
-              odds={question.options.find((o) => o.id === picked)?.odds}
-              balance={profile?.ewc_points ?? 0}
-              locked={locked || upcoming}
-              bet={bet}
-              onPlaced={() => setBetNonce((n) => n + 1)}
-            />
+            <>
+              {/* Betting cards replace the footer with the slip, so the note
+                  rides above it instead of being lost with the footer. */}
+              {streakNote && (
+                <p className="mt-2 flex justify-center text-center text-[0.6875rem] leading-snug">
+                  {streakNote}
+                </p>
+              )}
+              <BetSlip
+                questionId={question.id}
+                optionId={bet?.option_id ?? picked}
+                odds={question.options.find((o) => o.id === picked)?.odds}
+                balance={profile?.ewc_points ?? 0}
+                locked={locked || upcoming}
+                bet={bet}
+                multiplier={multiplier}
+                onPlaced={() => setBetNonce((n) => n + 1)}
+              />
+            </>
           ) : (
             <p className="mt-2 text-center text-xs text-ink-subtle">
               Увійди, щоб зробити ставку.
