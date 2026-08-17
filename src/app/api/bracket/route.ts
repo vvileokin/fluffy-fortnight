@@ -27,7 +27,18 @@ async function playoffLock() {
       m.status !== "upcoming" &&
       /playoff|плей|1\/8|1\/4|1\/2|фінал/i.test(m.stage ?? ""),
   );
-  return { open: !started, started, teams: EWC_PLAYOFF_TEAMS };
+
+  // An admin can shut it early. The first-fixture rule stays as the backstop,
+  // but it's the wrong *only* option: the schedule moves, and "wait for a match
+  // to start" can't be undone if the draw turns out to be wrong.
+  const { data } = await createAdminClient()
+    .from("site_settings")
+    .select("bracket_closed")
+    .eq("id", 1)
+    .maybeSingle();
+  const closed = !!data?.bracket_closed;
+
+  return { open: !started && !closed, started, closed, teams: EWC_PLAYOFF_TEAMS };
 }
 
 export async function GET() {
@@ -88,18 +99,33 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
+  // The RLS policy already refuses to touch a scored row, but this route holds
+  // the service key and RLS does not apply to it — so the same rule is enforced
+  // here rather than assumed. Scoring must never move under a bracket that has
+  // already been paid.
+  const { data: existing } = await admin
+    .from("bracket_predictions")
+    .select("scored_at")
+    .eq("user_id", user.id)
+    .eq("tournament_slug", SLUG)
+    .maybeSingle();
+  if (existing?.scored_at) {
+    return NextResponse.json({ ok: false, error: "already_scored" }, { status: 409 });
+  }
+
+  // Upsert, not insert. A bracket stays editable until it closes: nothing is
+  // paid out until the playoff ends, so a change before the deadline costs
+  // nobody anything, while one-shot entry punished filling it in early — the
+  // exact behaviour the feature wants to encourage.
   const { error } = await admin
     .from("bracket_predictions")
-    .insert({ user_id: user.id, tournament_slug: SLUG, picks });
+    .upsert(
+      { user_id: user.id, tournament_slug: SLUG, picks },
+      { onConflict: "user_id,tournament_slug" },
+    );
 
   if (error) {
-    // The primary key is the guard against a second submission, so a unique
-    // violation here is the feature working, not a fault.
-    const already = error.code === "23505";
-    return NextResponse.json(
-      { ok: false, error: already ? "already_submitted" : error.message },
-      { status: already ? 409 : 500 },
-    );
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

@@ -16,12 +16,36 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * `score_brackets` skips anything already scored, so a re-run tops up brackets
  * without paying anyone twice.
  */
-/** How many brackets are in, and how many have already been paid. */
+/** Open or shut the bracket for everyone. */
+export async function PATCH(request: Request) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  const body = await request.json().catch(() => null);
+  const closed = !!body?.closed;
+
+  const { error } = await createAdminClient()
+    .from("site_settings")
+    .upsert({ id: 1, bracket_closed: closed }, { onConflict: "id" });
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+
+  await logAdmin("bracket", closed ? "Закрив сітку плей-офу" : "Відкрив сітку плей-офу");
+  return NextResponse.json({ ok: true, closed });
+}
+
+/** How many brackets are in, how many are paid, and whether picks are open. */
 export async function GET() {
   if (!(await isAdmin())) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   const admin = createAdminClient();
+  const { data: settings } = await admin
+    .from("site_settings")
+    .select("bracket_closed")
+    .eq("id", 1)
+    .maybeSingle();
   const [{ count: total }, { count: scored }] = await Promise.all([
     admin
       .from("bracket_predictions")
@@ -33,7 +57,12 @@ export async function GET() {
       .eq("tournament_slug", "ewc-2026")
       .not("scored_at", "is", null),
   ]);
-  return NextResponse.json({ ok: true, total: total ?? 0, scored: scored ?? 0 });
+  return NextResponse.json({
+    ok: true,
+    total: total ?? 0,
+    scored: scored ?? 0,
+    closed: !!settings?.bracket_closed,
+  });
 }
 
 export async function POST(request: Request) {

@@ -236,6 +236,26 @@ export async function POST(request: Request) {
           : `${prefix}прогноз «${title}» не зіграв`,
       };
     });
+
+  // Bets get their own line, and it names the stake. A player who put 300 on a
+  // 3.40 wants to read back what they risked and what came of it — "не зіграла"
+  // on its own tells them nothing they didn't already fear, and the balance
+  // moved by an amount no other message accounts for.
+  const { data: settled } = await admin
+    .from("bets")
+    .select("user_id, stake, payout")
+    .eq("question_id", question_id);
+  for (const b of (settled ?? []) as { user_id: string; stake: number; payout: number | null }[]) {
+    const won = (b.payout ?? 0) > 0;
+    notifs.push({
+      user_id: b.user_id,
+      kind: "reward",
+      title: won
+        ? `${prefix}ставка ${b.stake} на «${title}» зіграла — +${b.payout} EWC`
+        : `${prefix}ставка ${b.stake} на «${title}» не зіграла`,
+    });
+  }
+
   if (notifs.length > 0) await admin.from("notifications").insert(notifs);
 
   // Record the result only now — awards are done, so this can't lock out a retry.

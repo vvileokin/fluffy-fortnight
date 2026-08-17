@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2, Trophy } from "lucide-react";
+import { Check, Loader2, Lock, Trophy, Unlock } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { getTeam } from "@/lib/data";
@@ -26,14 +26,33 @@ const ROUNDS = [
 
 export default function BracketAdmin() {
   const [sel, setSel] = React.useState<Record<string, string[]>>({});
-  const [stats, setStats] = React.useState<{ total: number; scored: number } | null>(null);
+  const [stats, setStats] = React.useState<{
+    total: number;
+    scored: number;
+    closed: boolean;
+  } | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const [locking, setLocking] = React.useState(false);
 
   const load = React.useCallback(async () => {
     const res = await fetch("/api/admin/bracket/score", { cache: "no-store" });
     const j = await res.json().catch(() => ({}));
-    if (j.ok) setStats({ total: j.total, scored: j.scored });
+    if (j.ok) setStats({ total: j.total, scored: j.scored, closed: j.closed });
   }, []);
+
+  async function toggleLock() {
+    if (!stats) return;
+    setLocking(true);
+    const res = await fetch("/api/admin/bracket/score", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ closed: !stats.closed }),
+    });
+    const j = await res.json().catch(() => ({}));
+    setLocking(false);
+    if (j.ok) await load();
+    else alert(j.error || "Не вдалося змінити статус");
+  }
 
   React.useEffect(() => {
     void load();
@@ -97,14 +116,39 @@ export default function BracketAdmin() {
               {" · "}уже нараховано:{" "}
               <span className="tnum font-bold text-ink">{stats?.scored ?? "—"}</span>
             </p>
-            <button
-              onClick={score}
-              disabled={!complete || busy}
-              className="inline-flex h-9 min-w-32 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-50"
-            >
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Trophy className="size-4" />}
-              Нарахувати
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Closing is reversible on purpose — an admin who shuts it a day
+                  early, or by mistake, can open it again while the playoff
+                  hasn't started. The first live fixture still closes it for
+                  good regardless of this switch. */}
+              <button
+                onClick={toggleLock}
+                disabled={locking || !stats}
+                className={cn(
+                  "inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors disabled:opacity-50",
+                  stats?.closed
+                    ? "border border-success/50 bg-success/10 text-success hover:bg-success/20"
+                    : "border border-border-strong text-ink hover:bg-surface-2",
+                )}
+              >
+                {locking ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : stats?.closed ? (
+                  <Unlock className="size-4" />
+                ) : (
+                  <Lock className="size-4" />
+                )}
+                {stats?.closed ? "Відкрити прогнози" : "Закрити прогнози"}
+              </button>
+              <button
+                onClick={score}
+                disabled={!complete || busy}
+                className="inline-flex h-9 min-w-32 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Trophy className="size-4" />}
+                Нарахувати
+              </button>
+            </div>
           </div>
         </Panel>
 

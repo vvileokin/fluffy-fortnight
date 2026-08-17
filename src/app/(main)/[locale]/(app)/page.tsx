@@ -54,8 +54,20 @@ export default async function HomePage() {
     .filter((m) => m.status !== "finished" || minutesSinceFinished(m) < 10)
     .sort(feedOrder)
     .slice(0, 6);
+  // Bets and flat predictions are ranked on different scales — one by the
+  // biggest coefficient on offer, the other by the biggest payout — so they are
+  // split before either is sorted. Ranking a ×3.40 against a +150 would compare
+  // two numbers that don't mean the same thing, and a betting card would either
+  // always win or never appear depending on which way the units fell.
+  const maxOdds = (q: (typeof openQuestions)[number]) =>
+    Math.max(0, ...q.options.map((o) => o.odds ?? 0));
+  const betQuestions = openQuestions
+    .filter((q) => q.betting)
+    .sort((a, b) => maxOdds(b) - maxOdds(a))
+    .slice(0, 2);
   // The two biggest payouts on offer — that's what earns a spot on the home page.
-  const hotQuestions = [...openQuestions]
+  const hotQuestions = openQuestions
+    .filter((q) => !q.betting)
     .sort((a, b) => questionMaxReward(b) - questionMaxReward(a))
     .slice(0, 2);
 
@@ -89,6 +101,26 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {giveaways.map((g) => (
               <GiveawayCard key={g.slug} g={g} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Bets — the longest odds on offer, above the flat predictions because a
+          coefficient is the more interesting proposition of the two.
+
+          One card on a phone, two on a desktop. The second is rendered and
+          hidden rather than sliced away at a JS breakpoint: this page is a
+          server component, so it has no viewport to branch on, and guessing
+          would ship the wrong count to somebody on every load. */}
+      {betQuestions.length > 0 && (
+        <section className="space-y-2.5 sm:space-y-4">
+          <SectionHeader icon={TargetGlyph} title="Ставки" href="/interactives" />
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 lg:grid-cols-2">
+            {betQuestions.map((q, i) => (
+              <div key={q.id} className={i === 1 ? "hidden lg:block" : undefined}>
+                <QuestionCard question={q} withMatch match={matchById.get(q.matchId)} />
+              </div>
             ))}
           </div>
         </section>

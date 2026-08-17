@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, Loader2, Plus } from "lucide-react";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { cn, formatInt } from "@/lib/utils";
 
@@ -52,6 +52,7 @@ export function BetSlip({
   onPlaced: () => void;
 }) {
   const [stake, setStake] = React.useState<number>(CHIPS[0]);
+  const [custom, setCustom] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -117,60 +118,89 @@ export function BetSlip({
 
   return (
     <div className="mt-2 space-y-1.5">
-      {/* Stake row: three presets and the player's own figure, four equal
-          cells so the custom field reads as the fourth option rather than an
-          afterthought bolted to the end. */}
-      <div className="grid grid-cols-4 gap-1.5">
-        {CHIPS.map((c) => (
+      {/* Stake row. Presets while the row is closed; the whole row becomes the
+          field once `+` opens it, rather than squeezing an input into a quarter
+          of the width where the digits never had room. One row either way. */}
+      {custom ? (
+        <div className="flex gap-1.5">
           <button
-            key={c}
-            disabled={c > balance}
-            onClick={() => setStake(c)}
-            className={cn(
-              "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
-              stake === c
-                ? "bg-[rgb(255_122_44)] text-[#1a0a0d]"
-                : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
-              c > balance && "cursor-not-allowed opacity-35 hover:bg-white/[0.06]",
-            )}
+            onClick={() => {
+              setCustom(false);
+              setStake(CHIPS[0]);
+            }}
+            aria-label="Назад до сум"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/[0.06] text-white/60 transition-colors hover:bg-white/[0.12]"
           >
-            {c}
+            <ChevronLeft className="size-4" />
           </button>
-        ))}
-        {/* `text` with a numeric inputMode, not `type="number"`. A number input
-            renders the browser's own spinner arrows inside a 9mm-wide cell,
-            which is both ugly and a hit target nobody wants — and no betting
-            product anywhere ships stake entry with steppers. This gives the
-            phone keypad and keeps the cell clean. */}
-        <input
-          type="text"
-          inputMode="numeric"
-          value={CHIPS.includes(stake) ? "" : stake || ""}
-          placeholder="своя"
-          aria-label="Своя сума"
-          onChange={(e) => {
-            const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
-            setStake(digits ? Number(digits) : 0);
-          }}
-          className={cn(
-            "tnum h-9 w-full rounded-lg text-center font-mono text-xs font-bold outline-none transition-colors",
-            "placeholder:font-sans placeholder:font-semibold",
-            CHIPS.includes(stake)
-              ? "bg-white/[0.06] text-white/70 placeholder:text-white/45 focus:bg-white/[0.12]"
-              : "bg-[rgb(255_122_44)] text-[#1a0a0d] placeholder:text-[#1a0a0d]/50",
-          )}
-        />
-      </div>
+          <input
+            autoFocus
+            type="text"
+            inputMode="numeric"
+            value={stake || ""}
+            placeholder="скільки ставиш"
+            aria-label="Своя сума"
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
+              setStake(digits ? Number(digits) : 0);
+            }}
+            className={cn(
+              "tnum h-9 min-w-0 flex-1 rounded-lg bg-white/[0.06] text-center font-mono text-sm font-bold text-white outline-none transition-colors",
+              "placeholder:font-sans placeholder:text-xs placeholder:font-semibold placeholder:text-white/40",
+              "focus:bg-white/[0.12]",
+            )}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-1.5">
+          {CHIPS.map((c) => (
+            <button
+              key={c}
+              disabled={c > balance}
+              onClick={() => setStake(c)}
+              className={cn(
+                "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
+                stake === c
+                  ? "bg-[rgb(158_68_26)] text-white"
+                  : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
+                c > balance && "cursor-not-allowed opacity-35 hover:bg-white/[0.06]",
+              )}
+            >
+              {c}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              setCustom(true);
+              setStake(0);
+            }}
+            aria-label="Своя сума"
+            className="grid h-9 place-items-center rounded-lg bg-white/[0.06] text-white/60 transition-colors hover:bg-white/[0.12] hover:text-white"
+          >
+            <Plus className="size-4" strokeWidth={2.5} />
+          </button>
+        </div>
+      )}
 
       {/* The action carries the return, because that is the number the player
           is actually choosing between. */}
+      {/* The action says what you put in and what comes back, and nothing else.
+          A verb plus "поверне" plus two figures was a sentence on a button; the
+          arrow carries the same meaning wordlessly, and the accessible name
+          supplies the verb for anyone who needs it read aloud.
+
+          The ember is well below the ring orange the card outlines itself with.
+          At full strength this filled a third of the card with the brightest
+          thing on the page and pulled the eye off the options, which are the
+          actual decision. */}
       <button
         onClick={place}
         disabled={!valid || busy}
+        aria-label="Зробити ставку"
         className={cn(
-          "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
-          "bg-[rgb(255_122_44)] text-[#1a0a0d] hover:bg-[rgb(255_146_72)]",
-          "disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(255_122_44)]",
+          "flex h-11 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-bold transition-colors",
+          "bg-[rgb(158_68_26)] text-white hover:bg-[rgb(184_82_34)]",
+          "disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-white/35",
         )}
       >
         {busy ? (
@@ -181,32 +211,23 @@ export function BetSlip({
           // player can already see is dark.
           "Обери варіант"
         ) : (
-          <>
-            Поставити
-            {valid && (
-              <span className="tnum flex items-center gap-1 font-mono">
-                · поверне
-                <BrandIcon name="points-ewc" className="size-4" />
-                {formatInt(ret)}
-              </span>
-            )}
-          </>
+          <span className="tnum flex items-center gap-1.5 font-mono">
+            <BrandIcon name="points-ewc" className="size-4" />
+            {formatInt(stake)}
+            <ArrowRight className="size-3.5 opacity-60" strokeWidth={3} />
+            <BrandIcon name="points-ewc" className="size-4" />
+            {formatInt(ret)}
+          </span>
         )}
       </button>
 
-      <p className="tnum flex items-center justify-center gap-1 text-[0.6875rem] text-white/40">
-        {error ? (
-          <span role="alert" className="font-semibold text-danger">
-            {error}
-          </span>
-        ) : (
-          <>
-            баланс
-            <BrandIcon name="points-ewc" className="size-3.5" />
-            {formatInt(balance)} · змінити не можна
-          </>
-        )}
-      </p>
+      {/* Errors only. The balance line that used to live here was permanent
+          chrome under a two-row slip, and the top bar already carries it. */}
+      {error && (
+        <p role="alert" className="text-center text-[0.6875rem] font-semibold text-danger">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

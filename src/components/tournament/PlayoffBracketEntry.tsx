@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/i18n/navigation";
-import { Check, Loader2, Lock, LogIn } from "lucide-react";
+import { Check, Loader2, Lock, LogIn, Pencil } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { useUser } from "@/lib/supabase/use-user";
@@ -52,6 +52,7 @@ export function PlayoffBracketEntry() {
   const [round, setRound] = React.useState(0);
   const [picks, setPicks] = React.useState<Picks>({});
   const [busy, setBusy] = React.useState(false);
+  const [editing, setEditing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [nonce, setNonce] = React.useState(0);
 
@@ -70,7 +71,10 @@ export function PlayoffBracketEntry() {
 
   if (!data) return null;
 
-  if (data.mine) {
+  // Filled in and not being re-edited. Still open means it can be changed —
+  // nothing is paid until the playoff ends, so there is no reason to make an
+  // early entry final, and every reason not to punish filling it in first.
+  if (data.mine && !editing) {
     return (
       <Panel>
         <Head />
@@ -92,6 +96,24 @@ export function PlayoffBracketEntry() {
             "Бали — після завершення плей-офу."
           )}
         </p>
+        {data.open && !data.mine.scored && (
+          <button
+            onClick={() => {
+              setPicks({
+                qf: [...data.mine!.picks.qf],
+                sf: [...data.mine!.picks.sf],
+                final: [...data.mine!.picks.final],
+                champion: [data.mine!.picks.champion],
+              });
+              setRound(0);
+              setEditing(true);
+            }}
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-white/[0.06] text-sm font-semibold text-white/80 transition-colors hover:bg-white/[0.12]"
+          >
+            <Pencil className="size-3.5" />
+            Змінити
+          </button>
+        )}
       </Panel>
     );
   }
@@ -119,7 +141,7 @@ export function PlayoffBracketEntry() {
           <Lock className="mt-0.5 size-3.5 shrink-0 text-ink-subtle" />
           {data.started
             ? "Плей-оф уже почався — сітку закрито."
-            : "Відкриється, щойно визначаться всі 16 учасників."}
+            : "Прийом прогнозів закрито."}
         </p>
       </Panel>
     );
@@ -181,12 +203,14 @@ export function PlayoffBracketEntry() {
     setBusy(false);
     if (!out.ok) {
       setError(
-        out.error === "already_submitted"
-          ? "Ти вже заповнив сітку."
-          : out.error === "closed"
-            ? "Плей-оф уже почався."
+        out.error === "already_scored"
+          ? "Сітку вже розраховано."
+          : out.error === "closed" || out.error === "not_open"
+            ? "Прийом прогнозів закрито."
             : "Не вдалося зберегти. Спробуй ще раз.",
       );
+    } else {
+      setEditing(false);
     }
     setNonce((n) => n + 1);
   }
@@ -214,9 +238,9 @@ export function PlayoffBracketEntry() {
               className={cn(
                 "flex h-7 flex-1 items-center justify-center gap-1 rounded-md text-xs font-bold transition-colors",
                 i === round
-                  ? "bg-[rgb(255_122_44)] text-[#1a0a0d]"
+                  ? "bg-[rgb(158_68_26)] text-white"
                   : ok
-                    ? "bg-[rgb(255_122_44/0.16)] text-[rgb(255_154_64)]"
+                    ? "bg-[rgb(158_68_26/0.3)] text-[rgb(255_154_64)]"
                     : "bg-black/30 text-white/35",
                 reachable(i) ? "cursor-pointer" : "cursor-not-allowed",
               )}
@@ -296,16 +320,13 @@ export function PlayoffBracketEntry() {
         disabled={!done || busy}
         className={cn(
           "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
-          "bg-[rgb(255_122_44)] text-[#1a0a0d] hover:bg-[rgb(255_146_72)]",
+          "bg-[rgb(158_68_26)] text-white hover:bg-[rgb(184_82_34)]",
           "disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(255_122_44)]",
         )}
       >
         {busy && <Loader2 className="size-4 animate-spin" />}
-        {last ? "Заповнити остаточно" : "Далі"}
+        {last ? "Зберегти сітку" : "Далі"}
       </button>
-      {last && (
-        <p className="text-center text-xs text-ink-subtle">Змінити потім не можна.</p>
-      )}
     </Panel>
   );
 }
