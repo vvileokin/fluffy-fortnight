@@ -234,15 +234,13 @@ export function QuestionCard({
        page has one way of saying "this one is selected". */
     <div
       className={cn(
-        // Sized to its own contents, not to its neighbour. Grid children
-        // stretch by default, and a card whose bet is already placed is far
-        // shorter than one still showing the stake picker — so the taller one
-        // in the row dictated a height the shorter one had to pad out, and
-        // that padding was dead ground above the sponsor plate. Filling it
-        // would mean inventing content to cover a layout artefact; not
-        // stretching removes the artefact. Tops still line up, which is the
-        // alignment that actually reads.
-        "flex flex-col self-start overflow-hidden rounded-2xl",
+        // Full height again, with the body taking the slack, so the sponsor
+        // plates across a row sit on one line. Letting each card find its own
+        // height did remove the dead space, but it left the white strips at
+        // different heights next to each other, which reads worse than the
+        // gap did. The gap itself is dealt with where it came from: the placed
+        // slip is now close in height to the picker it replaces.
+        "flex h-full flex-col overflow-hidden rounded-2xl",
         isEwc ? "ewc-match" : "surface-1",
       )}
     >

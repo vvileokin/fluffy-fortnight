@@ -83,72 +83,65 @@ export function BetSlip({
     const settled = !!bet.settled_at;
     const won = settled && (bet.payout ?? 0) > 0;
     return (
+      /* Two rows, near enough the picker's height that a placed card and an
+         unplaced one sit level in a grid. One cramped line left the card half
+         the height of its neighbour, which is what pushed the sponsor plates
+         out of line with each other. It also gives the cancel its own full
+         width instead of wedging it beside the figures. */
       <div className="mt-2 space-y-1.5">
-      <div className="flex items-center justify-between gap-2 rounded-lg bg-black/30 px-2.5 py-2">
-        {/* Both marks ember. They are the same currency going out and coming
-            back, and the silver read as a second kind of point rather than as
-            a direction — the arrow and the coefficient between them already
-            say which figure is which. */}
-        <span className="tnum flex min-w-0 items-center gap-1 font-mono text-xs font-bold leading-none text-[rgb(255_154_64)]">
-          <BrandIcon name="points-ewc" className="size-4" />
-          {formatInt(bet.stake)}
-          {/* Wider gaps around the arrow than inside either figure, so the row
-              parses as two amounts with a turn between them rather than one
-              run of numbers. */}
-          <span className="mx-1.5 text-white/45">× {bet.odds}</span>
-          <ArrowRight className="mr-1.5 size-3 shrink-0 text-white/35" strokeWidth={3} />
-          <BrandIcon name="points-ewc" className="size-4" />
-          {formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
-        </span>
-        {/* Once settled, the outcome replaces the projection — what it is
-            worth stops mattering the moment it's decided. */}
-        {settled && (
-          <span
-            className={cn(
-              "tnum flex shrink-0 items-center gap-1 font-mono text-xs font-extrabold",
-              won ? "text-success" : "text-white/40",
-            )}
-          >
-            {won ? (
-              <>
-                <BrandIcon name="points-ewc" className="size-4" />+
-                {formatInt(bet.payout ?? 0)}
-              </>
-            ) : (
-              "не зіграла"
-            )}
+        <div className="flex h-11 items-center justify-between gap-2 rounded-lg bg-black/30 px-3">
+          {/* Both marks ember: the same currency going out and coming back,
+              with the arrow and the coefficient saying which is which. */}
+          <span className="tnum flex min-w-0 items-center gap-1 font-mono text-sm font-bold leading-none text-[rgb(255_154_64)]">
+            <BrandIcon name="points-ewc" className="size-4" />
+            {formatInt(bet.stake)}
+            <span className="mx-1.5 text-white/45">× {bet.odds}</span>
+            <ArrowRight className="mr-1.5 size-3.5 shrink-0 text-white/35" strokeWidth={3} />
+            <BrandIcon name="points-ewc" className="size-4" />
+            {formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
           </span>
-        )}
-        {/* Cancelling is only offered while the question is open — after that
+          {/* Once settled the outcome replaces the projection — what a slip is
+              worth stops mattering the moment it is decided. */}
+          {settled && (
+            <span
+              className={cn(
+                "tnum flex shrink-0 items-center gap-1 font-mono text-sm font-extrabold",
+                won ? "text-success" : "text-white/40",
+              )}
+            >
+              {won ? (
+                <>
+                  <BrandIcon name="points-ewc" className="size-4" />+{formatInt(bet.payout ?? 0)}
+                </>
+              ) : (
+                "не зіграла"
+              )}
+            </span>
+          )}
+        </div>
+
+        {/* Cancelling is offered only while the question is open — after that
             the slip is live and taking it back would be a free look. */}
         {!settled && !locked && (
           <button
             onClick={cancel}
             disabled={busy}
-            // Fixed height and `leading-none`: the label's own line box is
-            // taller than the 12px icon beside it, so left to flow the two sat
-            // on different centres and the whole control rode low against the
-            // figures opposite.
-            className="flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-[0.6875rem] font-semibold leading-none text-white/45 transition-colors hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-50"
+            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.06] text-xs font-semibold text-white/60 transition-colors hover:bg-white/[0.12] hover:text-white disabled:opacity-50"
           >
             {busy ? (
               <Loader2 className="size-3.5 shrink-0 animate-spin" />
             ) : (
-              // 14px, not 12. A lucide glyph is drawn inset in its own box, so
-              // at the label's exact size its ink comes out visibly smaller
-              // than the letters and the pair reads as mismatched rather than
-              // as an icon with a word.
               <X className="size-3.5 shrink-0" strokeWidth={2.5} />
             )}
-            <span className="leading-none">Скасувати</span>
+            Скасувати ставку
           </button>
         )}
-      </div>
-      {error && (
-        <p role="alert" className="text-center text-[0.6875rem] font-semibold text-danger">
-          {error}
-        </p>
-      )}
+
+        {error && (
+          <p role="alert" className="text-center text-[0.6875rem] font-semibold text-danger">
+            {error}
+          </p>
+        )}
       </div>
     );
   }

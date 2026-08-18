@@ -125,12 +125,16 @@ export default async function MatchPage({
             48px of empty plate around an 84px crest and made the header the
             tallest object on the page without carrying more information than
             the row of cards below it. */}
-        {/* Equal on all four sides, at both sizes. It was 16/10 on phones and
+        {/* Equal on all four sides, at both sizes, and no taller than the row
+            inside it needs. The tournament link carries a 44px touch target,
+            which inflated a 16px line to 28px and put a band of nothing under
+            the top edge — worth it on a phone, pure padding with a mouse, so
+            it stops at sm. It was 16/10 on phones and
             24/16 above, so the crests sat closer to the top and bottom edges
             than to the left and right ones and the block read as squashed
             rather than inset. One value per breakpoint is the only way that
             stays true as the contents change. */}
-        <div className="relative p-4 sm:p-6">
+        <div className="relative p-4 sm:p-5">
           {/* The scoreboard says this visually; the page still needs one real
               heading, and duplicating the names on screen would be noise. */}
           <h1 className="sr-only">
@@ -141,7 +145,7 @@ export default async function MatchPage({
             {tour ? (
               <Link
                 href={`/tournaments/${tour.slug}`}
-                className="-my-2 inline-flex min-h-11 items-center truncate rounded-lg py-2 pr-2 font-semibold transition-colors hover:text-ink"
+                className="-my-2 inline-flex min-h-11 items-center truncate rounded-lg py-2 pr-2 font-semibold transition-colors hover:text-ink sm:my-0 sm:min-h-0 sm:py-0"
               >
                 {tour.name}
               </Link>
