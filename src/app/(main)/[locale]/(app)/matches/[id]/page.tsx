@@ -128,8 +128,10 @@ export default async function MatchPage({
         {/* Equal on all four sides, at both sizes, and no taller than the row
             inside it needs. The tournament link carries a 44px touch target,
             which inflated a 16px line to 28px and put a band of nothing under
-            the top edge — worth it on a phone, pure padding with a mouse, so
-            it stops at sm. It was 16/10 on phones and
+            the top edge. With a mouse that is pure padding, so it stops at sm;
+            on a phone the target is kept but its padding is cancelled by an
+            equal negative margin, so the finger still gets 44px while the
+            layout is only charged for the 16px of text inside it. It was 16/10 on phones and
             24/16 above, so the crests sat closer to the top and bottom edges
             than to the left and right ones and the block read as squashed
             rather than inset. One value per breakpoint is the only way that
@@ -145,7 +147,7 @@ export default async function MatchPage({
             {tour ? (
               <Link
                 href={`/tournaments/${tour.slug}`}
-                className="-my-2 inline-flex min-h-11 items-center truncate rounded-lg py-2 pr-2 font-semibold transition-colors hover:text-ink sm:my-0 sm:min-h-0 sm:py-0"
+                className="-my-3.5 inline-flex min-h-11 items-center truncate rounded-lg py-3.5 pr-2 font-semibold transition-colors hover:text-ink sm:my-0 sm:min-h-0 sm:py-0"
               >
                 {tour.name}
               </Link>
