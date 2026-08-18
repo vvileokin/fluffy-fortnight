@@ -131,12 +131,18 @@ export default async function MatchPage({
             the top edge. With a mouse that is pure padding, so it stops at sm;
             on a phone the target is kept but its padding is cancelled by an
             equal negative margin, so the finger still gets 44px while the
-            layout is only charged for the 16px of text inside it. It was 16/10 on phones and
+            layout is only charged for the 16px of text inside it.
+
+            Phones take 12px rather than 16: the scorelines carry their own
+            inner padding, so the crest already stood ~28px off the banner edge
+            and the whole block read as inset twice over. Still equal on all
+            four sides — the rule holds, the value is just tighter where the
+            screen is narrow. It was 16/10 on phones and
             24/16 above, so the crests sat closer to the top and bottom edges
             than to the left and right ones and the block read as squashed
             rather than inset. One value per breakpoint is the only way that
             stays true as the contents change. */}
-        <div className="relative p-4 sm:p-5">
+        <div className="relative p-3 sm:p-5">
           {/* The scoreboard says this visually; the page still needs one real
               heading, and duplicating the names on screen would be noise. */}
           <h1 className="sr-only">
