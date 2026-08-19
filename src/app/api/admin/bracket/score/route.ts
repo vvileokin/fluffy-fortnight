@@ -89,18 +89,22 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   const slug = String(body?.slug ?? "ewc-2026");
-  const actual = body?.actual as
-    | { qf?: string[]; sf?: string[]; final?: string[]; champion?: string }
-    | undefined;
+  const round = String(body?.round ?? "");
+  const teams = Array.isArray(body?.teams) ? (body.teams as string[]) : [];
 
-  if (!actual?.champion || !Array.isArray(actual.qf)) {
+  if (!["qf", "sf", "final", "champion"].includes(round) || teams.length === 0) {
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
   }
 
   const admin = createAdminClient();
-  const { data, error } = await admin.rpc("score_brackets", {
+  // One round at a time, so a bracket earns as the playoff goes rather than
+  // sitting on nothing until the final is over. `score_bracket_round` records
+  // which rounds a bracket has been paid for, so pressing this twice pays
+  // nothing the second time.
+  const { data, error } = await admin.rpc("score_bracket_round", {
     p_slug: slug,
-    p_actual: actual,
+    p_round: round,
+    p_teams: teams,
   });
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
@@ -108,21 +112,22 @@ export async function POST(request: Request) {
 
   const scored = Number(data ?? 0);
 
-  // Everything else that pays tells the player it paid; the bracket was the one
-  // silent payout, which is the worst kind — points appear and nothing accounts
-  // for them. Read back after scoring so the figure quoted is the one banked.
+  // Naming the round matters now that there are four payouts instead of one:
+  // "+120 EWC" arriving with no reason attached is the kind of thing players
+  // ask about in chat.
+  const label = { qf: "1/4", sf: "1/2", final: "фінал", champion: "чемпіон" }[round];
   const { data: paid } = await admin
     .from("bracket_predictions")
     .select("user_id, points")
     .eq("tournament_slug", slug)
-    .not("scored_at", "is", null);
+    .contains("scored_rounds", [round]);
   const notifs = (paid ?? []).map((b: { user_id: string; points: number | null }) => ({
     user_id: b.user_id,
     kind: "reward",
-    title: `Сітка плей-офу розрахована — +${b.points ?? 0} EWC`,
+    title: `Сітка плей-офу · ${label} розраховано — разом ${b.points ?? 0} EWC`,
   }));
   if (notifs.length > 0) await admin.from("notifications").insert(notifs);
 
-  await logAdmin("bracket", `Розрахував сітки ${slug} — ${scored} гравцям`);
-  return NextResponse.json({ ok: true, scored });
+  await logAdmin("bracket", `Розрахував сітки ${slug}, раунд ${round} — ${scored} гравцям`);
+  return NextResponse.json({ ok: true, scored, round });
 }

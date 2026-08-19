@@ -34,7 +34,7 @@ export default function BracketAdmin() {
     forceOpen: boolean;
     favourites: Record<string, number>;
   } | null>(null);
-  const [busy, setBusy] = React.useState(false);
+  const [busy, setBusy] = React.useState<string | null>(null);
   const [locking, setLocking] = React.useState(false);
 
   const load = React.useCallback(async () => {
@@ -77,33 +77,28 @@ export default function BracketAdmin() {
     });
   }
 
-  const complete = ROUNDS.every((r) => (sel[r.key] ?? []).length === r.size);
-
-  async function score() {
-    if (
-      !confirm(
-        "Нарахувати EWC поінти за сітки? Уже нараховані сітки пропускаються, тож повторний запуск не платить двічі.",
-      )
-    )
-      return;
-    setBusy(true);
+  /**
+   * Pay one round.
+   *
+   * Rounds settle as they finish rather than all at once at the end: a bracket
+   * filled in on day one used to earn nothing for eleven days, which is a long
+   * time to remember you entered. Pressing the same round twice pays nothing
+   * the second time — the database records which rounds each bracket has had.
+   */
+  async function scoreRound(key: string, size: number) {
+    const teams = sel[key] ?? [];
+    if (teams.length !== size) return;
+    if (!confirm(`Нарахувати поінти за цей раунд? Повторне натискання нічого не додасть.`)) return;
+    setBusy(key);
     const res = await fetch("/api/admin/bracket/score", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        slug: "ewc-2026",
-        actual: {
-          qf: sel.qf,
-          sf: sel.sf,
-          final: sel.final,
-          champion: (sel.champion ?? [])[0],
-        },
-      }),
+      body: JSON.stringify({ slug: "ewc-2026", round: key, teams }),
     });
     const j = await res.json().catch(() => ({}));
-    setBusy(false);
+    setBusy(null);
     if (j.ok) {
-      alert(`Розраховано. Сіток нараховано: ${j.scored}.`);
+      alert(`Розраховано. Сіток оброблено: ${j.scored}.`);
       await load();
     } else {
       alert(j.error || "Помилка розрахунку");
@@ -159,14 +154,6 @@ export default function BracketAdmin() {
                   відкрито вручну, попри початок плей-офу
                 </span>
               )}
-              <button
-                onClick={score}
-                disabled={!complete || busy}
-                className="inline-flex h-9 min-w-32 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-50"
-              >
-                {busy ? <Loader2 className="size-4 animate-spin" /> : <Trophy className="size-4" />}
-                Нарахувати
-              </button>
             </div>
           </div>
         </Panel>
@@ -225,12 +212,27 @@ export default function BracketAdmin() {
             <Panel key={r.key}>
               <div className="flex items-center justify-between gap-3 shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-4 py-3">
                 <p className="text-sm font-bold text-ink">{r.label}</p>
-                <p className="text-xs text-ink-subtle">
-                  <span className="tnum font-bold">
-                    {chosen.length}/{r.size}
-                  </span>{" "}
-                  · по +{r.per} за команду
-                </p>
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-ink-subtle">
+                    <span className="tnum font-bold">
+                      {chosen.length}/{r.size}
+                    </span>{" "}
+                    · по +{r.per} за команду
+                  </p>
+                  {/* Each round pays on its own, the moment it is decided. */}
+                  <button
+                    onClick={() => scoreRound(r.key, r.size)}
+                    disabled={chosen.length !== r.size || busy !== null}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-xs font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-45"
+                  >
+                    {busy === r.key ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Trophy className="size-3.5" />
+                    )}
+                    Нарахувати
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5 p-4">
                 {pool.length === 0 ? (

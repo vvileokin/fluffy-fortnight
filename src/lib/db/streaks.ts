@@ -17,6 +17,7 @@ type Admin = {
 type QRow = { id: string; match_id: string };
 type ResRow = { question_id: string; correct_option_id: string };
 type PredRow = { user_id: string; question_id: string; option_id: string };
+type BetRow = { user_id: string; question_id: string; payout: number | null; settled_at: string | null };
 type MatchRow = { id: string; is_event: boolean | null; start_at: string | null };
 
 /**
@@ -66,6 +67,20 @@ export async function recomputeStreaks(admin: unknown, userIds: string[]): Promi
       .range(f, t) as PromiseLike<{ data: PredRow[] | null; error: unknown }>,
   );
 
+  // Bets count toward the run exactly as answers do.
+  //
+  // A staking question writes no prediction row — the slip *is* the answer — so
+  // replaying `predictions` alone meant a player who bet on every match of an
+  // evening and got them all right finished on a streak of nought. Whether the
+  // call was right is what a streak measures; what it cost is not.
+  const { rows: bets } = await fetchAllRows<BetRow>((f, t) =>
+    db
+      .from("bets")
+      .select("user_id, question_id, payout, settled_at")
+      .order("user_id", { ascending: true })
+      .range(f, t) as PromiseLike<{ data: BetRow[] | null; error: unknown }>,
+  ).catch(() => ({ rows: [] as BetRow[] }));
+
   const correctOf = new Map(results.map((r) => [r.question_id, r.correct_option_id]));
   const matchOf = new Map(questions.map((q) => [q.id, q.match_id]));
   const matchById = new Map(matches.map((m) => [m.id, m]));
@@ -83,6 +98,18 @@ export async function recomputeStreaks(admin: unknown, userIds: string[]): Promi
     if (!perMatch) byUser.set(p.user_id, (perMatch = new Map()));
     const list = perMatch.get(matchId) ?? [];
     list.push(p.option_id === answer);
+    perMatch.set(matchId, list);
+  }
+
+  for (const b of bets) {
+    if (!b.settled_at) continue; // still live — no outcome to count yet
+    if (!wanted.has(b.user_id)) continue;
+    const matchId = matchOf.get(b.question_id);
+    if (!matchId) continue;
+    let perMatch = byUser.get(b.user_id);
+    if (!perMatch) byUser.set(b.user_id, (perMatch = new Map()));
+    const list = perMatch.get(matchId) ?? [];
+    list.push((b.payout ?? 0) > 0);
     perMatch.set(matchId, list);
   }
 
