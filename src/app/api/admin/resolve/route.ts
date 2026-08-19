@@ -210,7 +210,7 @@ export async function POST(request: Request) {
   // the slip was accepted at, and skips anything already settled — so a
   // re-resolved question tops up what it missed rather than paying twice. A
   // question with no bets on it simply touches nothing.
-  const { error: betErr } = await admin.rpc("settle_bets", {
+  const { data: betsSettled, error: betErr } = await admin.rpc("settle_bets", {
     p_question: question_id,
     p_correct: correct_option_id,
   });
@@ -270,5 +270,8 @@ export async function POST(request: Request) {
   await recomputeStreaks(admin, userIds);
 
   await logAdmin("resolve", `Розрахував питання ${question_id}: нараховано ${awarded} гравцям (+${reward})`);
-  return NextResponse.json({ ok: true, awarded, reward });
+  // `bets` lets the panel report what actually happened: a staking question
+  // pays out of `bets` and awards no flat points, so "нараховано 0 гравцям"
+  // would read as a failure rather than as the correct outcome.
+  return NextResponse.json({ ok: true, awarded, reward, bets: Number(betsSettled ?? 0) });
 }

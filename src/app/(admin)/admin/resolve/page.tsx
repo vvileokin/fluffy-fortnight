@@ -8,8 +8,8 @@ import { getTeam } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-type Opt = { id: string; label: string; reward: number };
-type QRow = { id: string; match_id: string; title: string; deadline_label: string | null; options: Opt[] };
+type Opt = { id: string; label: string; reward: number; odds?: number };
+type QRow = { id: string; match_id: string; title: string; deadline_label: string | null; options: Opt[]; betting?: boolean | null };
 type MatchLite = { id: string; team_a: string; team_b: string; team_a_name: string | null; team_b_name: string | null };
 
 function teamTag(slug: string, name: string | null): string {
@@ -25,7 +25,7 @@ export default function ResolveAdmin() {
   const load = React.useCallback(async () => {
     const sb = createClient();
     const [{ data: qs }, { data: ms }, { data: res }] = await Promise.all([
-      sb.from("questions").select("id, match_id, title, deadline_label, options").order("created_at", { ascending: false }),
+      sb.from("questions").select("id, match_id, title, deadline_label, options, betting").order("created_at", { ascending: false }),
       sb.from("matches").select("id, team_a, team_b, team_a_name, team_b_name"),
       sb.from("question_results").select("question_id, correct_option_id"),
     ]);
@@ -55,7 +55,11 @@ export default function ResolveAdmin() {
     if (res.ok) {
       setResolved((r) => ({ ...r, [questionId]: optionId }));
       if (typeof j.awarded === "number" && !j.alreadyResolved) {
-        alert(`Розраховано. Нараховано ${j.awarded} гравцям по +${j.reward}.`);
+        alert(
+          j.bets
+            ? `Розраховано. Ставок закрито: ${j.bets}.`
+            : `Розраховано. Нараховано ${j.awarded} гравцям по +${j.reward}.`,
+        );
       }
     } else {
       alert(j.error || "Помилка розрахунку");
@@ -113,7 +117,18 @@ export default function ResolveAdmin() {
                         {won && <Check className="size-4" strokeWidth={3} />}
                         {isBusy && !winner && <Loader2 className="size-3.5 animate-spin" />}
                         {o.label}
-                        <span className="tnum font-mono text-xs text-accent">+{o.reward}</span>
+                        {/* A staking question pays stake × coefficient out of
+                            `bets`, and hands out no flat points at all — so
+                            showing "+50" here described a payout that will
+                            never happen and made the panel look like it was
+                            about to double-pay. */}
+                        {q.betting ? (
+                          <span className="tnum font-mono text-xs text-accent">
+                            ×{(o.odds ?? 1).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="tnum font-mono text-xs text-accent">+{o.reward}</span>
+                        )}
                       </button>
                     );
                   })}
