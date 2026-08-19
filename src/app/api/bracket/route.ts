@@ -3,43 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCompleteBracket, type BracketPicks } from "@/lib/bracket-scoring";
 import { EWC_PLAYOFF_TEAMS } from "@/lib/ewc-bracket";
-import { getMatches } from "@/lib/db/matches";
+import { playoffWindow } from "@/lib/db/playoff-window";
 
 const SLUG = "ewc-2026";
-
-/**
- * The playoff shuts the moment the first playoff match starts.
- *
- * The field is the published draw, not whatever fixtures an admin happens to
- * have created — the sixteen are known and the form should be fillable now,
- * rather than waiting on eight rows being typed in to unlock itself.
- *
- * The deadline still reads from the matches rather than a date in a config:
- * the schedule moves, and a hardcoded deadline that drifts past the first game
- * would let someone submit a bracket with a result already on the board. No
- * playoff fixture existing yet simply means nothing has started.
- */
-async function playoffLock() {
-  const matches = await getMatches();
-  const started = matches.some(
-    (m) =>
-      m.tournamentSlug === SLUG &&
-      m.status !== "upcoming" &&
-      /playoff|плей|1\/8|1\/4|1\/2|фінал/i.test(m.stage ?? ""),
-  );
-
-  // An admin can shut it early. The first-fixture rule stays as the backstop,
-  // but it's the wrong *only* option: the schedule moves, and "wait for a match
-  // to start" can't be undone if the draw turns out to be wrong.
-  const { data } = await createAdminClient()
-    .from("site_settings")
-    .select("bracket_closed")
-    .eq("id", 1)
-    .maybeSingle();
-  const closed = !!data?.bracket_closed;
-
-  return { open: !started && !closed, started, closed, teams: EWC_PLAYOFF_TEAMS };
-}
 
 export async function GET() {
   const supabase = await createClient();
@@ -47,9 +13,9 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const lock = await playoffLock();
+  const lock = await playoffWindow();
   if (!user) {
-    return NextResponse.json({ ok: true, signedIn: false, ...lock, mine: null });
+    return NextResponse.json({ ok: true, signedIn: false, ...lock, teams: EWC_PLAYOFF_TEAMS, mine: null });
   }
 
   const admin = createAdminClient();
@@ -64,6 +30,9 @@ export async function GET() {
     ok: true,
     signedIn: true,
     ...lock,
+    // The draw is fixed and lives in the bundle, so it never needed a query —
+    // the form reads its round-of-16 fixtures straight from here.
+    teams: EWC_PLAYOFF_TEAMS,
     mine: data
       ? { picks: data.picks, points: data.points, scored: !!data.scored_at }
       : null,
@@ -79,7 +48,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  const lock = await playoffLock();
+  const lock = await playoffWindow();
   if (!lock.open) {
     return NextResponse.json(
       { ok: false, error: lock.started ? "closed" : "not_open" },
@@ -94,7 +63,7 @@ export async function POST(request: Request) {
   }
   // Every name has to be one of the sixteen actually in the playoff — otherwise
   // a crafted request could bank points on a team that was never there.
-  if (!picks.qf.every((s) => lock.teams.includes(s))) {
+  if (!picks.qf.every((s) => EWC_PLAYOFF_TEAMS.includes(s))) {
     return NextResponse.json({ ok: false, error: "unknown_team" }, { status: 400 });
   }
 

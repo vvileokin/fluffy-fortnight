@@ -31,6 +31,7 @@ export default function BracketAdmin() {
     total: number;
     scored: number;
     closed: boolean;
+    forceOpen: boolean;
     favourites: Record<string, number>;
   } | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -44,6 +45,7 @@ export default function BracketAdmin() {
         total: j.total,
         scored: j.scored,
         closed: j.closed,
+        forceOpen: j.forceOpen,
         favourites: j.favourites ?? {},
       });
   }, []);
@@ -125,10 +127,11 @@ export default function BracketAdmin() {
               <span className="tnum font-bold text-ink">{stats?.scored ?? "—"}</span>
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              {/* Closing is reversible on purpose — an admin who shuts it a day
-                  early, or by mistake, can open it again while the playoff
-                  hasn't started. The first live fixture still closes it for
-                  good regardless of this switch. */}
+              {/* Reversible in both directions. The first live fixture closes
+                  the bracket automatically, which is the right default and was
+                  the wrong absolute: a match set live by mistake used to shut
+                  picks for the rest of the event with this button silently
+                  doing nothing. Opening now overrides that. */}
               <button
                 onClick={toggleLock}
                 disabled={locking || !stats}
@@ -148,6 +151,14 @@ export default function BracketAdmin() {
                 )}
                 {stats?.closed ? "Відкрити прогнози" : "Закрити прогнози"}
               </button>
+              {/* Say so when the switch is the only reason picks are still
+                  being taken — otherwise "open" during a live playoff looks
+                  like the automatic close simply failed. */}
+              {stats && !stats.closed && stats.forceOpen && (
+                <span className="text-xs text-ink-subtle">
+                  відкрито вручну, попри початок плей-офу
+                </span>
+              )}
               <button
                 onClick={score}
                 disabled={!complete || busy}

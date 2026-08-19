@@ -24,9 +24,13 @@ export async function PATCH(request: Request) {
   const body = await request.json().catch(() => null);
   const closed = !!body?.closed;
 
+  // Opening means opening. Pairing the two flags here is what makes the button
+  // honest: `started` would otherwise keep the bracket shut and the press would
+  // appear to do nothing at all.
   const { error } = await createAdminClient()
     .from("site_settings")
-    .upsert({ id: 1, bracket_closed: closed }, { onConflict: "id" });
+    .update({ bracket_closed: closed, bracket_force_open: !closed })
+    .eq("id", 1);
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
@@ -43,7 +47,7 @@ export async function GET() {
   const admin = createAdminClient();
   const { data: settings } = await admin
     .from("site_settings")
-    .select("bracket_closed")
+    .select("bracket_closed, bracket_force_open")
     .eq("id", 1)
     .maybeSingle();
   const [{ count: total }, { count: scored }] = await Promise.all([
@@ -73,6 +77,7 @@ export async function GET() {
     total: total ?? 0,
     scored: scored ?? 0,
     closed: !!settings?.bracket_closed,
+    forceOpen: !!settings?.bracket_force_open,
     favourites,
   });
 }

@@ -2,32 +2,17 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EWC_PLAYOFF_TEAMS } from "@/lib/ewc-bracket";
-import { getMatches } from "@/lib/db/matches";
+import { playoffWindow } from "@/lib/db/playoff-window";
 
 const SLUG = "ewc-2026";
 
 /**
- * Open exactly as long as the bracket is.
+ * Open exactly as long as the bracket is — the same switch, deliberately.
  *
- * They are the same decision taken at the same moment — pick your sixteen, pick
- * your one — so closing one but not the other would be arbitrary, and would
- * leave a player able to hedge a locked bracket with a fresh team.
+ * They are the same decision taken at the same moment (pick your sixteen, pick
+ * your one), so closing one but not the other would be arbitrary and would let
+ * a player hedge a locked bracket with a fresh team.
  */
-async function pickWindow() {
-  const matches = await getMatches();
-  const started = matches.some(
-    (m) =>
-      m.tournamentSlug === SLUG &&
-      m.status !== "upcoming" &&
-      /playoff|плей|1\/8|1\/4|1\/2|фінал/i.test(m.stage ?? ""),
-  );
-  const { data } = await createAdminClient()
-    .from("site_settings")
-    .select("bracket_closed")
-    .eq("id", 1)
-    .maybeSingle();
-  return { open: !started && !data?.bracket_closed, started };
-}
 
 export async function GET() {
   const supabase = await createClient();
@@ -35,7 +20,7 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const window = await pickWindow();
+  const window = await playoffWindow();
   if (!user) {
     return NextResponse.json({ ok: true, signedIn: false, ...window, team: null, earned: 0 });
   }
@@ -69,7 +54,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  const { open } = await pickWindow();
+  const { open } = await playoffWindow();
   if (!open) {
     return NextResponse.json({ ok: false, error: "closed" }, { status: 409 });
   }

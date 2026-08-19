@@ -38,21 +38,27 @@ export function FavouriteTeam() {
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [nonce, setNonce] = React.useState(0);
+  const [failed, setFailed] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
     fetch("/api/favourite", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
-        if (!cancelled && d.ok) setData(d);
+        if (cancelled) return;
+        if (d.ok) setData(d);
+        else setFailed(true);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
     return () => {
       cancelled = true;
     };
   }, [user, nonce]);
 
-  if (!data) return null;
+  if (failed) return <Failed onRetry={() => { setFailed(false); setNonce((n) => n + 1); }} />;
+  if (!data) return <Skeleton rows={4} />;
 
   async function choose(team: string) {
     setBusy(team);
@@ -185,5 +191,45 @@ export function FavouriteTeam() {
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Something is always on screen.
+ *
+ * Both cards used to render `null` until their fetch landed and swallow any
+ * failure, so a slow reply showed an empty tab and a failed one showed an empty
+ * tab for good — indistinguishable from the feature not existing. A shape while
+ * loading, and a reason when it breaks, is the difference between "wait" and
+ * "this is broken".
+ */
+function Shell({ children }: { children: React.ReactNode }) {
+  return <div className="ewc-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">{children}</div>;
+}
+
+function Skeleton({ rows }: { rows: number }) {
+  return (
+    <Shell>
+      <div className="h-4 w-40 animate-pulse rounded bg-white/[0.07]" />
+      <div className="grid gap-1.5" style={{ gridTemplateRows: `repeat(${rows}, 1fr)` }}>
+        {Array.from({ length: rows }, (_, i) => (
+          <div key={i} className="h-9 animate-pulse rounded-lg bg-white/[0.05]" />
+        ))}
+      </div>
+    </Shell>
+  );
+}
+
+function Failed({ onRetry }: { onRetry: () => void }) {
+  return (
+    <Shell>
+      <p className="text-xs text-white/60">Не вдалося завантажити.</p>
+      <button
+        onClick={onRetry}
+        className="h-9 w-full rounded-lg bg-white/[0.06] text-xs font-semibold text-white/80 transition-colors hover:bg-white/[0.12]"
+      >
+        Спробувати ще раз
+      </button>
+    </Shell>
   );
 }
