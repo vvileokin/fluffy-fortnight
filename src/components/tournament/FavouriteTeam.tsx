@@ -69,7 +69,8 @@ export function FavouriteTeam() {
   }
 
   const picked = data.team;
-  const tier = picked ? underdogTier(picked) : null;
+  const t = picked ? getTeam(picked) : undefined;
+  const band = picked ? underdogTier(picked) : null;
 
   return (
     <div className="ewc-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">
@@ -97,17 +98,39 @@ export function FavouriteTeam() {
       {!data.signedIn ? (
         <p className="text-xs text-ink-subtle">Увійди, щоб обрати команду.</p>
       ) : !data.open ? (
-        <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-muted">
-          <Lock className="mt-0.5 size-3.5 shrink-0 text-ink-subtle" />
-          {picked ? (
-            <>
-              Твій вибір: <span className="font-bold text-white">{getTeam(picked)?.name}</span>
-              {tier && tier.multiplier > 1 && ` (×${tier.multiplier})`}
-            </>
-          ) : (
-            "Вибір закрито."
-          )}
-        </p>
+        picked && t ? (
+          /* The locked pick is the only thing on this card that is still true,
+             so it gets the crest and the team's own colour rather than a grey
+             line of prose. It reads as a badge you are wearing for the rest of
+             the playoff, which is what it is. */
+          <div
+            className="flex items-center gap-3 rounded-lg p-2.5 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)]"
+            style={{
+              backgroundImage: `linear-gradient(90deg, color-mix(in oklch, ${t.brand} 30%, transparent), transparent 70%)`,
+            }}
+          >
+            <TeamLogo team={t} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-extrabold leading-tight text-white">
+                {t.name}
+              </p>
+              <p className="flex items-center gap-1 text-[0.6875rem] leading-tight text-white/50">
+                <Lock className="size-3 shrink-0" />
+                вибір зафіксовано
+              </p>
+            </div>
+            {band && band.multiplier > 1 && (
+              <span className="tnum shrink-0 rounded-md bg-black/35 px-1.5 py-1 font-mono text-xs font-bold text-[rgb(255_178_112)]">
+                ×{band.multiplier}
+              </span>
+            )}
+          </div>
+        ) : (
+          <p className="flex items-center gap-2 text-xs text-ink-muted">
+            <Lock className="size-3.5 shrink-0 text-ink-subtle" />
+            Вибір закрито.
+          </p>
+        )
       ) : (
         <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
             {EWC_PLAYOFF_TEAMS.map((slug) => {
