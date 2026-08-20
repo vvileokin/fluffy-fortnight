@@ -28,6 +28,9 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [done, setDone] = React.useState<number | null>(null);
+  // Every control in here is 44px tall, and an 8px radius on a 44px box reads
+  // as a rectangle with its corners filed rather than as a rounded control —
+  // the taller the object, the more radius it needs to look equally soft.
 
   React.useEffect(() => {
     if (!open) return;
@@ -97,7 +100,7 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
           <span className="font-semibold text-ink">поза івентом</span>.
         </p>
 
-        <div className="flex items-center justify-between rounded-lg surface-2 px-3 py-2.5">
+        <div className="flex items-center justify-between rounded-xl surface-2 px-3 py-2.5">
           <span className="text-xs text-ink-subtle">Доступно до обміну</span>
           <span className="tnum flex items-center gap-1 font-mono text-sm font-extrabold text-accent">
             <BrandIcon name="points" className="size-4" />
@@ -106,7 +109,7 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
         </div>
 
         {done !== null ? (
-          <p className="tnum flex items-center justify-center gap-1 rounded-lg bg-success/10 px-3 py-3 text-sm font-bold text-success">
+          <p className="tnum flex items-center justify-center gap-1 rounded-xl bg-success/10 px-3 py-3 text-sm font-bold text-success">
             Отримано +{formatInt(done)}
             <BrandIcon name="points-ewc" className="size-4" />
           </p>
@@ -125,12 +128,12 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
                 // a 2px offset outline meant for controls on flat ground; on a
                 // bordered input it doubles the frame. The border going accent
                 // is the focus cue here, so the state stays visible without it.
-                className="tnum h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none placeholder:font-sans placeholder:font-medium placeholder:text-ink-subtle focus:border-accent focus-visible:outline-none!"
+                className="tnum h-11 min-w-0 flex-1 rounded-xl border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none placeholder:font-sans placeholder:font-medium placeholder:text-ink-subtle focus:border-accent focus-visible:outline-none!"
               />
               <button
                 onClick={() => setGold(String(Math.floor(max / rate) * rate))}
                 disabled={max < rate}
-                className="h-11 shrink-0 rounded-lg border border-border px-3 text-xs font-semibold text-ink-muted transition-colors hover:bg-surface-2 disabled:opacity-40"
+                className="h-11 shrink-0 rounded-xl border border-border px-3 text-xs font-semibold text-ink-muted transition-colors hover:bg-surface-2 disabled:opacity-40"
               >
                 Усе
               </button>
@@ -140,7 +143,7 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
                 what comes out. One shape for every exchange on the site means a
                 player reads the second one without being taught it. */}
             {amount > 0 && (
-              <p className="tnum flex h-11 items-center justify-center gap-1 rounded-lg surface-2 font-mono text-sm font-bold text-accent">
+              <p className="tnum flex h-11 items-center justify-center gap-1 rounded-xl surface-2 font-mono text-sm font-bold text-accent">
                 <BrandIcon name="points" className="size-4" />
                 {formatInt(amount)}
                 <span className="mx-1.5 font-normal text-ink-subtle">÷ {rate}</span>
@@ -160,7 +163,7 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
               onClick={convert}
               disabled={!valid || busy}
               className={cn(
-                "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
+                "flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors",
                 "bg-accent text-accent-ink hover:bg-accent-hover",
                 "disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-ink-faint",
               )}
