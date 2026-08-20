@@ -267,7 +267,21 @@ export async function POST(request: Request) {
   await admin.from("questions").update({ status: "resolved" }).eq("id", question_id);
 
   // Streaks are replayed after the result is recorded so this question counts.
-  await recomputeStreaks(admin, userIds);
+  // Bettors are recomputed too, and they are not in `userIds`.
+  //
+  // That list is built from `predictions`, but a staking question writes no
+  // prediction row — the slip is the answer. So a player who only ever bet was
+  // never passed to the replay and their streak sat frozen no matter how many
+  // calls they got right. Reading the question's slips back is what makes the
+  // streak automatic for them rather than something the admin has to trigger.
+  const { data: betUsers } = await admin
+    .from("bets")
+    .select("user_id")
+    .eq("question_id", question_id);
+  const toReplay = [
+    ...new Set([...userIds, ...((betUsers ?? []) as { user_id: string }[]).map((b) => b.user_id)]),
+  ];
+  await recomputeStreaks(admin, toReplay);
 
   await logAdmin("resolve", `Розрахував питання ${question_id}: нараховано ${awarded} гравцям (+${reward})`);
   // `bets` lets the panel report what actually happened: a staking question
