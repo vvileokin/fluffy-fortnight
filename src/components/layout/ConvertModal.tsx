@@ -88,10 +88,13 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <Modal open={open} onClose={onClose} title="Обмін поінтів">
       <div className="space-y-3">
+        {/* The rate, and the one word that scopes it. The reasoning behind the
+            cap — that event winnings already sit in the season total — is true
+            but is the kind of thing a player only needs if they go looking;
+            the figure below already tells them what they can spend. */}
         <p className="text-sm leading-relaxed text-ink-muted">
           {rate} поінтів сезону — 1 поінт EWC. Міняється лише те, що зароблене{" "}
-          <span className="font-semibold text-ink">поза івентом</span>: вигране на EWC уже
-          враховане в сезонних, тож назад не конвертується.
+          <span className="font-semibold text-ink">поза івентом</span>.
         </p>
 
         <div className="flex items-center justify-between rounded-lg surface-2 px-3 py-2.5">
