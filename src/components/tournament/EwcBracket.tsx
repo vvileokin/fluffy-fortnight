@@ -55,10 +55,21 @@ function resolveSlot(
 function useResolver(matches: Match[]) {
   return React.useMemo(() => {
     // Index the admin's matches by the pair of teams they involve, so a fixture
-    // that was created without an explicit bracket id still lands in its slot.
-    const byPair = new Map<string, Match>();
+    // that was created without an explicit bracket id still lands in its slot —
+    // but keep the group and playoff stages in separate books.
+    //
+    // One shared index put FUT vs MOUZ from Group C into the quarter-final slot
+    // those same two teams could reach, complete with its 2:1 from the 14th, so
+    // the bracket showed a played result for a match nobody had played. Two
+    // teams meeting twice in one tournament is normal; a pair of slugs is
+    // therefore not an identity, and the stage is what separates them.
+    const isPlayoffStage = (stage?: string | null) =>
+      /playoff|плей|1\/8|1\/4|1\/2|фінал/i.test(stage ?? "");
+    const byPairPlayoff = new Map<string, Match>();
+    const byPairGroup = new Map<string, Match>();
     for (const m of matches) {
-      byPair.set([m.a, m.b].sort().join("|"), m);
+      const key = [m.a, m.b].sort().join("|");
+      (isPlayoffStage(m.stage) ? byPairPlayoff : byPairGroup).set(key, m);
     }
     const byNode = new Map<string, Match>();
 
@@ -66,14 +77,17 @@ function useResolver(matches: Match[]) {
     // (the opening rounds), each later one uses those results to resolve the
     // rounds that depend on them. The playoff ladder is four deep, so it needs
     // one pass per round to reach the grand final.
-    const all = [...EWC_GROUPS.flatMap(groupNodes), ...playoffNodes()];
+    const all = [
+      ...EWC_GROUPS.flatMap(groupNodes).map((node) => ({ node, playoff: false })),
+      ...playoffNodes().map((node) => ({ node, playoff: true })),
+    ];
     for (let pass = 0; pass < 5; pass++) {
-      for (const node of all) {
+      for (const { node, playoff } of all) {
         if (byNode.has(node.id)) continue;
         const a = resolveSlot(node.a, byNode);
         const b = resolveSlot(node.b, byNode);
         if (!a || !b) continue;
-        const found = byPair.get([a, b].sort().join("|"));
+        const found = (playoff ? byPairPlayoff : byPairGroup).get([a, b].sort().join("|"));
         if (found) byNode.set(node.id, found);
       }
     }

@@ -121,14 +121,14 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
                 type="text"
                 inputMode="numeric"
                 value={gold}
-                placeholder="скільки Season Points"
+                placeholder="Season Points"
                 aria-label="Скільки CS2UA Season Points обміняти"
                 onChange={(e) => setGold(e.target.value.replace(/\D/g, "").slice(0, 7))}
                 // Forced off, like the stake field. The site-wide focus ring is
                 // a 2px offset outline meant for controls on flat ground; on a
                 // bordered input it doubles the frame. The border going accent
                 // is the focus cue here, so the state stays visible without it.
-                className="tnum h-11 min-w-0 flex-1 rounded-xl border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none placeholder:font-sans placeholder:font-medium placeholder:text-ink-subtle focus:border-accent focus-visible:outline-none!"
+                className="tnum h-11 min-w-0 flex-1 rounded-xl border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none placeholder:font-sans placeholder:font-medium placeholder:text-ink-subtle focus:border-accent focus-visible:outline-none! focus-visible:rounded-xl!"
               />
               <button
                 onClick={() => setGold(String(Math.floor(max / rate) * rate))}

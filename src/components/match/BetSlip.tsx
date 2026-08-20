@@ -255,7 +255,7 @@ export function BetSlip({
               // it kept winning in practice, and one element opting out of a
               // site-wide default is exactly what the important modifier is
               // for. Scoped to this input; every other control keeps its ring.
-              "outline-none focus:bg-white/[0.12] focus-visible:outline-none!",
+              "outline-none focus:bg-white/[0.12] focus-visible:outline-none! focus-visible:rounded-lg!",
             )}
           />
         </div>
