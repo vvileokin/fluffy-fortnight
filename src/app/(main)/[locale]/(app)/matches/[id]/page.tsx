@@ -361,9 +361,15 @@ export default async function MatchPage({
           <SectionLabel icon={History}>Історія зустрічей</SectionLabel>
           {match.h2h && (match.h2h.a > 0 || match.h2h.b > 0) ? (
             <div className="rounded-lg surface-1 p-4">
-              <div className="flex items-center justify-between">
+              {/* `1fr auto 1fr`, not `justify-between`. With flex the middle
+                  column is content-sized between two flexible flanks, so the
+                  score drifted toward whichever team had the shorter name —
+                  Falcons against The MongolZ pushed it visibly off centre. A
+                  grid puts it on the axis and keeps it there whatever the
+                  names weigh. */}
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center">
                 <TeamMini team={a} />
-                <div className="text-center">
+                <div className="px-4 text-center">
                   <p className="font-mono text-2xl font-bold text-ink">
                     <span className={cn(match.h2h.a >= match.h2h.b && "text-accent")}>
                       {match.h2h.a}
