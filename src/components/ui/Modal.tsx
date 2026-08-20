@@ -50,10 +50,15 @@ export function Modal({
         {/* The header's bottom padding and the body's top padding stacked to
             32px, so a title sat a third of a line-height away from the sentence
             it introduces and read as a separate object. 12 and 12 keeps the
-            hairline breathing without the two halves drifting apart. The close
-            button is 36px, so the header is still 60px tall. */}
+            hairline breathing without the two halves drifting apart.
+
+            The title also carries `leading-none`: at 16px its default line box
+            is 24px, so four of those pixels were half-leading sitting under the
+            glyphs and reading as yet more gap. Measured lid-to-text is 20px
+            now, from 32. The close button is 36px, so the header keeps its
+            height regardless. */}
         <div className="flex shrink-0 items-center justify-between shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-5 py-3">
-          <h2 className="text-base font-bold text-ink">{title}</h2>
+          <h2 className="text-base font-bold leading-none text-ink">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Закрити"
@@ -62,7 +67,7 @@ export function Modal({
             <X className="size-5" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-3">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-2">{children}</div>
         {footer && (
           <div className="flex shrink-0 items-center justify-end gap-2 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] px-5 py-4">
             {footer}
