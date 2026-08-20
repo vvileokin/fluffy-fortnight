@@ -31,6 +31,7 @@ import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import { EwcBracket } from "@/components/tournament/EwcBracket";
 import { PlayoffBracketEntry } from "@/components/tournament/PlayoffBracketEntry";
 import { FavouriteTeam } from "@/components/tournament/FavouriteTeam";
+import { ConvertPoints } from "@/components/tournament/ConvertPoints";
 import type { CSSProperties } from "react";
 import {
   getTeam,
@@ -365,6 +366,10 @@ export function TournamentView({
             {/* Above the bracket: it's one tap against sixteen, so it's the
                 thing a player can finish before deciding whether to fill in a
                 whole ladder. */}
+            {/* First: it is the only card that can turn an empty balance into
+                one you can bet with, so it belongs above the things that need
+                a balance. Renders nothing when there is nothing to exchange. */}
+            <ConvertPoints />
             <FavouriteTeam />
             <PlayoffBracketEntry />
           </div>
