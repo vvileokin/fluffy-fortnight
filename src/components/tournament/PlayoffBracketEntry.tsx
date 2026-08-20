@@ -96,7 +96,7 @@ export function PlayoffBracketEntry() {
               <span className="tnum font-bold text-[rgb(255_154_64)]">
                 +{formatInt(data.mine.points)}
               </span>{" "}
-              EWC.
+              EWC Points.
             </>
           ) : (
             "Бали — після завершення плей-офу."

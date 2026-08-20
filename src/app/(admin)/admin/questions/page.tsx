@@ -342,10 +342,10 @@ export default function QuestionsAdmin() {
               />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-ink">
-                  Ставки на EWC поінти
+                  Ставки на EWC Points
                 </span>
                 <span className="block text-xs text-ink-subtle">
-                  Гравець ставить свої EWC поінти, виграш = ставка × коефіцієнт.
+                  Гравець ставить свої EWC Points, виграш = ставка × коефіцієнт.
                   Мінімальна ставка 50, змінити ставку не можна.
                 </span>
               </span>

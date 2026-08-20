@@ -363,7 +363,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
                       <span className={cn("tnum font-bold", orange)}>
                         {formatInt(balance)}
                       </span>
-                      {giveaway.entryCurrency === "ewc" && " EWC поінтів"}
+                      {giveaway.entryCurrency === "ewc" && " EWC Points"}
                     </p>
                   )}
                 </div>
