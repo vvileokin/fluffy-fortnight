@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recomputeStreaks } from "@/lib/db/streaks";
 
 /** Any positive whole number of points. Mirrored in `place_bet`. */
 export const MIN_STAKE = 1;
@@ -138,5 +139,9 @@ export async function DELETE(request: Request) {
   }
 
   const out = data as { ok: boolean; error?: string; refunded?: number };
+  // A withdrawn slip is an outcome that no longer exists, so the run it fed has
+  // to be replayed. Doing it here is what keeps the streak true without anyone
+  // pressing anything.
+  if (out.ok) await recomputeStreaks(createAdminClient(), [user.id]);
   return NextResponse.json(out, { status: out.ok ? 200 : 409 });
 }

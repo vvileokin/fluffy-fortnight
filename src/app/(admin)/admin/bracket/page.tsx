@@ -80,15 +80,23 @@ export default function BracketAdmin() {
   /**
    * Pay one round.
    *
-   * Rounds settle as they finish rather than all at once at the end: a bracket
-   * filled in on day one used to earn nothing for eleven days, which is a long
-   * time to remember you entered. Pressing the same round twice pays nothing
-   * the second time — the database records which rounds each bracket has had.
+   * Whatever is decided so far, whenever it is decided.
+   *
+   * The eight quarter-finalists are settled across four separate evenings, so
+   * requiring all eight before paying anything put the first two nights on
+   * hold. The ledger is per team: tick the ones that just went through, press,
+   * come back tomorrow for the next. Teams already paid are skipped, so
+   * pressing again — with the same list or a longer one — never pays twice.
    */
-  async function scoreRound(key: string, size: number) {
+  async function scoreRound(key: string) {
     const teams = sel[key] ?? [];
-    if (teams.length !== size) return;
-    if (!confirm(`Нарахувати поінти за цей раунд? Повторне натискання нічого не додасть.`)) return;
+    if (teams.length === 0) return;
+    if (
+      !confirm(
+        `Нарахувати за позначені команди (${teams.length})? Ті, за які вже нараховано, пропускаються — решту можна дотикати пізніше.`,
+      )
+    )
+      return;
     setBusy(key);
     const res = await fetch("/api/admin/bracket/score", {
       method: "POST",
@@ -221,8 +229,8 @@ export default function BracketAdmin() {
                   </p>
                   {/* Each round pays on its own, the moment it is decided. */}
                   <button
-                    onClick={() => scoreRound(r.key, r.size)}
-                    disabled={chosen.length !== r.size || busy !== null}
+                    onClick={() => scoreRound(r.key)}
+                    disabled={chosen.length === 0 || busy !== null}
                     className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-xs font-bold text-accent-ink transition-colors hover:bg-accent-hover disabled:opacity-45"
                   >
                     {busy === r.key ? (

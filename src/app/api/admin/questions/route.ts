@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { logAdmin } from "@/lib/admin-audit";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recomputeStreaks } from "@/lib/db/streaks";
 
 type OptionInput = {
   id?: string;
@@ -102,10 +103,25 @@ export async function DELETE(request: Request) {
     );
   }
 
+  // Collected before the delete: the rows cascade away with the question, and
+  // afterwards there is no way to know whose runs just changed shape.
+  const [{ data: hadPreds }, { data: hadBets }] = await Promise.all([
+    admin.from("predictions").select("user_id").eq("question_id", String(id)),
+    admin.from("bets").select("user_id").eq("question_id", String(id)),
+  ]);
+  const affected = [
+    ...new Set([
+      ...((hadPreds ?? []) as { user_id: string }[]).map((r) => r.user_id),
+      ...((hadBets ?? []) as { user_id: string }[]).map((r) => r.user_id),
+    ]),
+  ];
+
   const { error } = await admin.from("questions").delete().eq("id", String(id));
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
+  if (affected.length > 0) await recomputeStreaks(admin, affected);
+
   const n = Number(refunded ?? 0);
   await logAdmin(
     "questions",
