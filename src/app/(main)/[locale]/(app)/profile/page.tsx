@@ -130,7 +130,7 @@ export default async function ProfilePage() {
      lucide icons read as an emoji dropped into the UI. A real mark or nothing. */
   const stats = [
     { label: "Місце", value: `#${rank}`, tone: "var(--accent)" },
-    { label: "Поінтів", value: formatInt(points), tone: "var(--accent)", icon: "points" },
+    { label: "Season Points", value: formatInt(points), tone: "var(--accent)", icon: "points" },
     { label: "Серія", value: String(streak), tone: "var(--accent)", icon: "streak" },
   ] as const;
 

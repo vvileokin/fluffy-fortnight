@@ -93,7 +93,7 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
             but is the kind of thing a player only needs if they go looking;
             the figure below already tells them what they can spend. */}
         <p className="text-sm leading-relaxed text-ink-muted">
-          {rate} поінтів сезону — 1 поінт EWC. Міняється лише те, що зароблене{" "}
+          {rate} CS2UA Season Points — 1 поінт EWC. Міняється лише те, що зароблене{" "}
           <span className="font-semibold text-ink">поза івентом</span>.
         </p>
 
@@ -118,10 +118,14 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
                 type="text"
                 inputMode="numeric"
                 value={gold}
-                placeholder="скільки золотих"
-                aria-label="Скільки золотих обміняти"
+                placeholder="скільки Season Points"
+                aria-label="Скільки CS2UA Season Points обміняти"
                 onChange={(e) => setGold(e.target.value.replace(/\D/g, "").slice(0, 7))}
-                className="tnum h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none placeholder:font-sans placeholder:font-medium placeholder:text-ink-subtle focus:border-accent"
+                // Forced off, like the stake field. The site-wide focus ring is
+                // a 2px offset outline meant for controls on flat ground; on a
+                // bordered input it doubles the frame. The border going accent
+                // is the focus cue here, so the state stays visible without it.
+                className="tnum h-11 min-w-0 flex-1 rounded-lg border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none placeholder:font-sans placeholder:font-medium placeholder:text-ink-subtle focus:border-accent focus-visible:outline-none!"
               />
               <button
                 onClick={() => setGold(String(Math.floor(max / rate) * rate))}
