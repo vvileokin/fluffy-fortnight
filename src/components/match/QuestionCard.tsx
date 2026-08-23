@@ -163,11 +163,15 @@ export function QuestionCard({
    */
   function scoreCrests(label: string) {
     if (sides.length !== 2) return null;
-    const legs = label.split("/").map((s) => s.trim());
+    // Split on commas as well as slashes. A BO5 option lists several scorelines
+    // per side — "3:1, 3:2 / 2:3, 1:3" — and splitting on the slash alone left
+    // each half as "3:1, 3:2", which matches no scoreline pattern, so the whole
+    // option fell back to a dot despite naming both teams twice over.
+    const legs = label.split(/[/,]/).map((s) => s.trim()).filter(Boolean);
     const sidesHit = new Set<0 | 1>();
     for (const leg of legs) {
       const m = /^(\d+)\s*[:\-–]\s*(\d+)$/.exec(leg);
-      if (!m) return null; // not a scoreline at all — leave it to the dot
+      if (!m) return null; // not a scoreline at all
       const [x, y] = [Number(m[1]), Number(m[2])];
       if (x === y) return null; // a draw names nobody
       sidesHit.add(x > y ? 0 : 1);
@@ -388,18 +392,7 @@ export function QuestionCard({
                       </span>
                     ))}
                   </span>
-                ) : (
-                  <span
-                    className={cn(
-                      "size-1.5 shrink-0 rounded-full transition-colors",
-                      selected
-                        ? isEwc
-                          ? "bg-[rgb(255_122_44)]"
-                          : "bg-accent"
-                        : "bg-[color-mix(in_oklch,var(--ink)_25%,transparent)]",
-                    )}
-                  />
-                )}
+                ) : null}
 
                 {/* The text column is exactly as tall as the crest beside it
                     (34px, `cardCrest`) and pushes its two lines to the ends, so
