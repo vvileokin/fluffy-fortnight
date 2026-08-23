@@ -15,7 +15,7 @@ type Api = {
   open: boolean;
   started: boolean;
   teams: string[];
-  mine: { picks: BracketPicks; points: number; scored: boolean } | null;
+  mine: { picks: BracketPicks; points: number; scored: boolean; settled: string[] } | null;
 };
 
 /**
@@ -77,31 +77,22 @@ export function PlayoffBracketEntry() {
   if (failed) return <Failed onRetry={() => { setFailed(false); setNonce((n) => n + 1); }} />;
   if (!data) return <Skeleton rows={4} />;
 
-  // Filled in and not being re-edited. Still open means it can be changed —
-  // nothing is paid until the playoff ends, so there is no reason to make an
-  // early entry final, and every reason not to punish filling it in first.
+  // Filled in and not being re-edited. Still open means it can be changed:
+  // picks close the moment the playoff starts, and until then there is no
+  // reason to make an early entry final — every reason not to punish filling it
+  // in first. Nothing has been paid at that stage either, since the first round
+  // cannot settle before it is played.
   if (data.mine && !editing) {
     return (
       <Panel>
-        <Head />
-        <div className="flex items-center gap-2 rounded-lg bg-[color-mix(in_oklch,var(--success)_12%,transparent)] px-3 py-2.5 text-sm font-semibold text-success">
-          <Check className="size-4 shrink-0" strokeWidth={3} />
-          Сітку заповнено
-        </div>
-        <Filled picks={data.mine.picks} />
-        <p className="text-xs text-ink-subtle">
-          {data.mine.scored ? (
-            <>
-              Нараховано{" "}
-              <span className="tnum font-bold text-[rgb(255_154_64)]">
-                +{formatInt(data.mine.points)}
-              </span>{" "}
-              EWC Points.
-            </>
-          ) : (
-            "Бали — після завершення плей-офу."
-          )}
-        </p>
+        {/* The running total sits where the ceiling was. A filled bracket used
+            to announce itself ("Сітку заповнено") and then promise points at
+            some point after the playoff — which stopped being true when scoring
+            went round by round, and left a player who had already been paid 275
+            looking at a card that showed nothing at all. The banner said what
+            the card below it already showed; the number says what changed. */}
+        <Head earned={data.mine.points ?? 0} />
+        <Filled picks={data.mine.picks} settled={data.mine.settled ?? []} />
         {data.open && !data.mine.scored && (
           <button
             onClick={() => {
@@ -358,49 +349,79 @@ function Panel({ children }: { children: React.ReactNode }) {
  * was the whole first screen. The rule it was explaining only matters once the
  * bracket is submitted, and the fixtures now teach the form by themselves.
  */
-function Head() {
+function Head({ earned = 0 }: { earned?: number }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <p className="text-sm font-extrabold tracking-tight text-white">Сітка плей-офу</p>
       <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(255_154_64)]">
-        до {formatInt(BRACKET_MAX)}
+        {earned > 0 ? (
+          <>
+            {formatInt(earned)}
+            <span className="font-medium text-white/35">/ {formatInt(BRACKET_MAX)}</span>
+          </>
+        ) : (
+          <>до {formatInt(BRACKET_MAX)}</>
+        )}
         <BrandIcon name="points-ewc" className="size-3.5" />
       </span>
     </div>
   );
 }
 
-/** A submitted bracket, read-only — champion first, then back down the rounds. */
-function Filled({ picks }: { picks: BracketPicks }) {
+/**
+ * A submitted bracket, read-only — champion first, then back down the rounds.
+ *
+ * `settled` holds the round/team pairs the event has actually decided, so a
+ * call that landed is marked and a call that missed is dimmed. Rounds still to
+ * come are left alone: nothing has happened to them yet, and colouring them
+ * would read as a verdict. Without this the card was a list of names that never
+ * changed from the day it was filled in to the day it was paid.
+ */
+function Filled({ picks, settled = [] }: { picks: BracketPicks; settled?: string[] }) {
   const rows = [
-    { label: "Чемпіон", teams: [picks.champion] },
-    { label: "Фінал", teams: picks.final },
-    { label: "1/2", teams: picks.sf },
-    { label: "1/4", teams: picks.qf },
+    { key: "champion", label: "Чемпіон", teams: [picks.champion] },
+    { key: "final", label: "Фінал", teams: picks.final },
+    { key: "sf", label: "1/2", teams: picks.sf },
+    { key: "qf", label: "1/4", teams: picks.qf },
   ];
+  const done = new Set(settled);
   return (
     <div className="space-y-1.5">
-      {rows.map((r) => (
-        <div key={r.label} className="flex items-start gap-2">
-          <span className="w-12 shrink-0 pt-1 text-[0.625rem] font-bold uppercase tracking-wide text-white/40">
-            {r.label}
-          </span>
-          <div className="flex flex-wrap gap-1">
-            {r.teams.map((slug) => {
-              const t = getTeam(slug);
-              return (
-                <span
-                  key={slug}
-                  className="flex items-center gap-1 rounded bg-black/35 px-1.5 py-1 text-[0.6875rem] font-semibold text-white"
-                >
-                  {t && <TeamLogo team={t} size="xs" />}
-                  {t?.name ?? slug}
-                </span>
-              );
-            })}
+      {rows.map((r) => {
+        // A round counts as decided once anything in it has been settled — that
+        // is what makes a name in it a miss rather than a pending pick.
+        const decided = settled.some((t) => t.startsWith(`${r.key}:`));
+        return (
+          <div key={r.label} className="flex items-start gap-2">
+            <span className="w-12 shrink-0 pt-1 text-[0.625rem] font-bold uppercase tracking-wide text-white/40">
+              {r.label}
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {r.teams.map((slug) => {
+                const t = getTeam(slug);
+                const hit = done.has(`${r.key}:${slug}`);
+                return (
+                  <span
+                    key={slug}
+                    className={cn(
+                      "flex items-center gap-1 rounded px-1.5 py-1 text-[0.6875rem] font-semibold",
+                      hit
+                        ? "bg-[color-mix(in_oklch,var(--success)_18%,transparent)] text-success"
+                        : decided
+                          ? "bg-black/35 text-white/35"
+                          : "bg-black/35 text-white",
+                    )}
+                  >
+                    {t && <TeamLogo team={t} size="xs" />}
+                    {t?.name ?? slug}
+                    {hit && <Check className="size-2.5 shrink-0" strokeWidth={3.5} />}
+                  </span>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

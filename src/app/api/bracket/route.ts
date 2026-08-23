@@ -21,7 +21,7 @@ export async function GET() {
   const admin = createAdminClient();
   const { data } = await admin
     .from("bracket_predictions")
-    .select("picks, points, scored_at")
+    .select("picks, points, scored_at, scored_rounds")
     .eq("user_id", user.id)
     .eq("tournament_slug", SLUG)
     .maybeSingle();
@@ -34,7 +34,16 @@ export async function GET() {
     // the form reads its round-of-16 fixtures straight from here.
     teams: EWC_PLAYOFF_TEAMS,
     mine: data
-      ? { picks: data.picks, points: data.points, scored: !!data.scored_at }
+      ? {
+          picks: data.picks,
+          points: data.points,
+          scored: !!data.scored_at,
+          // Which round/team pairs have been settled. They are the real results,
+          // identical for everybody, and they come free with the row already
+          // being read — so the card can show which calls actually landed
+          // instead of a total with no working shown.
+          settled: (data.scored_rounds ?? []) as string[],
+        }
       : null,
   });
 }
