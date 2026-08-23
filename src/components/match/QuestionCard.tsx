@@ -347,7 +347,13 @@ export function QuestionCard({
                   // and below it, so the logo sits in an even margin on three
                   // sides instead of floating 10px in from the edge. The right
                   // keeps its full padding — that side holds text, not a tile.
-                  "group/opt relative flex h-[2.75rem] min-w-0 items-center gap-2 overflow-hidden rounded-md pl-[0.3125rem] pr-2.5 text-left",
+                  //
+                  // With no crest there is no tile to inset, and 5px left the
+                  // label almost touching the edge once the placeholder dot was
+                  // removed — the dot had been doing the spacing. An option
+                  // that carries only text takes ordinary text padding.
+                  "group/opt relative flex h-[2.75rem] min-w-0 items-center gap-2 overflow-hidden rounded-md pr-2.5 text-left",
+                  optTeam || crests ? "pl-[0.3125rem]" : "pl-3",
                   "transition-[background-color,box-shadow,transform,opacity] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]",
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   // On the event the option plate is a well cut into the ember
