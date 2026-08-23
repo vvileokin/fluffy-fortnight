@@ -32,6 +32,7 @@ export default function BracketAdmin() {
     scored: number;
     closed: boolean;
     forceOpen: boolean;
+    scoredTeams: string[];
     favourites: Record<string, number>;
   } | null>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
@@ -46,8 +47,19 @@ export default function BracketAdmin() {
         scored: j.scored,
         closed: j.closed,
         forceOpen: j.forceOpen,
+        scoredTeams: j.scoredTeams ?? [],
         favourites: j.favourites ?? {},
       });
+    // Already-settled teams come back ticked. The page holds no draft of its
+    // own, so without this a reload looked like the selection had been lost.
+    if (j.ok && Array.isArray(j.scoredTeams)) {
+      const back: Record<string, string[]> = {};
+      for (const tag of j.scoredTeams as string[]) {
+        const [round, slug] = tag.split(":");
+        if (round && slug) (back[round] ??= []).push(slug);
+      }
+      setSel((prev) => ({ ...back, ...prev }));
+    }
   }, []);
 
   async function toggleLock() {
@@ -249,21 +261,32 @@ export default function BracketAdmin() {
                   pool.map((slug) => {
                     const t = getTeam(slug);
                     const on = chosen.includes(slug);
+                    // Settled already: shown ticked and locked, so an admin can
+                    // tell at a glance what the next press would actually pay
+                    // for rather than re-deriving it from memory.
+                    const settled = (stats?.scoredTeams ?? []).includes(`${r.key}:${slug}`);
                     return (
                       <button
                         key={slug}
-                        onClick={() => toggle(r.key, r.size, slug)}
+                        onClick={() => !settled && toggle(r.key, r.size, slug)}
+                        title={settled ? "Уже нараховано" : undefined}
                         aria-pressed={on}
                         className={cn(
                           "inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-semibold transition-colors",
-                          on
-                            ? "border-accent/50 bg-accent/10 text-ink"
-                            : "border-border bg-surface text-ink-muted hover:bg-surface-2",
+                          settled
+                            ? "cursor-default border-success/40 bg-success/10 text-success"
+                            : on
+                              ? "border-accent/50 bg-accent/10 text-ink"
+                              : "border-border bg-surface text-ink-muted hover:bg-surface-2",
                         )}
                       >
                         <TeamLogo team={t} size="xs" />
                         {t.tag}
-                        {on && <Check className="size-3 text-accent" strokeWidth={3} />}
+                        {settled ? (
+                          <Check className="size-3 text-success" strokeWidth={3} />
+                        ) : (
+                          on && <Check className="size-3 text-accent" strokeWidth={3} />
+                        )}
                       </button>
                     );
                   })

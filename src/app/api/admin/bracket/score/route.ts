@@ -61,6 +61,22 @@ export async function GET() {
       .eq("tournament_slug", "ewc-2026")
       .not("scored_at", "is", null),
   ]);
+  // Which round/team pairs have already been paid. The admin page keeps no
+  // draft of its own — the ticks are lost on every reload, which read as "the
+  // bracket won't save" — so the record of what was settled is the memory, and
+  // it lives here rather than in a browser.
+  const { data: brackets } = await admin
+    .from("bracket_predictions")
+    .select("scored_rounds")
+    .eq("tournament_slug", "ewc-2026");
+  const scoredTeams = [
+    ...new Set(
+      ((brackets ?? []) as { scored_rounds: string[] | null }[]).flatMap(
+        (b) => b.scored_rounds ?? [],
+      ),
+    ),
+  ];
+
   // Who backed whom, so an admin can see the spread before the playoff runs —
   // and afterwards, work out what the underdog band actually cost.
   const { data: favs } = await admin
@@ -78,6 +94,7 @@ export async function GET() {
     scored: scored ?? 0,
     closed: !!settings?.bracket_closed,
     forceOpen: !!settings?.bracket_force_open,
+    scoredTeams,
     favourites,
   });
 }
@@ -116,11 +133,17 @@ export async function POST(request: Request) {
   // "+120 EWC" arriving with no reason attached is the kind of thing players
   // ask about in chat.
   const label = { qf: "1/4", sf: "1/2", final: "фінал", champion: "чемпіон" }[round];
+  // Overlap on the tagged entries, not the bare round. Since scoring went
+  // per team the column holds "qf:g2", so asking whether it contains "qf"
+  // matched nothing and the notifications quietly stopped going out.
   const { data: paid } = await admin
     .from("bracket_predictions")
     .select("user_id, points")
     .eq("tournament_slug", slug)
-    .contains("scored_rounds", [round]);
+    .overlaps(
+      "scored_rounds",
+      teams.map((t) => `${round}:${t}`),
+    );
   const notifs = (paid ?? []).map((b: { user_id: string; points: number | null }) => ({
     user_id: b.user_id,
     kind: "reward",
