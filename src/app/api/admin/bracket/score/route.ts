@@ -117,7 +117,7 @@ export async function POST(request: Request) {
   // One round at a time, so a bracket earns as the playoff goes rather than
   // sitting on nothing until the final is over. `score_bracket_round` records
   // which rounds a bracket has been paid for, so pressing this twice pays
-  // nothing the second time.
+  // nothing the second time — and it hands back only the players it paid.
   const { data, error } = await admin.rpc("score_bracket_round", {
     p_slug: slug,
     p_round: round,
@@ -127,27 +127,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
-  const scored = Number(data ?? 0);
+  const wins = (data ?? []) as { user_id: string; gained: number; total: number }[];
+  const scored = wins.length;
 
   // Naming the round matters now that there are four payouts instead of one:
   // "+120 EWC" arriving with no reason attached is the kind of thing players
   // ask about in chat.
   const label = { qf: "1/4", sf: "1/2", final: "фінал", champion: "чемпіон" }[round];
-  // Overlap on the tagged entries, not the bare round. Since scoring went
-  // per team the column holds "qf:g2", so asking whether it contains "qf"
-  // matched nothing and the notifications quietly stopped going out.
-  const { data: paid } = await admin
-    .from("bracket_predictions")
-    .select("user_id, points")
-    .eq("tournament_slug", slug)
-    .overlaps(
-      "scored_rounds",
-      teams.map((t) => `${round}:${t}`),
-    );
-  const notifs = (paid ?? []).map((b: { user_id: string; points: number | null }) => ({
-    user_id: b.user_id,
+  // What this round paid, sent to the people it paid.
+  //
+  // It used to go to every bracket in the tournament and quote the running
+  // total, because the round marks a team settled for a player whether they
+  // named it or not. Somebody who called none of the semi-finalists was told
+  // "1/2 розраховано — разом 275 EWC", went to look at a balance of 100, and
+  // read the whole thing as a payout that never arrived.
+  const notifs = wins.map((w) => ({
+    user_id: w.user_id,
     kind: "reward",
-    title: `Сітка плей-офу · ${label} розраховано — разом ${b.points ?? 0} EWC`,
+    title: `Сітка плей-офу · ${label} — +${w.gained} EWC, разом ${w.total}`,
   }));
   if (notifs.length > 0) await admin.from("notifications").insert(notifs);
 

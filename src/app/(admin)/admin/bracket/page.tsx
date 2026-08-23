@@ -118,7 +118,9 @@ export default function BracketAdmin() {
     const j = await res.json().catch(() => ({}));
     setBusy(null);
     if (j.ok) {
-      alert(`Розраховано. Сіток оброблено: ${j.scored}.`);
+      // The count is players actually paid, not brackets looked at: a round
+      // touches every bracket and pays only some of them.
+      alert(`Розраховано. Отримали поінти: ${j.scored}.`);
       await load();
     } else {
       alert(j.error || "Помилка розрахунку");
