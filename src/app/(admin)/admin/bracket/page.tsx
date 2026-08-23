@@ -120,7 +120,11 @@ export default function BracketAdmin() {
     if (j.ok) {
       // The count is players actually paid, not brackets looked at: a round
       // touches every bracket and pays only some of them.
-      alert(`Розраховано. Отримали поінти: ${j.scored}.`);
+      alert(
+        j.migrated === false
+          ? `Розраховано, ${j.scored} сіток. Сповіщення не пішли — треба застосувати міграцію 0051.`
+          : `Розраховано. Отримали поінти: ${j.scored}.`,
+      );
       await load();
     } else {
       alert(j.error || "Помилка розрахунку");

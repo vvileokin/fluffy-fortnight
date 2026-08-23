@@ -127,8 +127,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
-  const wins = (data ?? []) as { user_id: string; gained: number; total: number }[];
-  const scored = wins.length;
+  // 0051 turns the integer return into a row per player paid. A deploy can land
+  // before the migration is pasted in, and in that window the old function has
+  // already taken the money by the time this line runs — so read the old shape
+  // rather than throwing on it, and say plainly why nobody was notified.
+  const migrated = Array.isArray(data);
+  const wins = migrated ? (data as { user_id: string; gained: number; total: number }[]) : [];
+  const scored = migrated ? wins.length : Number(data ?? 0);
 
   // Naming the round matters now that there are four payouts instead of one:
   // "+120 EWC" arriving with no reason attached is the kind of thing players
@@ -149,5 +154,5 @@ export async function POST(request: Request) {
   if (notifs.length > 0) await admin.from("notifications").insert(notifs);
 
   await logAdmin("bracket", `Розрахував сітки ${slug}, раунд ${round} — ${scored} гравцям`);
-  return NextResponse.json({ ok: true, scored, round });
+  return NextResponse.json({ ok: true, scored, round, migrated });
 }
