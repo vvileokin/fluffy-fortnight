@@ -7,7 +7,6 @@ import { Bell, Target, Swords, Gift, TrendingUp, Check, LogIn } from "lucide-rea
 import { Brand } from "./Brand";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandIcon } from "@/components/ui/BrandIcon";
-import { ConvertModal } from "@/components/layout/ConvertModal";
 import { displayName } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -39,7 +38,6 @@ export function Topbar() {
   const t = useTranslations("nav");
   const { user, profile } = useProfile();
   const [open, setOpen] = React.useState(false);
-  const [convertOpen, setConvertOpen] = React.useState(false);
   const [items, setItems] = React.useState<Notif[]>([]);
   const unread = items.filter((n) => !n.read).length;
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -98,7 +96,6 @@ export function Topbar() {
   const handle = profile?.handle || (user ? displayName(user) : "");
   const points = profile?.points ?? 0;
   const streak = profile?.streak ?? 0;
-  const eventPoints = profile?.ewc_points ?? 0;
 
   return (
     /* Impeccable: Crafted Top Bar — opaque, in the canvas's own colour, with no
@@ -140,37 +137,27 @@ export function Topbar() {
             points; the streak sits smaller on a neutral recessed one and reads
             as a badge next to it. Hue stays constant, hierarchy comes from
             plate, scale and weight. */}
-        {/* The balance is the button. The exchange spends season points, so it
-            hangs off the season balance rather than living on a tournament page
-            where a player would have no reason to look for it. */}
-        <button
-          onClick={() => setConvertOpen(true)}
-          aria-label={`${formatInt(points)} ${t("points")} — обміняти`}
+        {/* The season balance. It stopped being a button when the event
+            balance left the bar: the exchange it opened bought a currency that
+            is no longer on screen, and an unlabelled control that spends your
+            points on something invisible is worse than no control. */}
+        <Link
+          href="/profile"
+          aria-label={`${formatInt(points)} ${t("points")}`}
           className="flex h-8 items-center gap-1 rounded-full bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_28%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_18%,transparent)] sm:h-10 sm:gap-1.5 sm:pl-2 sm:pr-3.5"
         >
           <BrandIcon name="points" className="size-4 sm:size-5" priority />
           <span className="tnum font-mono text-xs font-extrabold leading-none text-accent sm:text-sm">
             {formatInt(points)}
           </span>
-        </button>
+        </Link>
 
-        {/* Event currency. It links to the event's own board rather than the
-            profile, because the only question a player has when they look at
-            this number is "where does that put me at EWC". Shown even at zero
-            while the event runs — it's a route into the event, not just a
-            readout, and hiding it at zero meant nobody ever saw it. */}
-        {(
-          <Link
-            href="/tournaments/ewc-2026"
-            aria-label={`${formatInt(eventPoints)} EWC`}
-            className="flex h-8 items-center gap-1 rounded-full bg-[color-mix(in_oklch,rgb(255_88_16)_14%,transparent)] pl-1 pr-2 shadow-[0_0_0_1px_color-mix(in_oklch,rgb(255_88_16)_30%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,rgb(255_88_16)_22%,transparent)] sm:h-9 sm:pl-1.5 sm:pr-2.5"
-          >
-            <BrandIcon name="points-ewc" className="size-4 sm:size-[1.125rem]" priority />
-            <span className="tnum font-mono text-xs font-bold leading-none text-[rgb(255_154_64)] sm:text-[0.8125rem]">
-              {formatInt(eventPoints)}
-            </span>
-          </Link>
-        )}
+        {/* The event balance is off the bar. It belonged to a tournament, not
+            to the chrome: it read as a permanent second currency while 387 of
+            553 accounts held none of it, and the bar was quietly telling most
+            of the site they had nothing. It lives inside the event now, where
+            it is spent and where a zero is information rather than an
+            accusation. */}
 
         <Link
           href="/profile"
@@ -276,7 +263,6 @@ export function Topbar() {
         </div>
       </div>
       )}
-      <ConvertModal open={convertOpen} onClose={() => setConvertOpen(false)} />
     </header>
   );
 }
