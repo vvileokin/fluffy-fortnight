@@ -244,7 +244,10 @@ export const allTournaments: Tournament[] = [
     name: "Esports World Cup 2026",
     shortName: "EWC 2026",
     tier: 1,
-    status: "live",
+    // Over: Spirit beat FUT 3-1 in the grand final on 23 August. Every payout
+    // the event owed is settled — 57 questions resolved, no open bets, the
+    // bracket paid through the champion round, the favourite-team final paid.
+    status: "finished",
     startISO: "2026-08-12",
     endISO: "2026-08-23",
     dateLabel: "12 – 23 сер",
