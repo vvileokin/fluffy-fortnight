@@ -193,7 +193,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
   return (
     <div
       className={cn(
-        "relative h-full overflow-hidden rounded-xl p-5",
+        "relative flex h-full flex-col overflow-hidden rounded-xl p-5",
         ewc ? "ewc-aura-card" : "surface-1",
       )}
     >
@@ -211,7 +211,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
         />
       )}
 
-      <div className="relative">
+      <div className="relative flex flex-1 flex-col">
         {/* `items-center`, not `items-baseline`. The right-hand side is itself a
             flex row whose first item is an icon, and a flex container with no
             text as its first item has no real baseline to share — the browser
@@ -239,6 +239,13 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
 
         {drawn ? (
           <Result giveaway={giveaway} iWon={iWon} />
+        ) : closed ? (
+          /* Entries shut, winners not yet pulled. Nobody had drawn this state,
+             so it rendered the buy column with the button removed by the gate —
+             a ticket count, a price for something no longer on sale, and a tall
+             column of nothing under it. The one question left is whether you are
+             in, so that is what it answers. */
+          <Pending tickets={tickets} cap={cap} ewc={ewc} />
         ) : (
           <div className="mt-5 space-y-3">
             {/* Tickets held, as pips. A number alone ("2/5") makes you do the
@@ -541,6 +548,50 @@ function StepButton({
     >
       {children}
     </button>
+  );
+}
+
+/** Entries closed, draw still to come. */
+function Pending({ tickets, cap, ewc }: { tickets: number; cap: number; ewc: boolean }) {
+  const orange = ewc ? "text-[rgb(255_154_64)]" : "text-accent";
+  return (
+    <div className="mt-4 flex flex-1 flex-col gap-3">
+      {cap > 1 && (
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
+            <Ticket className="size-3.5 text-ink-subtle" />
+            Твої квитки
+          </span>
+          <span className="flex items-center gap-1">
+            {Array.from({ length: cap }, (_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "size-2 rounded-full",
+                  i < tickets
+                    ? ewc
+                      ? "bg-[rgb(255_154_64)]"
+                      : "bg-accent"
+                    : "bg-[color-mix(in_oklch,var(--ink)_16%,transparent)]",
+                )}
+              />
+            ))}
+            <span className="tnum ml-1.5 font-mono text-xs font-bold text-ink">
+              {tickets}/{cap}
+            </span>
+          </span>
+        </div>
+      )}
+      <div className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-lg bg-fill-1 px-4 py-6 text-center">
+        <Trophy className={cn("size-5", orange)} strokeWidth={2} />
+        <p className="text-sm font-bold text-ink">Заявки закрито</p>
+        <p className="text-xs leading-relaxed text-ink-muted">
+          {tickets > 0
+            ? "Ти в розіграші. Переможці з'являться тут."
+            : "Переможці з'являться тут."}
+        </p>
+      </div>
+    </div>
   );
 }
 

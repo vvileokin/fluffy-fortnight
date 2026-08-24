@@ -77,8 +77,9 @@ export default async function GiveawayPage({
             <div className="relative flex flex-col justify-end p-5 sm:p-6">
               <div className="mb-2 flex flex-wrap items-center gap-1.5">
                 {g.winners.length > 0 || g.status === "finished" ? (
-                  <Badge tone="neutral">
-                    <Trophy className="size-3" /> Розіграно
+                  <Badge tone={ewc ? "ewc" : "accent"}>
+                    <Trophy className="size-3" />
+                    {g.winners.length > 0 ? "Розіграно" : "Завершено"}
                   </Badge>
                 ) : g.status === "ending" ? (
                   <Badge tone="live">Завершується</Badge>

@@ -69,8 +69,13 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
               card is where most people meet it — showing "Активний" on a prize
               that already has a winner is the one wrong answer here. */}
           {g.winners.length > 0 || g.status === "finished" ? (
-            <Badge tone="neutral">
-              <Trophy className="size-3" /> Розіграно
+            /* Orange, not grey: a decided giveaway is the outcome people came
+               back for, and the neutral chip made it read as archived. The word
+               follows the facts — "Розіграно" is a claim about winners, and
+               entries can be shut before there are any. */
+            <Badge tone={ewc ? "ewc" : "accent"}>
+              <Trophy className="size-3" />
+              {g.winners.length > 0 ? "Розіграно" : "Завершено"}
             </Badge>
           ) : g.status === "ending" ? (
             <Badge tone="live">Завершується</Badge>
