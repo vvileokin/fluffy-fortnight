@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trophy, Check, Dices, Crown, Plus, Trash2, Pencil, Ban, Loader2 } from "lucide-react";
+import { Trophy, Check, Dices, Crown, Plus, RefreshCw, Trash2, Pencil, Ban, Loader2 } from "lucide-react";
 import { AdminHead, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -50,6 +50,7 @@ export default function GiveawaysAdmin() {
   const [active, setActive] = React.useState<string | null>(null);
   const [applicants, setApplicants] = React.useState<Applicant[]>([]);
   const [winners, setWinners] = React.useState<Winner[]>([]);
+  const [rerolling, setRerolling] = React.useState<string | null>(null);
   const [drawnAt, setDrawnAt] = React.useState<string | null>(null);
   const [drawing, setDrawing] = React.useState(false);
   const [drawError, setDrawError] = React.useState<string | null>(null);
@@ -127,6 +128,31 @@ export default function GiveawaysAdmin() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ slug: active, userId, confirmed: next }),
     });
+  }
+
+  /** Swap one winner for a fresh name, leaving every other place untouched. */
+  async function reroll(userId: string, handle: string, place: number) {
+    if (!active) return;
+    if (
+      !confirm(
+        `Перекрутити місце ${place}? ${handle} втрачає приз і вибуває з розіграшу — решта переможців лишаються.`,
+      )
+    )
+      return;
+    setRerolling(userId);
+    const res = await fetch("/api/admin/giveaways/draw", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug: active, userId }),
+    });
+    const j = await res.json().catch(() => ({}));
+    setRerolling(null);
+    if (!j.ok) {
+      alert(j.error === "no_candidates" ? "Немає кого поставити натомість" : j.error || "Не вдалося");
+      return;
+    }
+    alert(`Місце ${j.place}: ${j.replaced.handle} → ${j.winner.handle}`);
+    await loadEntries(active);
   }
 
   async function draw() {
@@ -397,12 +423,29 @@ export default function GiveawaysAdmin() {
                       className="flex items-center gap-3 rounded-lg bg-[color-mix(in_oklch,var(--accent)_10%,transparent)] p-3 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_35%,transparent)]"
                     >
                       <Avatar name={w.handle} size="md" ring />
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-[0.6875rem] uppercase tracking-wide text-ink-subtle">
                           {winners.length > 1 ? `Місце ${w.place}` : "Переможець"}
                         </p>
                         <p className="truncate text-sm font-bold text-ink">{w.handle}</p>
                       </div>
+                      {/* One place at a time. The button below rerolls all of
+                          them, which is the wrong instrument when a single name
+                          needs replacing — the other six won fairly and have
+                          already been told so. */}
+                      <button
+                        onClick={() => reroll(w.userId, w.handle, w.place)}
+                        disabled={rerolling !== null}
+                        title={`Перекрутити місце ${w.place}`}
+                        aria-label={`Перекрутити місце ${w.place}`}
+                        className="grid size-8 shrink-0 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"
+                      >
+                        {rerolling === w.userId ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <RefreshCw className="size-3.5" />
+                        )}
+                      </button>
                     </li>
                   ))}
                 </ul>

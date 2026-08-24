@@ -169,6 +169,116 @@ export async function PATCH(request: Request) {
   return NextResponse.json({ ok: true });
 }
 
+/**
+ * Replace one winner, leave the other six alone.
+ *
+ * `redraw` throws the whole result away, which is the right tool when the draw
+ * itself was wrong and the wrong one when a single name is. Seven skins go to
+ * seven people; if one of them turns out to be an admin, rerolling all seven
+ * takes the prize back off six players who did nothing but win it, and they
+ * have already been told they won.
+ *
+ * The replaced entry is disqualified rather than dropped back in the bag. The
+ * reason for pulling a name is almost never "this particular spin" — it is that
+ * the person should not have been eligible — so leaving their tickets in would
+ * let the next spin hand them the same prize back.
+ */
+export async function PUT(request: Request) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => null);
+  const slug = String(body?.slug ?? "");
+  const target = String(body?.userId ?? "");
+  if (!slug || !target) {
+    return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+
+  const { data: giveaway } = await admin
+    .from("giveaways")
+    .select("slug, prize")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!giveaway) {
+    return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
+  }
+
+  const { data: winners } = await admin
+    .from("giveaway_winners")
+    .select("user_id, place")
+    .eq("giveaway_slug", slug);
+  const row = (winners ?? []).find((w) => w.user_id === target);
+  if (!row) {
+    return NextResponse.json({ ok: false, error: "not_a_winner" }, { status: 400 });
+  }
+
+  // Out of the bag for good, before the pool is read.
+  await admin
+    .from("giveaway_entries")
+    .update({ confirmed: false })
+    .eq("giveaway_slug", slug)
+    .eq("user_id", target);
+
+  let pool: string[];
+  try {
+    pool = await eligible(admin, slug);
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: e instanceof Error ? e.message : "entries_failed" },
+      { status: 500 },
+    );
+  }
+
+  // Everybody already holding a place is out of contention too, or the reroll
+  // could hand one person two of the seven.
+  const held = new Set((winners ?? []).map((w) => w.user_id as string));
+  const bag = pool.filter((id) => !held.has(id));
+  if (bag.length === 0) {
+    return NextResponse.json({ ok: false, error: "no_candidates" }, { status: 400 });
+  }
+
+  const replacement = bag[randomInt(bag.length)];
+
+  await admin
+    .from("giveaway_winners")
+    .delete()
+    .eq("giveaway_slug", slug)
+    .eq("user_id", target);
+  const { error: wErr } = await admin
+    .from("giveaway_winners")
+    .insert({ giveaway_slug: slug, user_id: replacement, place: row.place });
+  if (wErr) {
+    return NextResponse.json({ ok: false, error: wErr.message }, { status: 500 });
+  }
+
+  await admin.from("notifications").insert({
+    user_id: replacement,
+    kind: "giveaway",
+    title: `Ти виграв: ${giveaway.prize}`,
+  });
+
+  const { data: profiles } = await admin
+    .from("profiles")
+    .select("id, handle")
+    .in("id", [target, replacement]);
+  const byId = new Map((profiles ?? []).map((p) => [p.id as string, p.handle as string]));
+
+  await logAdmin(
+    "giveaways",
+    `Перекрутив місце ${row.place} в ${slug}: ${byId.get(target) ?? target} → ${byId.get(replacement) ?? replacement}`,
+  );
+
+  return NextResponse.json({
+    ok: true,
+    place: row.place,
+    replaced: { userId: target, handle: byId.get(target) || "гравець" },
+    winner: { userId: replacement, handle: byId.get(replacement) || "гравець", place: row.place },
+  });
+}
+
 export async function POST(request: Request) {
   if (!(await isAdmin())) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
