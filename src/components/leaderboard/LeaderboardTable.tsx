@@ -275,13 +275,20 @@ function Podium({
                 <span
                   className={cn(
                     "tnum absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-md px-1.5 text-[0.625rem] font-extrabold leading-4",
+                    // Opaque, and ringed. Second and third sat on `black/45`,
+                    // which is a tint rather than a plate: the portrait showed
+                    // through it and the number went with it. The winner never
+                    // had the problem because a solid fill hides whatever is
+                    // behind it — so the other two get a solid floor of their
+                    // own, and a hairline so the badge still reads as a badge
+                    // against a dark avatar.
                     first
                       ? ewc
                         ? "bg-[rgb(var(--skin-ring))] text-black"
                         : "bg-accent text-accent-ink"
                       : ewc
-                        ? `bg-black/45 ${EVENT_INK}`
-                        : "bg-surface-3 text-accent",
+                        ? `bg-[var(--skin-base)] ${EVENT_INK} shadow-[0_0_0_1px_rgb(var(--skin-ring)/0.55)]`
+                        : "bg-surface-3 text-accent shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_40%,transparent)]",
                   )}
                 >
                   {row.rank}
