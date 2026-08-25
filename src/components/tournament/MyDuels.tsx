@@ -61,9 +61,13 @@ export function MyDuels({ matches }: { matches: Match[] }) {
   if (!user) return null;
 
   const live = (duels ?? []).filter((d) => d.status === "open" || d.status === "matched");
-  const done = (duels ?? []).filter((d) => d.status === "settled" || d.status === "void");
+  // Settled only. A duel that was voided or never taken gave everyone their
+  // stake back — nobody won, nobody lost, nothing happened — so it has no
+  // business sitting in a ledger of results. The refund is the whole story and
+  // the balance already tells it.
+  const done = (duels ?? []).filter((d) => d.status === "settled");
   const won = done.filter((d) => d.winner === me).length;
-  const lost = done.filter((d) => d.status === "settled" && d.winner !== me).length;
+  const lost = done.length - won;
 
   return (
     <div className="skin-aura-card space-y-3 rounded-xl p-3 sm:p-4">
@@ -84,7 +88,7 @@ export function MyDuels({ matches }: { matches: Match[] }) {
 
       {duels === null ? (
         <p className="py-1 text-xs text-white/40">Завантажуємо…</p>
-      ) : duels.length === 0 ? (
+      ) : live.length + done.length === 0 ? (
         <p className="text-xs leading-relaxed text-white/45">
           Ще жодної. Виклик кидається з лідерборду — на конкретну людину — або зі
           сторінки матчу, на будь-кого.
@@ -126,7 +130,6 @@ function DuelRow({
   const other = iAmChallenger ? duel.opponent : duel.challenger;
   const settled = duel.status === "settled";
   const won = settled && duel.winner === me;
-  const voided = duel.status === "void";
 
   const body = (
     <div className="flex items-center gap-2.5 rounded-lg bg-black/30 px-2.5 py-2">
@@ -150,13 +153,7 @@ function DuelRow({
       <span
         className={cn(
           "tnum flex shrink-0 items-center gap-1 font-mono text-xs font-bold",
-          settled
-            ? won
-              ? "text-success"
-              : "text-white/30"
-            : voided
-              ? "text-white/40"
-              : "text-[rgb(var(--skin-ring))]",
+          settled ? (won ? "text-success" : "text-white/30") : "text-[rgb(var(--skin-ring))]",
         )}
       >
         <BrandIcon name="points-porto" className="size-3.5" />
@@ -164,9 +161,7 @@ function DuelRow({
           ? won
             ? `+${formatInt(duel.stake * 2)}`
             : `−${formatInt(duel.stake)}`
-          : voided
-            ? "↩"
-            : formatInt(duel.stake)}
+          : formatInt(duel.stake)}
       </span>
 
       {/* Only an untaken challenge can be pulled. Once somebody has staked
