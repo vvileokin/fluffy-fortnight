@@ -4,7 +4,7 @@ import { tournaments } from "@/lib/data";
 import { findTournament } from "@/lib/db/tournaments";
 import { getSiteSettings } from "@/lib/db/settings";
 import { getMatches } from "@/lib/db/matches";
-import { getLeaderboard, getBountyLeaderboard, getEwcLeaderboard } from "@/lib/db/leaderboard";
+import { getLeaderboard, getBountyLeaderboard, getEwcLeaderboard , getEventLeaderboard} from "@/lib/db/leaderboard";
 import { getWorldRanks } from "@/lib/db/team-ranks";
 import { TournamentView } from "./TournamentView";
 
@@ -40,9 +40,11 @@ export default async function TournamentPage({
     getMatches(),
     t.slug === "ewc-2026"
       ? getEwcLeaderboard(200)
-      : t.isEvent
-        ? getBountyLeaderboard(200)
-        : getLeaderboard(200),
+      : t.skin === "porto"
+        ? getEventLeaderboard(200)
+        : t.isEvent
+          ? getBountyLeaderboard(200)
+          : getLeaderboard(200),
     getWorldRanks(),
   ]);
   const tourMatches = allMatches.filter((m) => m.tournamentSlug === slug);

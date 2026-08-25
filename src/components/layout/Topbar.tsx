@@ -96,7 +96,10 @@ export function Topbar() {
   const handle = profile?.handle || (user ? displayName(user) : "");
   const points = profile?.points ?? 0;
   const streak = profile?.streak ?? 0;
-  const eventPoints = profile?.ewc_points ?? 0;
+  // The running event's balance, not the last one's. `ewc_points` is what is
+  // left of the World Cup — a giveaway wallet now — and reading it here would
+  // greet a player at a new event holding points they won at the old one.
+  const eventPoints = profile?.event_points ?? 0;
 
   return (
     /* Impeccable: Crafted Top Bar — opaque, in the canvas's own colour, with no

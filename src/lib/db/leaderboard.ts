@@ -186,3 +186,47 @@ export async function getEwcLeaderboard(limit = 50): Promise<LeaderRow[]> {
     return [];
   }
 }
+
+/**
+ * The running event's board.
+ *
+ * Same shape as the World Cup one and for the same reason — there is no draft
+ * to enumerate a field from, so the field is everyone who has scored at the
+ * event. `> 0` is what makes it a board of participants rather than a roll of
+ * the whole site: an account that has not played the event has nothing to rank.
+ *
+ * `streak` comes back 0 deliberately. A streak belongs to a player across the
+ * season, not to one tournament, so the event board carries no column for it.
+ */
+export async function getEventLeaderboard(limit = 50): Promise<LeaderRow[]> {
+  try {
+    const sb = await createClient();
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+
+    const { data, error } = await sb
+      .from("profiles")
+      .select("id, handle, avatar_url, event_points")
+      .gt("event_points", 0)
+      .order("event_points", { ascending: false })
+      .limit(Math.max(limit, 200));
+    // Pre-migration the column doesn't exist; an empty board is the right
+    // answer then, not a crash.
+    if (error || !data) return [];
+
+    const ranked = rankByPoints(
+      data.map((p) => ({
+        handle: p.handle as string,
+        points: (p.event_points as number) ?? 0,
+        correct: 0,
+        streak: 0,
+        avatarUrl: (p.avatar_url as string) ?? undefined,
+        isYou: user?.id === p.id,
+      })),
+    );
+    return ranked.sort((a, b) => a.rank - b.rank).slice(0, limit);
+  } catch {
+    return [];
+  }
+}

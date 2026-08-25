@@ -12,6 +12,7 @@ export type Profile = {
   bounty_points: number;
   /** EWC 2026 event points. Absent until migration 0033 runs. */
   ewc_points?: number;
+  event_points?: number;
   correct: number;
   streak: number;
   is_admin: boolean;
@@ -55,18 +56,26 @@ export function useProfile() {
     const read = (columns: string) =>
       supabase.from("profiles").select(columns).eq("id", user.id).maybeSingle();
 
-    // `ewc_points` doesn't exist until migration 0033 runs, and PostgREST fails
-    // the *whole* select on one unknown column — which would blank the balance
-    // and the streak too, not just the event chip. Retry without it rather than
-    // let a pending migration empty the top bar.
-    read(`${BASE}, ewc_points`).then(({ data, error }) => {
+    // Neither `ewc_points` (migration 0033) nor `event_points` (0052) exists
+    // before its migration runs, and PostgREST fails the *whole* select on one
+    // unknown column — which would blank the balance and the streak too, not
+    // just the event chip. Step down rather than let a pending migration empty
+    // the top bar.
+    read(`${BASE}, ewc_points, event_points`).then(({ data, error }) => {
       if (cancelled) return;
       if (!error) {
         setProfile((data as unknown as Profile) ?? null);
         return;
       }
-      read(BASE).then(({ data: base }) => {
-        if (!cancelled) setProfile((base as unknown as Profile) ?? null);
+      read(`${BASE}, ewc_points`).then(({ data: mid, error: midErr }) => {
+        if (cancelled) return;
+        if (!midErr) {
+          setProfile((mid as unknown as Profile) ?? null);
+          return;
+        }
+        read(BASE).then(({ data: base }) => {
+          if (!cancelled) setProfile((base as unknown as Profile) ?? null);
+        });
       });
     });
     return () => {

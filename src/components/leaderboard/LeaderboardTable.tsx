@@ -66,8 +66,10 @@ function Delta({ delta }: { delta?: number }) {
   );
 }
 
-/** Ember stand-in for the brand yellow, used on every accent cue at the event. */
-const EWC_INK = "text-[rgb(255_154_64)]";
+/** The event's own accent, standing in for the brand yellow on every cue.
+    Reads the palette rather than naming a colour, so the board takes whichever
+    event it is sitting inside. */
+const EVENT_INK = "text-[rgb(var(--skin-ring))]";
 
 function Row({
   row,
@@ -104,7 +106,7 @@ function Row({
           "flex h-7 shrink-0 items-center gap-1 rounded-lg pl-2 pr-2",
           row.isYou
             ? ewc
-              ? "bg-[rgb(255_122_44)] text-black"
+              ? "bg-[rgb(var(--skin-ring))] text-black"
               : "bg-accent text-accent-ink"
             : ewc
               ? "bg-white/[0.07]"
@@ -118,7 +120,7 @@ function Row({
       <span
         className={cn(
           "min-w-0 flex-1 truncate text-sm font-semibold",
-          row.isYou ? (ewc ? EWC_INK : "text-accent") : "text-ink",
+          row.isYou ? (ewc ? EVENT_INK : "text-accent") : "text-ink",
         )}
       >
         {row.handle}
@@ -160,7 +162,7 @@ function Row({
       <span
         className={cn(
           "tnum flex w-[5.25rem] shrink-0 items-center justify-end gap-1.5 font-mono text-sm font-bold sm:w-24",
-          ewc ? EWC_INK : "text-accent",
+          ewc ? EVENT_INK : "text-accent",
         )}
       >
         {blastPoints && <BlastMark className="size-3.5 text-accent" />}
@@ -258,10 +260,10 @@ function Podium({
                     "tnum absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-md px-1.5 text-[0.625rem] font-extrabold leading-4",
                     first
                       ? ewc
-                        ? "bg-[rgb(255_122_44)] text-black"
+                        ? "bg-[rgb(var(--skin-ring))] text-black"
                         : "bg-accent text-accent-ink"
                       : ewc
-                        ? `bg-black/45 ${EWC_INK}`
+                        ? `bg-black/45 ${EVENT_INK}`
                         : "bg-surface-3 text-accent",
                   )}
                 >
@@ -304,7 +306,7 @@ function Podium({
               <span
                 className={cn(
                   "tnum flex items-center gap-1.5 font-mono font-extrabold",
-                  ewc ? EWC_INK : "text-accent",
+                  ewc ? EVENT_INK : "text-accent",
                   first ? "text-sm" : "text-xs",
                 )}
               >

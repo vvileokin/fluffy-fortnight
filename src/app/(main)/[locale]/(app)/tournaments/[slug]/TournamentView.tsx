@@ -70,24 +70,29 @@ export function TournamentView({
     { id: "matches" as Tab, label: "Матчі", icon: SwordsGlyph },
     { id: "results", label: "Результати", icon: ResultsGlyph },
     // The event gets a predictor too, it just plays a different game: one
-    // one-shot playoff bracket for real EWC points instead of the sandbox
+    // one-shot playoff bracket for real event points instead of the sandbox
     // simulator a regular tournament shows — so on the event it flies the
     // event's own mark rather than a generic bracket glyph.
-    t.skin === "ewc"
-      ? {
-          id: "predictor" as Tab,
-          label: "Прогнозатор",
-          icon: EwcMark,
-          // The wordmark is a 5:1 lockup: at the row's 16px it would run 80px
-          // wide and read as a banner wedged into a tab. Set to the cap height
-          // of the label beside it, the same inline size the bracket heading
-          // already uses, it sits as a mark rather than a second headline.
-          // 8px, matching the mark on the match card. At the label's cap height
-          // it out-weighed the word beside it — a 5:1 lockup carries far more
-          // ink across than a letter does, so equal height reads as bigger.
-          iconClass: "h-2 w-auto shrink-0",
-        }
-      : { id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork },
+    //
+    // Porto has none yet: its mechanics are still being built, and a tab that
+    // opens EWC's bracket on a different tournament is worse than no tab.
+    ...(t.skin === "porto"
+      ? []
+      : [
+          t.skin === "ewc"
+            ? {
+                id: "predictor" as Tab,
+                label: "Прогнозатор",
+                icon: EwcMark,
+                // The wordmark is a 5:1 lockup: at the row's 16px it would run
+                // 80px wide and read as a banner wedged into a tab. 8px, the
+                // cap height of the label beside it — a 5:1 lockup carries far
+                // more ink across than a letter does, so equal height reads as
+                // bigger.
+                iconClass: "h-2 w-auto shrink-0",
+              }
+            : { id: "predictor" as Tab, label: "Прогнозатор", icon: GitFork },
+        ]),
     {
       id: "leaderboard",
       label: "Лідерборд",
@@ -238,7 +243,12 @@ export function TournamentView({
             </div>
             <Dot />
             <div className="flex items-center gap-1.5">
-              <TeamGlyph className="size-4 shrink-0 text-ink-subtle" />
+              {/* Height-matched, not box-matched. Its viewBox is 20×14, so a
+                  square class fits it by width and leaves it 11px tall — the
+                  smallest mark in a row of 16px ones, floating in the middle of
+                  its own box. The crown two components down carries the mirror
+                  of this note for the opposite reason. */}
+              <TeamGlyph className="h-4 w-auto shrink-0 text-ink-subtle" />
               {teams.length} команд
             </div>
             <Dot />
@@ -413,9 +423,13 @@ export function TournamentView({
             <LeaderboardTable
               rows={leaderboard}
               blastPoints={t.skin === "blast"}
-              pointsIcon={t.skin === "ewc" ? "points-ewc" : "points"}
-              showStreak={t.skin !== "ewc"}
-              ewc={t.skin === "ewc"}
+              pointsIcon={
+                t.skin === "ewc" ? "points-ewc" : t.skin === "porto" ? "points-porto" : "points"
+              }
+              // A streak belongs to a player across the season, not to one
+              // tournament, so no event board carries the column.
+              showStreak={!isAuraSkin(t.skin)}
+              ewc={isAuraSkin(t.skin)}
               topN={10}
               expandable
               podium
@@ -517,7 +531,10 @@ function TeamsGrid({
           onClick={() => setExpanded((v) => !v)}
           className={cn(
             "mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition-colors",
-            skin === "ewc"
+            // The expander belongs to the grid above it, so at an event it
+            // wears the event's plate rather than the generic surface — which
+            // is what left a plain dark bar under sixteen lit tiles.
+            isAuraSkin(skin)
               ? "skin-aura-card text-white hover:brightness-110"
               : "surface-1 text-ink-muted hover:bg-surface-2 hover:text-ink",
           )}
