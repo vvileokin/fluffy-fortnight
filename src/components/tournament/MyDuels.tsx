@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/i18n/navigation";
-import { Loader2, Swords, X } from "lucide-react";
+import { Check, Loader2, Swords, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
@@ -47,10 +47,11 @@ export function MyDuels({ matches }: { matches: Match[] }) {
 
   const byId = React.useMemo(() => new Map(matches.map((m) => [m.id, m])), [matches]);
 
-  async function withdraw(id: string) {
+  /** Accept or turn down — one call, because they differ only in the verb. */
+  async function act(id: string, method: "PATCH" | "DELETE") {
     setBusy(id);
     await fetch("/api/duels", {
-      method: "DELETE",
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     }).catch(() => {});
@@ -102,7 +103,8 @@ export function MyDuels({ matches }: { matches: Match[] }) {
               me={me}
               match={byId.get(d.matchId)}
               busy={busy === d.id}
-              onWithdraw={() => withdraw(d.id)}
+              onAccept={() => act(d.id, "PATCH")}
+              onWithdraw={() => act(d.id, "DELETE")}
             />
           ))}
         </div>
@@ -116,12 +118,14 @@ function DuelRow({
   me,
   match,
   busy,
+  onAccept,
   onWithdraw,
 }: {
   duel: Duel;
   me: string | null;
   match?: Match;
   busy: boolean;
+  onAccept: () => void;
   onWithdraw: () => void;
 }) {
   const iAmChallenger = duel.challenger.id === me;
@@ -130,6 +134,7 @@ function DuelRow({
   const other = iAmChallenger ? duel.opponent : duel.challenger;
   const settled = duel.status === "settled";
   const won = settled && duel.winner === me;
+  const [armed, setArmed] = React.useState(false);
 
   const body = (
     <div className="flex items-center gap-2.5 rounded-lg bg-black/30 px-2.5 py-2">
@@ -164,20 +169,58 @@ function DuelRow({
           : formatInt(duel.stake)}
       </span>
 
-      {/* Only an untaken challenge can be pulled. Once somebody has staked
-          against it, it is their position too. */}
-      {duel.status === "open" && (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            onWithdraw();
-          }}
-          aria-label="Забрати виклик"
-          className="grid size-7 shrink-0 place-items-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.08] hover:text-white"
-        >
-          {busy ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
-        </button>
-      )}
+      {/* Only an untaken challenge can be undone. Once somebody has staked
+          against it, it is their position too.
+
+          The challenger gets one control; the person being challenged gets
+          two, because a challenge aimed at you is a question and "no" is only
+          half an answer. Accepting arms first — it is the one press here that
+          spends points, and the row it sits in is small and scrollable. */}
+      {duel.status === "open" &&
+        (iAmChallenger ? (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onWithdraw();
+            }}
+            aria-label="Забрати виклик"
+            title="Забрати виклик — поінти повернуться"
+            className="grid size-7 shrink-0 place-items-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.08] hover:text-white"
+          >
+            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+          </button>
+        ) : (
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                if (armed) onAccept();
+                else setArmed(true);
+              }}
+              aria-label={armed ? "Підтвердити" : "Прийняти виклик"}
+              title={armed ? "Ще раз — і ставка піде" : `Прийняти · ${formatInt(duel.stake)}`}
+              className={cn(
+                "grid h-7 shrink-0 place-items-center rounded-lg px-1.5 transition-colors",
+                armed
+                  ? "bg-[rgb(var(--skin-ring))] text-black"
+                  : "text-white/40 hover:bg-white/[0.08] hover:text-white",
+              )}
+            >
+              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                onWithdraw();
+              }}
+              aria-label="Відхилити виклик"
+              title="Відхилити — поінти повернуться суперникові"
+              className="grid size-7 shrink-0 place-items-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.08] hover:text-white"
+            >
+              {busy ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+            </button>
+          </div>
+        ))}
     </div>
   );
 

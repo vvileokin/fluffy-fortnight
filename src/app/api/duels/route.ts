@@ -162,7 +162,13 @@ export async function PATCH(request: Request) {
   return NextResponse.json(data);
 }
 
-/** Pull your own untaken challenge, or turn down one aimed at you. */
+/**
+ * Pull your own untaken challenge, or turn down one aimed at you.
+ *
+ * Both refund the challenger in full and neither is offered once somebody has
+ * staked against the duel — at that point the points are two people's, and one
+ * of them cannot hand back what the other has committed.
+ */
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const {

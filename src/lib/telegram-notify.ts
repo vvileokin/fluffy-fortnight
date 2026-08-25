@@ -77,6 +77,11 @@ export function render(kind: string, p: Record<string, unknown>): Message | null
         mark: "duel",
         text: `Дуель проти ${s(p.from)} програна. ${s(p.match)}.\n<i>Рахунок</i> <code>${s(p.record)}</code> — реванш?`,
       };
+    case "duel_declined":
+      return {
+        mark: "duel",
+        text: `<b>${s(p.from)} відхилив твій виклик</b>\n${n(p.stake)} повернуто на баланс.`,
+      };
     case "duel_expired":
       return {
         mark: "duel",

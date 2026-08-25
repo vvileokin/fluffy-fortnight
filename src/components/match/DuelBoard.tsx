@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/i18n/navigation";
-import { Loader2, LogIn, Swords, X } from "lucide-react";
+import { Check, Loader2, LogIn, Swords, X } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandIcon } from "@/components/ui/BrandIcon";
@@ -68,8 +68,11 @@ export function DuelBoard({ match }: { match: Match }) {
   const a = getTeam(match.a);
   const b = getTeam(match.b);
   const mine = duels?.find((d) => d.challenger.id === me || d.opponent?.id === me);
+  // Open to anybody, from somebody else. A challenge with a name on it is not
+  // board business even when the name is mine — it is answered above, and
+  // listing it in both places offered the same duel twice.
   const board = (duels ?? []).filter(
-    (d) => d.status === "open" && d.challenger.id !== me,
+    (d) => d.status === "open" && d.opponent === null && d.challenger.id !== me,
   );
 
   const REFUSAL: Record<string, string> = {
@@ -80,6 +83,9 @@ export function DuelBoard({ match }: { match: Match }) {
     taken: "Виклик уже взяли",
     bad_tier: "Обери одну з сум",
     self: "Це твій власний виклик",
+    not_open: "Виклик уже закрито",
+    not_yours: "Це не твій виклик",
+    not_found: "Виклику вже немає",
   };
 
   async function send(method: "POST" | "PATCH" | "DELETE", body: object, key: string) {
@@ -284,6 +290,7 @@ function MyDuel({
   const other = iAmChallenger ? duel.opponent : duel.challenger;
   const settled = duel.status === "settled";
   const won = settled && duel.winner === me;
+  const [confirming, setConfirming] = React.useState(false);
 
   return (
     <div className="space-y-2">
@@ -294,7 +301,11 @@ function MyDuel({
             Ти на {backed.name}
           </p>
           <p className="truncate text-[0.6875rem] text-white/45">
-            {other ? `проти ${other.handle}` : "чекає на суперника"}
+            {!other
+              ? "чекає на суперника"
+              : duel.status === "open" && !iAmChallenger
+                ? `${other.handle} викликав тебе`
+                : `проти ${other.handle}`}
           </p>
         </div>
         <span
@@ -308,9 +319,11 @@ function MyDuel({
         </span>
       </div>
 
-      {/* Withdrawing is offered only while nobody has taken it. After that the
-          stake is somebody else's position too. */}
-      {duel.status === "open" && open && (
+      {/* An open duel can still be undone, and which way depends on which end
+          of it you are. Once it is matched neither is offered: the stake is
+          somebody else's position too, and no single player may hand back what
+          the other has committed. */}
+      {duel.status === "open" && open && (iAmChallenger ? (
         <button
           onClick={() => onAct("DELETE", { id: duel.id }, "withdraw")}
           disabled={busy !== null}
@@ -321,9 +334,49 @@ function MyDuel({
           ) : (
             <X className="size-3.5" strokeWidth={2.5} />
           )}
-          {iAmChallenger ? "Забрати виклик" : "Відхилити"}
+          Забрати виклик · поінти повернуться
         </button>
-      )}
+      ) : (
+        <div className="space-y-2">
+          {/* Accepting is the only one of the two that costs anything, so it is
+              the only one that asks twice. Declining moves nobody's points but
+              the challenger's, and moves them home. */}
+          {confirming && (
+            <p className="rounded-lg bg-[rgb(var(--skin-ring)/0.12)] px-3 py-2.5 text-center text-xs leading-relaxed text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.35)]">
+              Прийняти виклик і поставити <b>{formatInt(duel.stake)}</b> на{" "}
+              <b>{backed.name}</b>? Переможець забирає {formatInt(duel.stake * 2)}.
+            </p>
+          )}
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <button
+              onClick={() =>
+                confirming ? onAct("PATCH", { id: duel.id }, "accept") : setConfirming(true)
+              }
+              disabled={busy !== null}
+              className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[rgb(var(--skin-ring))] text-xs font-bold text-black transition-[filter] hover:brightness-110 disabled:opacity-50"
+            >
+              {busy === "accept" ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Check className="size-3.5" strokeWidth={2.5} />
+              )}
+              {confirming ? "Так, приймаю" : `Прийняти · ${formatInt(duel.stake)}`}
+            </button>
+            <button
+              onClick={() => onAct("DELETE", { id: duel.id }, "withdraw")}
+              disabled={busy !== null}
+              className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white/[0.06] px-3 text-xs font-semibold text-white/60 transition-colors hover:bg-white/[0.12] hover:text-white disabled:opacity-50"
+            >
+              {busy === "withdraw" ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <X className="size-3.5" strokeWidth={2.5} />
+              )}
+              Відхилити
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
