@@ -32,11 +32,12 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
         <Link
           href={promoHref(promo)}
           /* Held at the artwork's own ratio, like the hero. A fixed 120px height
-             cropped a 16:9 banner top and bottom, so whatever the art was built
-             around sat outside the frame; at 16:9 the whole thing is on screen
-             and nothing has to be guessed at. Swap the art for a different
-             shape and this class is the one line that follows it. */
-          className="group relative mx-3 mb-1 block aspect-[16/9] overflow-hidden rounded-lg border border-border"
+             cropped the banner top and bottom, so whatever it was built around
+             sat outside the frame — and 16:9 was still 5% too wide for it,
+             which on a card with crests at both edges is a clipped logo. The
+             art is 1344×795; this class is the one line that follows it if the
+             art is ever replaced with a different shape. */
+          className="group relative mx-3 mb-1 block aspect-[1344/795] overflow-hidden rounded-lg border border-border"
           aria-label="Promo"
         >
           {/* Artwork, so it gets the same treatment as the covers and the hero
@@ -51,7 +52,7 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
             src={promo.image}
             alt=""
             width={448}
-            height={252}
+            height={265}
             quality={90}
             className="h-full w-full object-cover object-center"
           />
