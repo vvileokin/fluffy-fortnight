@@ -180,6 +180,11 @@ export default function MatchesAdmin() {
   const [statusTab, setStatusTab] = React.useState<MatchStatus>("live");
   const [tableMissing, setTableMissing] = React.useState(false);
   const [editing, setEditing] = React.useState<MatchForm | null>(null);
+  /** Tournaments that carry a dress of their own, newest first. */
+  const skinnedTournaments = React.useMemo(
+    () => allTournaments.filter((x) => x.skin).slice().reverse(),
+    [],
+  );
   /**
    * The closed list of stages this tournament's bracket can read, if it has
    * one. Free text is a money bug here, not a tidiness one: the favourite-team
@@ -539,25 +544,41 @@ export default function MatchesAdmin() {
                 )}
               </div>
               <Field label="Дизайн">
-                {/* The dress follows the tournament — a match in ewc-2026 wears
-                    the EWC skin automatically — so picking EWC here also sets
-                    the tournament, otherwise the two could disagree. */}
+                {/* The dress follows the tournament: `matchSkin` reads the
+                    tournament's own skin first, so a fixture in a skinned
+                    tournament is already wearing it. The list is therefore
+                    built from the skinned tournaments rather than naming one —
+                    a new event appears here by existing, and the control can't
+                    fall behind the data.
+
+                    It mattered: Porto had no option, so its matches read
+                    "Звичайний" while the site rendered them in Porto's colours.
+                    The obvious fix from in here would have been to pick BLAST,
+                    which sets `is_event` — the flag that routes the tournament
+                    page to the Bounty leaderboard and predictor. A cosmetic
+                    control that quietly reroutes a leaderboard is the kind of
+                    thing nobody finds until the numbers are wrong. */}
                 <select
                   className={inputCls}
                   value={
-                    editing.tournament_slug === "ewc-2026"
-                      ? "ewc"
+                    skinnedTournaments.some((x) => x.slug === editing.tournament_slug)
+                      ? editing.tournament_slug
                       : editing.is_event
                         ? "event"
                         : "regular"
                   }
                   onChange={(e) => {
                     const v = e.target.value;
-                    if (v === "ewc") up({ is_event: true, tournament_slug: "ewc-2026" });
+                    const picked = skinnedTournaments.find((x) => x.slug === v);
+                    if (picked) up({ tournament_slug: picked.slug, is_event: !!picked.isEvent });
                     else up({ is_event: v === "event" });
                   }}
                 >
-                  <option value="ewc">EWC 2026 (вогонь)</option>
+                  {skinnedTournaments.map((x) => (
+                    <option key={x.slug} value={x.slug}>
+                      {x.shortName}
+                    </option>
+                  ))}
                   <option value="event">BLAST (неон)</option>
                   <option value="regular">Звичайний</option>
                 </select>
