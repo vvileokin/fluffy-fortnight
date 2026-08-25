@@ -151,6 +151,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
+  // Duels close on the match, not on a question, and both halves happen at the
+  // same moment: anything still unanswered never found a pair and is refunded,
+  // anything matched is decided. It runs the moment a match stops being
+  // upcoming — including a cancellation, which refunds both sides rather than
+  // handing the pot to whoever happened to be side A of a 0-0.
+  //
+  // Idempotent by status, so every re-save of a finished match settles nothing
+  // twice. It is fired for any tournament: the function itself refuses
+  // anything that is not Porto, and duels only exist there.
+  let duels = { settled: 0, refunded: 0 };
+  if (derived.status !== "upcoming") {
+    const { data: duelOut, error: duelErr } = await admin.rpc("duel_close_match", {
+      p_match: id,
+    });
+    // Migration 0058 may not have run yet, and saving a match must not fail
+    // because a feature that is not deployed cannot answer.
+    if (duelErr && duelErr.code !== "PGRST202" && duelErr.code !== "42883") {
+      console.error("[matches] duel_close_match:", duelErr.message);
+    } else if (duelOut && typeof duelOut === "object") {
+      const o = duelOut as { settled?: number; refunded?: number };
+      duels = { settled: o.settled ?? 0, refunded: o.refunded ?? 0 };
+    }
+  }
+
   // Favourite-team payouts ride the match finishing, not a question resolving —
   // backing a team is a bet on the team, and it pays whether or not anyone
   // wrote a question about that fixture. `pay_favourite_team` is idempotent per
@@ -194,11 +218,11 @@ export async function POST(request: Request) {
 
   await logAdmin(
     "matches",
-    favourites > 0
-      ? `Зберіг матч ${id} — улюблена команда: ${favourites} виплат`
+    favourites > 0 || duels.settled > 0 || duels.refunded > 0
+      ? `Зберіг матч ${id} — улюблена команда: ${favourites} виплат, дуелі: ${duels.settled} розрахунків, ${duels.refunded} повернень`
       : `Зберіг матч ${id}`,
   );
-  return NextResponse.json({ ok: true, id, favourites });
+  return NextResponse.json({ ok: true, id, favourites, duels });
 }
 
 export async function DELETE(request: Request) {
