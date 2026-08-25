@@ -217,6 +217,9 @@ export async function getEventLeaderboard(limit = 50): Promise<LeaderRow[]> {
 
     const ranked = rankByPoints(
       data.map((p) => ({
+        // The id rides along here and nowhere else: this is the board duels are
+        // thrown from, and a challenge has to name a person.
+        userId: p.id as string,
         handle: p.handle as string,
         points: (p.event_points as number) ?? 0,
         correct: 0,

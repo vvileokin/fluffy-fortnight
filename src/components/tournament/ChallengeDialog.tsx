@@ -1,0 +1,202 @@
+"use client";
+
+import * as React from "react";
+import { Loader2 } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { TeamLogo } from "@/components/ui/TeamLogo";
+import { getTeam, matchTimeLabel, type Match } from "@/lib/data";
+import { cn, formatInt } from "@/lib/utils";
+
+/**
+ * Impeccable: Crafted Challenge — thrown at a person, from where you saw them.
+ *
+ * The leaderboard is the one page that already answers "who is above me", so it
+ * is where a challenge belongs: you are not looking for a fixture to bet on,
+ * you are looking at somebody you want to beat. The fixture is the second
+ * question, and it is asked here.
+ *
+ * A named challenge takes any amount, unlike the open board's four tiers. The
+ * tiers exist so an unanswered challenge can *find* a pair — 137 never meets
+ * 140 — and that problem does not exist when you are asking one person who
+ * either accepts or does not.
+ */
+export function ChallengeDialog({
+  open,
+  onClose,
+  target,
+  matches,
+}: {
+  open: boolean;
+  onClose: () => void;
+  target: { id: string; handle: string } | null;
+  /** Porto fixtures; only the ones not yet started can be challenged on. */
+  matches: Match[];
+}) {
+  const upcoming = React.useMemo(
+    () => matches.filter((m) => m.status === "upcoming").slice(0, 8),
+    [matches],
+  );
+
+  const [matchId, setMatchId] = React.useState<string | null>(null);
+  const [side, setSide] = React.useState<"a" | "b" | null>(null);
+  const [stake, setStake] = React.useState("100");
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [done, setDone] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!open) return;
+    setMatchId(null);
+    setSide(null);
+    setStake("100");
+    setError(null);
+    setDone(false);
+  }, [open, target?.id]);
+
+  const match = upcoming.find((m) => m.id === matchId) ?? null;
+  const amount = Number(stake || 0);
+  const ready = !!match && !!side && amount >= 1;
+
+  const REFUSAL: Record<string, string> = {
+    insufficient: "Не вистачає поінтів",
+    already_in: "У тебе вже є дуель на цей матч",
+    too_many_open: "Забагато відкритих викликів — максимум три",
+    started: "Матч уже почався",
+    self: "Це ти",
+  };
+
+  async function send() {
+    if (!match || !side || !target) return;
+    setBusy(true);
+    setError(null);
+    const res = await fetch("/api/duels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ match: match.id, side, stake: amount, opponent: target.id }),
+    });
+    const out = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!out.ok) {
+      setError(REFUSAL[out.error as string] ?? "Не вдалося");
+      return;
+    }
+    setDone(true);
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Виклик · ${target?.handle ?? ""}`}>
+      {done ? (
+        <p className="rounded-xl bg-success/10 px-3 py-4 text-center text-sm font-bold text-success">
+          Виклик надіслано. {target?.handle} побачить його на матчі.
+        </p>
+      ) : upcoming.length === 0 ? (
+        <p className="rounded-xl surface-2 px-3 py-4 text-center text-sm text-ink-muted">
+          Немає матчів, які ще не почались.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          <Field label="Матч">
+            <div className="space-y-1.5">
+              {upcoming.map((m) => {
+                const a = getTeam(m.a);
+                const b = getTeam(m.b);
+                const on = m.id === matchId;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      setMatchId(m.id);
+                      setSide(null);
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-colors",
+                      on
+                        ? "bg-accent/15 text-ink shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
+                        : "surface-2 text-ink-muted hover:bg-surface-3",
+                    )}
+                  >
+                    <TeamLogo team={a} size="xs" />
+                    <TeamLogo team={b} size="xs" />
+                    <span className="min-w-0 flex-1 truncate">
+                      {a.tag} — {b.tag}
+                    </span>
+                    <span className="shrink-0 text-[0.6875rem] font-normal text-ink-subtle">
+                      {matchTimeLabel(m)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+
+          {/* The side is only askable once there is a match to have sides. */}
+          {match && (
+            <Field label="Твій бік">
+              <div className="grid grid-cols-2 gap-2">
+                {(["a", "b"] as const).map((s) => {
+                  const t = getTeam(s === "a" ? match.a : match.b);
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSide(s)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-colors",
+                        side === s
+                          ? "bg-accent/15 text-ink shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
+                          : "surface-2 text-ink-muted hover:bg-surface-3",
+                      )}
+                    >
+                      <TeamLogo team={t} size="xs" />
+                      <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+          )}
+
+          <Field label="Ставка">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={stake}
+              onChange={(e) => setStake(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              // Forced off, like every other numeric field on the site: the
+              // site-wide focus ring is an offset outline meant for controls on
+              // flat ground, and on a bordered input it doubles the frame.
+              className="tnum h-11 w-full rounded-xl border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none focus:border-accent focus-visible:rounded-xl! focus-visible:outline-none!"
+            />
+          </Field>
+
+          {error && (
+            <p role="alert" className="text-center text-xs font-semibold text-danger">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={send}
+            disabled={!ready || busy}
+            className={cn(
+              "flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors",
+              "bg-accent text-accent-ink hover:bg-accent-hover",
+              "disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-ink-faint",
+            )}
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            {ready ? `Кинути виклик · ${formatInt(amount)}` : "Обери матч і бік"}
+          </button>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <span className="mb-1.5 block text-xs font-semibold text-ink-muted">{label}</span>
+      {children}
+    </div>
+  );
+}

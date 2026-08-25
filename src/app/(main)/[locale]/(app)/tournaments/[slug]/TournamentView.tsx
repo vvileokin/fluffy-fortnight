@@ -31,6 +31,7 @@ import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import { EwcBracket } from "@/components/tournament/EwcBracket";
 import { PortoBracket } from "@/components/tournament/PortoBracket";
 import { PortoGroupCard } from "@/components/tournament/PortoGroupCard";
+import { ChallengeDialog } from "@/components/tournament/ChallengeDialog";
 import { PlayoffBracketEntry } from "@/components/tournament/PlayoffBracketEntry";
 import { FavouriteTeam } from "@/components/tournament/FavouriteTeam";
 import type { CSSProperties } from "react";
@@ -125,6 +126,9 @@ export function TournamentView({
   ];
 
   const [tab, setTab] = React.useState<Tab>("overview");
+  // Who is being challenged, or null. Lives here rather than in the table so
+  // the dialog can see the tournament's fixtures.
+  const [challenging, setChallenging] = React.useState<{ id: string; handle: string } | null>(null);
 
   // At the event, every cue that would normally be the season's yellow burns
   // ember instead — the prize, the selected tab, the tier chip. A yellow
@@ -459,6 +463,13 @@ export function TournamentView({
               // tournament, so no event board carries the column.
               showStreak={!isAuraSkin(t.skin)}
               ewc={isAuraSkin(t.skin)}
+              // Duels are Porto's, so the swords only appear on Porto's board.
+              onChallenge={
+                t.skin === "porto"
+                  ? (row) =>
+                      row.userId && setChallenging({ id: row.userId, handle: row.handle })
+                  : undefined
+              }
               topN={10}
               expandable
               podium
@@ -468,6 +479,15 @@ export function TournamentView({
           )}
         </div>
       )}
+
+      {/* Mounted once at the page root rather than per row: it is one dialog
+          that changes who it is about, not sixty dialogs waiting to open. */}
+      <ChallengeDialog
+        open={!!challenging}
+        onClose={() => setChallenging(null)}
+        target={challenging}
+        matches={matches}
+      />
     </div>
   );
 }

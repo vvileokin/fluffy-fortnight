@@ -1047,6 +1047,13 @@ export const questions: Question[] = [
 
 export type LeaderRow = {
   rank: number;
+  /**
+   * Who the row is. Only filled where a board needs to *act* on a player —
+   * challenging them to a duel — because everywhere else a handle is enough and
+   * shipping ids to the browser for no reason is how they end up somewhere they
+   * should not be.
+   */
+  userId?: string;
   /** Last position of a tie group — equals `rank` when the score is unique. */
   rankEnd?: number;
   handle: string;

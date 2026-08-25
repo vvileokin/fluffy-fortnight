@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronUp, ChevronDown, Minus } from "lucide-react";
+import { ChevronUp, ChevronDown, Minus, Swords } from "lucide-react";
 import { formatInt } from "@/lib/utils";
 import { type LeaderRow } from "@/lib/data";
 import { Avatar } from "@/components/ui/Avatar";
@@ -77,12 +77,14 @@ function Row({
   pointsIcon,
   showStreak,
   ewc = false,
+  onChallenge,
 }: {
   row: LeaderRow;
   blastPoints: boolean;
   pointsIcon: BrandIconName;
   showStreak: boolean;
   ewc?: boolean;
+  onChallenge?: (row: LeaderRow) => void;
 }) {
   return (
     /* Impeccable: Crafted Board Row — each place is its own rounded slab with
@@ -169,6 +171,19 @@ function Row({
         <BrandIcon name={pointsIcon} className="size-4" />
         {formatInt(row.points)}
       </span>
+      {/* Only on other people, and only where the board was given a handler —
+          a swords icon beside your own name would be an invitation to duel
+          yourself. */}
+      {onChallenge && row.userId && !row.isYou && (
+        <button
+          onClick={() => onChallenge(row)}
+          aria-label={`Викликати ${row.handle}`}
+          title={`Викликати ${row.handle}`}
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-ink-subtle transition-colors hover:bg-white/[0.08] hover:text-[rgb(var(--skin-ring))]"
+        >
+          <Swords className="size-4" />
+        </button>
+      )}
     </div>
   );
 }
@@ -331,6 +346,7 @@ export function LeaderboardTable({
   ewc = false,
   expandable = false,
   podium = false,
+  onChallenge,
   className,
 }: {
   rows: LeaderRow[];
@@ -348,6 +364,13 @@ export function LeaderboardTable({
   expandable?: boolean;
   /** Lift the top three onto a podium above the list (season board). */
   podium?: boolean;
+  /**
+   * Offered on a row that is somebody else. The board is the one page that
+   * already answers "who is above me", so a challenge belongs here rather than
+   * on a list of fixtures — you are not shopping for a match, you are looking
+   * at a person you want to beat.
+   */
+  onChallenge?: (row: LeaderRow) => void;
   className?: string;
 }) {
   const [expanded, setExpanded] = React.useState(false);
@@ -387,12 +410,12 @@ export function LeaderboardTable({
         <Podium rows={onPodium} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
         <div className="flex flex-col gap-1.5">
           {inline.map((row, i) => (
-            <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
+            <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} onChallenge={onChallenge} />
           ))}
           {youBelow && you && (
             <>
               <Dots onClick={expandable && hasMore ? () => setExpanded(true) : undefined} />
-              <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
+              <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} onChallenge={onChallenge} />
             </>
           )}
           {collapsed && !youBelow && expandable && hasMore && (
@@ -422,14 +445,14 @@ export function LeaderboardTable({
       {/* Handles aren't unique (two players can share a display name), so the
           key has to include the position. */}
       {inline.map((row, i) => (
-        <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
+        <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} onChallenge={onChallenge} />
       ))}
 
       {/* You rank below the visible top — dots, then your highlighted row. */}
       {youBelow && you && (
         <>
           <Dots onClick={expandable && hasMore ? () => setExpanded(true) : undefined} />
-          <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
+          <Row row={you} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} onChallenge={onChallenge} />
         </>
       )}
 
