@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ArrowRight, ChevronLeft, Loader2, Plus, X } from "lucide-react";
-import { BrandIcon } from "@/components/ui/BrandIcon";
+import { BrandIcon, type BrandIconName } from "@/components/ui/BrandIcon";
 import { eventPointsLabel } from "@/lib/data";
 import { refreshProfile } from "@/lib/supabase/use-profile";
 import { useConvertLimit, invalidateConvertLimit } from "@/lib/convert-limit";
@@ -45,6 +45,7 @@ export function BetSlip({
   locked,
   bet,
   multiplier,
+  gem = "points",
   onPlaced,
 }: {
   questionId: string;
@@ -55,6 +56,8 @@ export function BetSlip({
   bet: Bet | null;
   /** Streak multiplier, applied to winnings exactly as it is to flat rewards. */
   multiplier: number;
+  /** The currency mark of the event this slip belongs to. */
+  gem?: BrandIconName;
   onPlaced: () => void;
 }) {
   const [stake, setStake] = React.useState<number>(CHIPS[0]);
@@ -100,12 +103,12 @@ export function BetSlip({
         <div className="flex h-11 items-center justify-between gap-2 rounded-lg bg-black/30 px-3">
           {/* Both marks ember: the same currency going out and coming back,
               with the arrow and the coefficient saying which is which. */}
-          <span className="tnum flex min-w-0 items-center gap-1 font-mono text-sm font-bold leading-none text-[rgb(255_154_64)]">
-            <BrandIcon name="points-ewc" className="size-4" />
+          <span className="tnum flex min-w-0 items-center gap-1 font-mono text-sm font-bold leading-none text-[rgb(var(--skin-ring))]">
+            <BrandIcon name={gem} className="size-4" />
             {formatInt(bet.stake)}
             <span className="mx-1.5 text-white/45">× {bet.odds}</span>
             <ArrowRight className="mr-1.5 size-3.5 shrink-0 text-white/35" strokeWidth={3} />
-            <BrandIcon name="points-ewc" className="size-4" />
+            <BrandIcon name={gem} className="size-4" />
             {formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
           </span>
           {/* Once settled the outcome replaces the projection — what a slip is
@@ -119,7 +122,7 @@ export function BetSlip({
             >
               {won ? (
                 <>
-                  <BrandIcon name="points-ewc" className="size-4" />+{formatInt(bet.payout ?? 0)}
+                  <BrandIcon name={gem} className="size-4" />+{formatInt(bet.payout ?? 0)}
                 </>
               ) : (
                 "не зіграла"
@@ -320,7 +323,7 @@ export function BetSlip({
               {formatInt(swapCost(allowance))}
               <span className="mx-1.5 font-normal text-white/40">÷ {allowance.rate}</span>
               <ArrowRight className="mr-1.5 size-3 shrink-0 text-white/35" strokeWidth={3} />
-              <BrandIcon name="points-ewc" className="size-4" />
+              <BrandIcon name={gem} className="size-4" />
               {formatInt(swapCost(allowance) / allowance.rate)}
             </>
           )}

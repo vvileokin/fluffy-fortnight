@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Check, Flame } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
-import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match, isAuraSkin } from "@/lib/data";
+import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match, isAuraSkin, matchSkin } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -62,7 +62,14 @@ export function QuestionCard({
   // Questions wear their event. EWC swaps the brand yellow for the event's
   // ember on every selected/‌payout cue, so a prediction on an EWC match
   // doesn't look like it belongs to the season board.
-  const isEwc = match?.tournamentSlug === "ewc-2026";
+  // Any event with a dress of its own, not the World Cup by name. The card was
+  // checking one slug, so a Porto bet sat on the generic grey plate with the
+  // season yellow on it while the match card above it was scarlet.
+  const skin = match ? matchSkin(match) : null;
+  const dressed = isAuraSkin(skin);
+  /** The currency mark this event pays in. */
+  const eventGem =
+    skin === "ewc" ? "points-ewc" : skin === "porto" ? "points-porto" : "points";
   // Floating odds are opt-in per tournament, the same list the trigger checks.
   const floating = match?.tournamentSlug === "blast-porto-2026";
 
@@ -299,6 +306,10 @@ export function QuestionCard({
        Same control language as the filter tabs and tournament switch, so the
        page has one way of saying "this one is selected". */
     <div
+      // The palette rides on the card, not the page: these cards appear on the
+      // home feed alongside cards from other tournaments, and `--skin-*`
+      // inherits, so each one has to paint itself.
+      data-skin={skin ?? undefined}
       className={cn(
         // Full height again, with the body taking the slack, so the sponsor
         // plates across a row sit on one line. Letting each card find its own
@@ -307,7 +318,7 @@ export function QuestionCard({
         // gap did. The gap itself is dealt with where it came from: the placed
         // slip is now close in height to the picker it replaces.
         "flex h-full flex-col overflow-hidden rounded-2xl",
-        isEwc ? "skin-match" : "surface-1",
+        dressed ? "skin-match" : "surface-1",
       )}
     >
       {/* The "which match is this" row belongs to feeds that mix matches
@@ -420,12 +431,12 @@ export function QuestionCard({
                   "active:scale-[0.99] motion-reduce:active:scale-100 disabled:cursor-not-allowed",
                   // On the event the option plate is a well cut into the ember
                   // floor, not a navy chip sitting on top of it.
-                  isEwc ? "bg-black/35" : "bg-surface-2",
+                  dressed ? "bg-black/35" : "bg-surface-2",
                   selected
-                    ? isEwc
+                    ? dressed
                       ? "shadow-[0_0_0_1px_rgb(255_122_44/0.7),0_4px_18px_-14px_rgb(255_122_44/0.6)]"
                       : "shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_65%,transparent),0_4px_16px_-14px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
-                    : isEwc
+                    : dressed
                       ? "shadow-[0_0_0_1px_rgb(255_120_50/0.18)] hover:shadow-[0_0_0_1px_rgb(255_120_50/0.4)]"
                       : "shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_18%,transparent)]",
                   (locked || upcoming) && !selected && "opacity-55",
@@ -499,7 +510,7 @@ export function QuestionCard({
                       // where the flat payout sits — against a 34px crest that
                       // reads as the whole row being out of true.
                       "tnum flex h-4 items-center gap-1 font-mono text-xs font-extrabold leading-none",
-                      isEwc
+                      dressed
                         ? selected
                           ? "text-[rgb(var(--skin-ring))]"
                           : "text-[rgb(var(--skin-ring))]/80"
@@ -529,7 +540,7 @@ export function QuestionCard({
                     ) : (
                       <>
                         <BrandIcon
-                          name={isEwc ? "points-ewc" : "points"}
+                          name={eventGem}
                           className="size-4"
                         />
                         {/* The multiplied figure, not the base one with an
@@ -565,6 +576,7 @@ export function QuestionCard({
         {betting ? (
           user ? (
             <BetSlip
+              gem={eventGem}
               questionId={question.id}
               optionId={bet?.option_id ?? picked}
               odds={question.options.find((o) => o.id === picked)?.odds}
