@@ -96,6 +96,7 @@ export function Topbar() {
   const handle = profile?.handle || (user ? displayName(user) : "");
   const points = profile?.points ?? 0;
   const streak = profile?.streak ?? 0;
+  const eventPoints = profile?.ewc_points ?? 0;
 
   return (
     /* Impeccable: Crafted Top Bar — opaque, in the canvas's own colour, with no
@@ -152,12 +153,25 @@ export function Topbar() {
           </span>
         </Link>
 
-        {/* The event balance is off the bar. It belonged to a tournament, not
-            to the chrome: it read as a permanent second currency while 387 of
-            553 accounts held none of it, and the bar was quietly telling most
-            of the site they had nothing. It lives inside the event now, where
-            it is spent and where a zero is information rather than an
-            accusation. */}
+        {/* The event balance, back for Porto and wearing Porto's gem.
+
+            It came off the bar when EWC ended, and for the right reason: a
+            permanent capsule reading 0 for most of the site is the chrome
+            telling people they have nothing. What makes it worth carrying now
+            is that the event starts everyone level, so the number is a stake
+            rather than a scoreboard — and it links into the tournament it is
+            spent at. */}
+        <Link
+          href="/tournaments/blast-porto-2026"
+          aria-label={`${formatInt(eventPoints)} — BLAST Open Porto`}
+          data-skin="porto"
+          className="flex h-8 items-center gap-1 rounded-full bg-[rgb(var(--skin-glow)/0.16)] pl-1 pr-2 shadow-[0_0_0_1px_rgb(var(--skin-ring)/0.32)] transition-colors hover:bg-[rgb(var(--skin-glow)/0.24)] sm:h-9 sm:pl-1.5 sm:pr-2.5"
+        >
+          <BrandIcon name="points-porto" className="size-4 sm:size-[1.125rem]" priority />
+          <span className="tnum font-mono text-xs font-bold leading-none text-[rgb(var(--skin-ring))] sm:text-[0.8125rem]">
+            {formatInt(eventPoints)}
+          </span>
+        </Link>
 
         <Link
           href="/profile"

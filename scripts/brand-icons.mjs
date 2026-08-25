@@ -59,6 +59,14 @@ const ICONS = [
     out: "public/brand/points-stake.webp",
     optical: 0.86,
   },
+  {
+    // BLAST Open Porto event currency. Same solid again, in Porto's scarlet and
+    // violet, and it arrives with its own alpha — so no lift, just the same
+    // optical inset as every other gem in the set.
+    src: "C:/Users/LNU/Downloads/BLAST open Porto point.png",
+    out: "public/brand/points-porto.webp",
+    optical: 0.86,
+  },
 ];
 
 /**

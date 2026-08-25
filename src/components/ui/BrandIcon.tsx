@@ -23,6 +23,8 @@ const SOURCES = {
   streak: "/brand/streak.webp",
   /** Event currency for EWC 2026 — same solid, the event's fire palette. */
   "points-ewc": "/brand/points-ewc.webp",
+  /** Event currency for BLAST Open Porto — the same solid in scarlet and violet. */
+  "points-porto": "/brand/points-porto.webp",
   /**
    * The same solid in silver, identical geometry to `points-ewc`.
    *

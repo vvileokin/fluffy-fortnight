@@ -76,7 +76,7 @@ export const teams: Record<string, Team> = {
   legacy: { slug: "legacy", name: "Legacy", tag: "LEG", logo: "/teams/legacy.webp", brand: "#0E6B3A", ink: "white", region: "SA", worldRank: 39 },
   luminosity: { slug: "luminosity", name: "LUMINOSITY", tag: "LG", logo: "/teams/luminosity.svg", brand: "#0B3D8A", ink: "white", region: "NA", worldRank: 44 },
   parivision: { slug: "parivision", name: "PARIVISION", tag: "PARI", logo: "/teams/parivision.webp", brand: "#1E8F5A", ink: "white", region: "EU", worldRank: 20 },
-  innercircle: { slug: "innercircle", name: "Inner Circle Esports", tag: "ICE", logo: "/teams/innercircle.svg", brand: "#1B1B1F", ink: "white", region: "EU", worldRank: 48 },
+  innercircle: { slug: "innercircle", name: "Inner Circle", tag: "ICE", logo: "/teams/innercircle.svg", brand: "#1B1B1F", ink: "white", region: "EU", worldRank: 48 },
 };
 
 export type Tier = 1 | 2;

@@ -44,6 +44,13 @@ export default async function HomePage() {
       getSiteSettings(),
       getOpenQuestions(100),
     ]);
+  // A drawn giveaway is over. The home page is what is happening now, so it
+  // drops off it the moment the winners exist — the giveaways page keeps it,
+  // where the result is the point rather than an invitation to enter something
+  // that has already closed.
+  const liveGiveaways = giveaways.filter(
+    (g) => !g.drawnAt && g.winners.length === 0 && g.status !== "finished",
+  );
   const matchById = new Map(matches.map((m) => [m.id, m]));
   const currentTournaments = applyCovers(
     (await listTournaments()).filter((t) => t.status !== "finished").slice(0, 3),
@@ -95,11 +102,11 @@ export default async function HomePage() {
       {/* Giveaways sit directly under the tournaments and share their grid, so
           a prize card is the same size as a tournament card rather than being
           stretched across a row of its own. */}
-      {giveaways.length > 0 && (
+      {liveGiveaways.length > 0 && (
         <section className="space-y-2.5 sm:space-y-4">
           <SectionHeader icon={GiftGlyph} title={t("giveaways")} href="/giveaways" />
           <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {giveaways.map((g) => (
+            {liveGiveaways.map((g) => (
               <GiveawayCard key={g.slug} g={g} />
             ))}
           </div>

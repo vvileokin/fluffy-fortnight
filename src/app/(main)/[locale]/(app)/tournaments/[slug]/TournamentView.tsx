@@ -107,9 +107,7 @@ export function TournamentView({
   // control sitting on the EWC's maroon floor reads as belonging to a
   // different page.
   const ewc = isAuraSkin(t.skin);
-  /* The chip plate used over artwork: opaque enough to stay legible on a bright
-     photo, quiet enough that three of them in a row are one object. */
-  const glass = "border-white/20 bg-black/45 text-white backdrop-blur-sm";
+
   const teams = t.teamSlugs.map(getTeam);
   const finishedMatches = matches.filter((m) => m.status === "finished");
   const upcomingMatches = matches.filter((m) => m.status !== "finished");
@@ -165,56 +163,55 @@ export function TournamentView({
         )}
         <div className="relative p-5 sm:p-7">
           <div className="flex flex-wrap items-center gap-1.5">
-            {/* Impeccable: Crafted Event Chip — same 22px height as every other
-                status, with the mark scaled to the cap height beside it. */}
-            {/* This was a hand-rolled span, which is why it never lined up with
-                the LIVE chip beside it — two implementations of the same object.
-                It's the real Badge now, so the 22px box, the padding and the
-                baseline are shared; only the skin-over-artwork colours differ. */}
-            {/* One plate for all three, over artwork.
+            {/* Over artwork this is a line, not a row of chips.
 
-                They used to be three different objects side by side — a glass
-                chip, a filled blue one and a filled pink one — which is why the
-                row read as unbalanced rather than as a set: three weights, three
-                shapes, three colours competing above a title. On a skinned
-                banner they now share the glass plate and differ only in what
-                they say, with the event's ring carrying the one accent. Off a
-                banner (no skin, no artwork) the filled tones still read best,
-                so they stay. */}
-            {t.skin && (
-              <Badge tone="neutral" className={glass}>
-                {/* Porto is a BLAST event and wears the BLAST mark. It used to
-                    fall through to the EWC one, so a BLAST tournament was
-                    chipped with a rival's logo. */}
-                {t.skin === "ewc" ? (
-                  <EwcMark className="h-[0.4375rem] w-auto" />
+                Three plates above a title never balanced, and restyling them
+                into one material did not fix it: the problem was that three
+                boxes were carrying three words. A banner already has a frame —
+                the artwork — so the facts don't need three more. They read as
+                one small-caps line with the event's mark at its head and thin
+                separators between, which is the same shape as the facts under
+                the title and makes the header one object instead of two.
+
+                Off a banner the filled chips stay: on a plain surface they are
+                the site's own pattern and there is no artwork for a bare line
+                to sit against. */}
+            {t.skin ? (
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-white/60 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]">
+                <span className="flex items-center gap-1.5 text-white">
+                  {t.skin === "ewc" ? (
+                    <EwcMark className="h-[0.4375rem] w-auto" />
+                  ) : (
+                    <BlastMark className="size-[0.6875rem]" />
+                  )}
+                  Event
+                </span>
+                <Sep />
+                {t.status === "live" ? (
+                  <span className="flex items-center gap-1.5 text-live">
+                    <span className="live-dot inline-block size-1.5 rounded-full bg-live" />
+                    Live
+                  </span>
                 ) : (
-                  <BlastMark className="size-[0.6875rem]" />
+                  <span>{t.status === "upcoming" ? "Незабаром" : "Завершено"}</span>
                 )}
-                Event
-              </Badge>
-            )}
-            {t.status === "live" ? (
-              <LiveBadge />
-            ) : t.status === "upcoming" ? (
-              <Badge tone={t.skin ? "neutral" : "info"} className={t.skin ? glass : undefined}>
-                Незабаром
-              </Badge>
+                <Sep />
+                <span className={cn(isAuraSkin(t.skin) && "text-[rgb(var(--skin-ring))]")}>
+                  Tier {t.tier}
+                </span>
+              </p>
             ) : (
-              <Badge tone="neutral" className={t.skin ? glass : undefined}>
-                Завершено
-              </Badge>
+              <>
+                {t.status === "live" ? (
+                  <LiveBadge />
+                ) : t.status === "upcoming" ? (
+                  <Badge tone="info">Незабаром</Badge>
+                ) : (
+                  <Badge tone="neutral">Завершено</Badge>
+                )}
+                <Badge tone={t.tier === 1 ? "tier1" : "tier2"}>Tier {t.tier}</Badge>
+              </>
             )}
-            <Badge
-              tone={t.skin ? "neutral" : t.tier === 1 ? "tier1" : "tier2"}
-              className={
-                t.skin
-                  ? cn(glass, isAuraSkin(t.skin) && "text-[rgb(var(--skin-ring))]")
-                  : undefined
-              }
-            >
-              Tier {t.tier}
-            </Badge>
           </div>
           <h1 className="mt-2.5 text-balance text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
             {t.name}
@@ -539,6 +536,13 @@ function TeamsGrid({
 }
 
 /** Hairline separator between facts in the header line. */
+/** Separator for the banner line — always visible, unlike the meta-row Dot. */
+function Sep() {
+  return (
+    <span aria-hidden className="size-1 rounded-full bg-white/30" />
+  );
+}
+
 function Dot() {
   return (
     <span
