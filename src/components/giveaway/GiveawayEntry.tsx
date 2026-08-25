@@ -194,7 +194,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
     <div
       className={cn(
         "relative flex h-full flex-col overflow-hidden rounded-xl p-5",
-        ewc ? "ewc-aura-card" : "surface-1",
+        ewc ? "skin-aura-card" : "surface-1",
       )}
     >
       {!ewc && (

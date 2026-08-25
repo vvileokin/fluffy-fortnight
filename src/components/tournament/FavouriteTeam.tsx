@@ -79,7 +79,7 @@ export function FavouriteTeam() {
   const band = picked ? underdogTier(picked) : null;
 
   return (
-    <div className="ewc-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">
+    <div className="skin-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-extrabold tracking-tight text-white">Улюблена команда</p>
         <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(255_154_64)]">
@@ -204,7 +204,7 @@ export function FavouriteTeam() {
  * "this is broken".
  */
 function Shell({ children }: { children: React.ReactNode }) {
-  return <div className="ewc-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">{children}</div>;
+  return <div className="skin-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">{children}</div>;
 }
 
 function Skeleton({ rows }: { rows: number }) {

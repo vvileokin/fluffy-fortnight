@@ -89,7 +89,7 @@ export function Countdown({
           <div
             className={cn(
               "flex min-w-[3.25rem] flex-col items-center rounded-lg border px-2 py-2",
-              ewc ? "ewc-hairline bg-black/35" : "border-border bg-surface-2",
+              ewc ? "skin-hairline bg-black/35" : "border-border bg-surface-2",
             )}
           >
             <span
@@ -114,7 +114,7 @@ export function Countdown({
             <span
               className={cn(
                 "self-center font-mono text-xl",
-                ewc ? "text-[rgb(var(--ewc-ring)/0.5)]" : "text-ink-faint",
+                ewc ? "text-[rgb(var(--skin-ring)/0.5)]" : "text-ink-faint",
               )}
             >
               :

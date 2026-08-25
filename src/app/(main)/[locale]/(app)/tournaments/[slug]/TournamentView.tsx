@@ -39,6 +39,7 @@ import {
   type Match,
   type LeaderRow,
   type EventSkin,
+  isAuraSkin,
 } from "@/lib/data";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -105,13 +106,13 @@ export function TournamentView({
   // ember instead — the prize, the selected tab, the tier chip. A yellow
   // control sitting on the EWC's maroon floor reads as belonging to a
   // different page.
-  const ewc = t.skin === "ewc";
+  const ewc = isAuraSkin(t.skin);
   const teams = t.teamSlugs.map(getTeam);
   const finishedMatches = matches.filter((m) => m.status === "finished");
   const upcomingMatches = matches.filter((m) => m.status !== "finished");
 
   return (
-    <div className="space-y-6">
+    <div data-skin={t.skin} className="space-y-6">
       {/* Impeccable: Crafted Return — plain text, close to what it belongs to.
           Same construction as the match page, and for the same reason: Tailwind
           v4's `space-y-*` puts `margin-bottom` on the child, so the link's old
@@ -134,8 +135,8 @@ export function TournamentView({
           "relative overflow-hidden rounded-2xl",
           t.skin === "blast"
             ? "event-aura"
-            : t.skin === "ewc"
-              ? "ewc-aura ewc-fire"
+            : isAuraSkin(t.skin)
+              ? cn("skin-aura", t.skin === "ewc" && "skin-art")
               : "surface-2",
         )}
       >
@@ -224,7 +225,7 @@ export function TournamentView({
             <div
               className={cn(
                 "tnum ml-auto flex items-center gap-1.5 font-mono text-base font-extrabold",
-                ewc ? "text-[rgb(var(--ewc-ring))]" : "text-accent",
+                ewc ? "text-[rgb(var(--skin-ring))]" : "text-accent",
               )}
             >
               <TrophyGlyph className="size-3.5 shrink-0" />
@@ -252,7 +253,7 @@ export function TournamentView({
                 "active:translate-y-px motion-reduce:active:translate-y-0",
                 active
                   ? ewc
-                    ? "seg-on bg-[rgb(var(--ewc-ring))] text-[var(--ewc-base)]"
+                    ? "seg-on bg-[rgb(var(--skin-ring))] text-[var(--skin-base)]"
                     : "seg-on bg-accent text-accent-ink"
                   : "text-ink-muted hover:bg-surface-2 hover:text-ink",
               )}
@@ -287,7 +288,7 @@ export function TournamentView({
                 "divide-y overflow-hidden rounded-xl",
                 // White hairlines are the only cool thing on an ember plate and
                 // read as scratches across it; warm them into the same family.
-                ewc ? "ewc-aura-card ewc-divide" : "surface-1 divide-white/[0.06]",
+                ewc ? "skin-aura-card skin-divide" : "surface-1 divide-white/[0.06]",
               )}
             >
               <MetaRow icon={DateGlyph} label="Дати" value={t.dateLabel} />
@@ -456,7 +457,7 @@ function TeamsGrid({
               key={slug}
               className={cn(
                 "lift surface-1 relative flex items-center gap-3 overflow-hidden rounded-xl p-3",
-                skin === "ewc" && "ewc-tile",
+                isAuraSkin(skin) && "skin-tile",
               )}
               style={
                 skin === "ewc"
@@ -485,7 +486,7 @@ function TeamsGrid({
           className={cn(
             "mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition-colors",
             skin === "ewc"
-              ? "ewc-aura-card text-white hover:brightness-110"
+              ? "skin-aura-card text-white hover:brightness-110"
               : "surface-1 text-ink-muted hover:bg-surface-2 hover:text-ink",
           )}
         >
@@ -543,7 +544,7 @@ function MetaRow({
           "text-right text-sm font-semibold",
           accent
             ? ewc
-              ? "font-mono text-[rgb(var(--ewc-ring))]"
+              ? "font-mono text-[rgb(var(--skin-ring))]"
               : "font-mono text-accent"
             : "text-ink",
         )}

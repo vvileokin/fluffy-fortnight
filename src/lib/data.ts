@@ -70,12 +70,13 @@ export const teams: Record<string, Team> = {
   og: { slug: "og", name: "OG", tag: "OG", logo: "/teams/og.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 70 },
 
   // --- EWC 2026 field: the six that weren't in the catalog yet ---
-  ninez: { slug: "ninez", name: "9z", tag: "9z", logo: "/teams/ninez.webp", brand: "#1B1B1F", ink: "white", region: "SA", worldRank: 31 },
+  ninez: { slug: "ninez", name: "9z", tag: "9z", logo: "/teams/9z.svg", brand: "#1B1B1F", ink: "white", region: "SA", worldRank: 31 },
   jijiehao: { slug: "jijiehao", name: "JiJieHao", tag: "JJH", logo: "/teams/jijiehao.svg", brand: "#8A1B1B", ink: "white", region: "Asia", worldRank: 58 },
   k27: { slug: "k27", name: "K27", tag: "K27", logo: "/teams/k27.webp", brand: "#12303A", ink: "white", region: "EU", worldRank: 62 },
   legacy: { slug: "legacy", name: "Legacy", tag: "LEG", logo: "/teams/legacy.webp", brand: "#0E6B3A", ink: "white", region: "SA", worldRank: 39 },
   luminosity: { slug: "luminosity", name: "LUMINOSITY", tag: "LG", logo: "/teams/luminosity.svg", brand: "#0B3D8A", ink: "white", region: "NA", worldRank: 44 },
   parivision: { slug: "parivision", name: "PARIVISION", tag: "PARI", logo: "/teams/parivision.webp", brand: "#1E8F5A", ink: "white", region: "EU", worldRank: 20 },
+  innercircle: { slug: "innercircle", name: "Inner Circle Esports", tag: "ICE", logo: "/teams/innercircle.svg", brand: "#1B1B1F", ink: "white", region: "EU", worldRank: 48 },
 };
 
 export type Tier = 1 | 2;
@@ -112,8 +113,22 @@ export type Tournament = {
  *
  *   blast — neon red/blue arena
  *   ewc   — Esports World Cup: drifting fire over near-black
+ *   porto — BLAST Open Porto: scarlet falling into violet, off the event's own
+ *           key art — the city at dusk under a red sky.
  */
-export type EventSkin = "blast" | "ewc";
+export type EventSkin = "blast" | "ewc" | "porto";
+
+/**
+ * Skins that dress a surface with the event's own floor, glow and ring.
+ *
+ * `blast` is not one of them: it paints a fixed neon arena of its own rather
+ * than reading the `--skin-*` palette, so it keeps its own classes. Asking this
+ * instead of `skin === "ewc"` is what stops every new event adding a branch to
+ * the twenty-odd places that decide whether a card is dressed.
+ */
+export function isAuraSkin(skin?: EventSkin | null): boolean {
+  return skin === "ewc" || skin === "porto";
+}
 
 export const allTournaments: Tournament[] = [
   {
@@ -272,12 +287,44 @@ export const allTournaments: Tournament[] = [
     isEvent: true,
     skin: "ewc",
   },
+  {
+    slug: "blast-porto-2026",
+    name: "BLAST Open Porto 2026",
+    shortName: "BLAST Porto",
+    tier: 1,
+    status: "upcoming",
+    startISO: "2026-08-26",
+    endISO: "2026-09-06",
+    dateLabel: "26 сер – 6 вер",
+    // Two venues, one event: the groups are played in BLAST's Copenhagen studio
+    // and only the playoff moves to the arena. The arena is what the event is
+    // named for and what an audience pictures, so it leads.
+    location: "Порту (Super Bock Arena)",
+    online: false,
+    prizeUSD: 1100000,
+    // Sixteen, in group order — the same reason EWC's list stays grouped.
+    // `sharks` is DENDELE and `ninez` is 9z; both are rebrands the catalogue
+    // already carried under their old slugs.
+    teamSlugs: [
+      // Group A — 26, 28, 30 August
+      "aurora", "g2", "spirit", "sharks", "natus", "m80", "furia", "pain",
+      // Group B — 27, 29, 31 August
+      "vitality", "innercircle", "mouz", "ninez", "legacy", "fut", "falcons", "lynn",
+    ],
+    format: "2 × GSL (BO3) → Playoffs",
+    accent: "oklch(0.6 0.25 10)",
+    // Deliberately not `isEvent`. That flag routes the page to the Bounty
+    // leaderboard and the Bounty predictor, neither of which Porto uses; it
+    // gets turned on with the mechanics it belongs to, not with the dress.
+    skin: "porto",
+  },
 ];
 
 // Only the BLAST Bounty event is public for now (other events are kept as
 // internal demo data and can be re-enabled later).
 export const tournaments: Tournament[] = allTournaments.filter(
-  (t) => t.slug === "blast-bounty-s2" || t.slug === "ewc-2026",
+  (t) =>
+    t.slug === "blast-bounty-s2" || t.slug === "ewc-2026" || t.slug === "blast-porto-2026",
 );
 
 /* --- BLAST Bounty S2: seeds & bounty stages --- */

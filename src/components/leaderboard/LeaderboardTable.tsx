@@ -92,8 +92,8 @@ function Row({
         "flex items-center gap-2 rounded-xl px-2.5 py-2 transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] sm:gap-3",
         ewc
           ? row.isYou
-            ? "ewc-row-you"
-            : "ewc-row"
+            ? "skin-row-you"
+            : "skin-row"
           : row.isYou
             ? "bg-[color-mix(in_oklch,var(--accent)_8%,transparent)] shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_24%,transparent)]"
             : "bg-surface hover:bg-surface-2",
@@ -217,7 +217,7 @@ function Podium({
     <div
       className={cn(
         "relative isolate rounded-2xl px-3 pb-5 pt-7 sm:px-6",
-        ewc ? "ewc-aura-card" : "bg-surface",
+        ewc ? "skin-aura-card" : "bg-surface",
       )}
     >
       <div

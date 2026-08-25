@@ -6,7 +6,7 @@ import { Wifi, ChevronRight } from "lucide-react";
 import { DateGlyph, GeoGlyph, TrophyGlyph } from "@/components/layout/NavGlyphs";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge, LiveBadge } from "@/components/ui/Badge";
-import { getTeam, formatPrize, type Tournament } from "@/lib/data";
+import { getTeam, formatPrize, type Tournament, isAuraSkin } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export function TournamentCard({ t }: { t: Tournament }) {
@@ -23,16 +23,20 @@ export function TournamentCard({ t }: { t: Tournament }) {
        now read as one material. */
     <Link
       href={`/tournaments/${t.slug}`}
+      // The palette rides on the element, not the page: a feed stacks cards
+      // from several tournaments, and `--skin-*` inherits, so each card paints
+      // itself off its own event.
+      data-skin={t.skin}
       style={
-        t.skin === "ewc"
-          ? ({ "--glow": "rgb(255 88 16)" } as CSSProperties)
+        isAuraSkin(t.skin)
+          ? ({ "--glow": "rgb(var(--skin-ring))" } as CSSProperties)
           : ({ "--team-a": t.accent, "--team-b": t.accent } as CSSProperties)
       }
       className={cn(
         "group lift relative flex h-full flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
         // An event card wears its event. Everything else keeps the shared plate
         // lit by its own accent.
-        t.skin === "ewc" ? "ewc-aura-card" : "surface-1 match-plate",
+        isAuraSkin(t.skin) ? "skin-aura-card" : "surface-1 match-plate",
       )}
     >
       {/* Cover — the tournament's own accent bled through the top of the card,
@@ -62,7 +66,7 @@ export function TournamentCard({ t }: { t: Tournament }) {
             Each carries its own opaque plate and border, so the gradient was
             only ever dimming the cover it sat on. */}
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
-          <Badge tone={t.skin === "ewc" ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
+          <Badge tone={isAuraSkin(t.skin) ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
             Tier {t.tier}
           </Badge>
           {t.status === "live" && <LiveBadge />}
@@ -107,7 +111,7 @@ export function TournamentCard({ t }: { t: Tournament }) {
             <span
               className={cn(
                 "tnum font-mono text-sm font-bold",
-                t.skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+                isAuraSkin(t.skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent",
               )}
             >
               {formatPrize(t.prizeUSD)}
@@ -136,7 +140,7 @@ export function TournamentCardWide({ t }: { t: Tournament }) {
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <Badge tone={t.skin === "ewc" ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
+          <Badge tone={isAuraSkin(t.skin) ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
             T{t.tier}
           </Badge>
           <h3 className="truncate text-sm font-bold text-ink">{t.name}</h3>
@@ -148,7 +152,7 @@ export function TournamentCardWide({ t }: { t: Tournament }) {
       <span
         className={cn(
           "tnum shrink-0 font-mono text-sm font-bold",
-          t.skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+          isAuraSkin(t.skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent",
         )}
       >
         {formatPrize(t.prizeUSD)}

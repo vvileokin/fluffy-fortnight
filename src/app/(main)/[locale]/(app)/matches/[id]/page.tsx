@@ -17,6 +17,7 @@ import {
   playedMaps,
   type Match,
   type PlayedMap,
+  isAuraSkin,
 } from "@/lib/data";
 import { getMatchById } from "@/lib/db/matches";
 import { getQuestionsForMatch } from "@/lib/db/questions";
@@ -77,7 +78,10 @@ export default async function MatchPage({
   const showScore = isLive || match.status === "finished";
 
   return (
-    <div className="space-y-7 sm:space-y-10">
+    /* One page, one match, one tournament — so the event palette is declared
+       once here and every skinned surface below inherits it. On the header
+       alone it left the question cards reading another event's colours. */
+    <div data-skin={skin} className="space-y-7 sm:space-y-10">
       {/* Impeccable: Crafted Return — plain text, no plate. It's a way back,
           not an action, and it sits close to what it belongs to. */}
       {/* Tailwind v4's `space-y-*` puts `margin-bottom` on the child, not
@@ -111,8 +115,8 @@ export default async function MatchPage({
           "relative overflow-hidden rounded-2xl",
           skin === "blast"
             ? "event-aura"
-            : skin === "ewc"
-              ? "ewc-aura ewc-fire"
+            : isAuraSkin(skin)
+              ? cn("skin-aura", skin === "ewc" && "skin-art")
               : "surface-2",
         )}
       >

@@ -9,6 +9,7 @@ import { BrandIcon } from "@/components/ui/BrandIcon";
 import { LiveBadge } from "@/components/ui/Badge";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { EwcMark } from "@/components/ui/EwcMark";
+import { PortoMark } from "@/components/ui/PortoMark";
 import {
   getTournament,
   matchSkin,
@@ -16,6 +17,7 @@ import {
   matchTimeLabel,
   type Match,
   type Team,
+  isAuraSkin,
 } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +94,7 @@ export function MatchCard({ match }: { match: Match }) {
        instead of a red box. */
     <Link
       href={`/matches/${match.id}`}
+      data-skin={skin}
       style={
         {
           "--team-a": matchTeam(match, "a").brand,
@@ -102,8 +105,8 @@ export function MatchCard({ match }: { match: Match }) {
           // colour: no tournament is the odd one out.
           ...(skin === "blast"
             ? { "--tour-a": "rgb(255 12 60)", "--tour-b": "rgb(46 86 255)" }
-            : skin === "ewc"
-              ? { "--tour-a": "rgb(255 138 24)", "--tour-b": "rgb(178 30 6)" }
+            : isAuraSkin(skin)
+              ? { "--tour-a": "rgb(var(--skin-glow))", "--tour-b": "rgb(var(--skin-deep))" }
               : tour?.accent
                 ? { "--tour-a": tour.accent, "--tour-b": tour.accent }
                 : {}),
@@ -116,7 +119,7 @@ export function MatchCard({ match }: { match: Match }) {
         // event is already named twice in the header (icon + tournament name);
         // it doesn't also need its own chassis.
         "group lift relative flex h-full flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
-        skin === "ewc" ? "ewc-match" : "surface-1 match-plate",
+        isAuraSkin(skin) ? "skin-match" : "surface-1 match-plate",
         isLive && "rail-live",
       )}
     >
@@ -130,8 +133,12 @@ export function MatchCard({ match }: { match: Match }) {
               height={14}
               className="size-3.5 shrink-0 object-contain"
             />
+          ) : skin === "porto" ? (
+            /* A stacked block, not a strip: sized to the text's cap height it
+               matches the 14px tournament icons beside it. */
+            <PortoMark className="h-3.5 w-auto shrink-0 text-[rgb(var(--skin-ring))]" />
           ) : skin === "ewc" ? (
-            <EwcMark className="h-2 w-auto shrink-0 text-[rgb(255_154_64)]" />
+            <EwcMark className="h-2 w-auto shrink-0 text-[rgb(var(--skin-ring))]" />
           ) : (
             skin === "blast" && <BlastMark className="size-3.5 shrink-0 text-accent" />
           )}
@@ -153,8 +160,8 @@ export function MatchCard({ match }: { match: Match }) {
               "hidden shrink-0 whitespace-nowrap text-xs font-semibold sm:inline",
               isFinished
                 ? "text-ink-subtle"
-                : skin === "ewc"
-                  ? "text-[rgb(255_154_64)]"
+                : isAuraSkin(skin)
+                  ? "text-[rgb(var(--skin-ring))]"
                   : "text-info",
             )}
           >
@@ -192,7 +199,7 @@ export function MatchCard({ match }: { match: Match }) {
           <span
             className={cn(
               "shrink-0 font-semibold",
-              skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-info",
+              isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-info",
             )}
           >
             {t("predictionsOpen")}
@@ -208,7 +215,7 @@ export function MatchCard({ match }: { match: Match }) {
               <TargetGlyph
                 className={cn(
                   "size-3.5",
-                  skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+                  isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent",
                 )}
               />
               {/* "Питання" was the admin's word for the row in the database,
@@ -228,13 +235,13 @@ export function MatchCard({ match }: { match: Match }) {
                 <span
                   className={cn(
                     "tnum font-mono font-bold leading-none",
-                    skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent",
+                    isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent",
                   )}
                 >
                   ×{match.maxOdds.toFixed(2)}
                 </span>
               ) : (
-                <span className={cn("tnum flex items-center gap-1 font-mono font-bold leading-none", skin === "ewc" ? "text-[rgb(255_154_64)]" : "text-accent")}>
+                <span className={cn("tnum flex items-center gap-1 font-mono font-bold leading-none", isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent")}>
                   <BrandIcon name={skin === "ewc" ? "points-ewc" : "points"} className="size-3.5" />
                   +{match.maxReward}
                 </span>

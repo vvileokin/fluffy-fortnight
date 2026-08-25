@@ -340,7 +340,7 @@ export function PlayoffBracketEntry() {
 }
 
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="ewc-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">{children}</div>;
+  return <div className="skin-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">{children}</div>;
 }
 
 /**
@@ -436,7 +436,7 @@ function Filled({ picks, settled = [] }: { picks: BracketPicks; settled?: string
  * "this is broken".
  */
 function Shell({ children }: { children: React.ReactNode }) {
-  return <div className="ewc-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">{children}</div>;
+  return <div className="skin-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">{children}</div>;
 }
 
 function Skeleton({ rows }: { rows: number }) {

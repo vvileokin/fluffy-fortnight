@@ -60,7 +60,7 @@ export default async function GiveawayPage({
           <div
             className={cn(
               "relative overflow-hidden rounded-xl",
-              ewc ? "ewc-aura ewc-fire" : "surface-1",
+              ewc ? "skin-aura skin-art" : "surface-1",
             )}
             style={
               ewc
@@ -122,7 +122,7 @@ export default async function GiveawayPage({
                 // reads as a scratch rather than a division — it's the only
                 // cool-toned thing on the panel. Warm it to the same family.
                 g.skin === "ewc"
-                  ? "ewc-aura-card ewc-divide"
+                  ? "skin-aura-card skin-divide"
                   : "surface-1 divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]",
               )}
             >
@@ -135,7 +135,7 @@ export default async function GiveawayPage({
                     className={cn(
                       "grid size-5 shrink-0 place-items-center rounded-full",
                       g.skin === "ewc"
-                        ? "bg-[rgb(var(--ewc-ember)/0.20)] text-[rgb(255_154_64)]"
+                        ? "bg-[rgb(var(--skin-glow)/0.20)] text-[rgb(255_154_64)]"
                         : "bg-success/15 text-success",
                     )}
                   >

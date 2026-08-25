@@ -26,7 +26,7 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
       }
       className={cn(
         "group lift relative flex h-full flex-col overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
-        ewc ? "ewc-aura-card" : "surface-1 aura",
+        ewc ? "skin-aura-card" : "surface-1 aura",
       )}
     >
       {/* A fixed 3:1 slot rather than a fixed 96px height: the card is a

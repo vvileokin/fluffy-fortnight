@@ -35,7 +35,7 @@ const tones: Record<Tone, string> = {
   // The event's ember, off the same tokens the EWC surfaces use. Deliberately
   // not a mix of `--accent`: the season yellow is the one colour a badge on an
   // EWC plate must not read as.
-  ewc: "bg-[rgb(var(--ewc-ember)/0.22)] text-[rgb(var(--ewc-ring))] border-[rgb(var(--ewc-ring)/0.45)]",
+  ewc: "bg-[rgb(var(--skin-glow)/0.22)] text-[rgb(var(--skin-ring))] border-[rgb(var(--skin-ring)/0.45)]",
   danger: "bg-[color-mix(in_oklch,var(--danger)_20%,oklch(0_0_0))] text-danger border-[color-mix(in_oklch,var(--danger)_46%,oklch(0_0_0))]",
 };
 

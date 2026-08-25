@@ -606,39 +606,61 @@ body {
 /* --- Esports World Cup 2026: fire -------------------------------------
    One palette, one base colour, three weights. The banner, the card and a
    match plate were drifting far apart in saturation — the banner blazed while
-   the card was almost grey — so they now share `--ewc-base` and differ only in
+   the card was almost grey — so they now share `--skin-base` and differ only in
    how much light sits on top. Close enough to read as one event, different
    enough that a full-width banner isn't as loud as a card in a grid.
    ---------------------------------------------------------------------- */
+/* The palette an event dresses itself in. Four values and one artwork, read by
+   every `.skin-*` surface below, so a new event is a palette rather than a
+   parallel set of classes and a third branch at twenty-five call sites.
+   `:root` carries EWC because it was here first and its markup carries no
+   attribute; anything else claims its palette with `data-skin` on the surface
+   itself. On the surface, not the page — the home feed stacks cards from
+   several tournaments, and custom properties inherit, so each card paints
+   itself. */
 :root {
-  --ewc-base: #1a0a0d;
-  --ewc-ember: 255 96 20;
-  --ewc-deep: 172 32 8;
-  --ewc-ring: 255 122 44;
+  --skin-base: #1a0a0d;
+  --skin-glow: 255 96 20;
+  --skin-deep: 172 32 8;
+  --skin-ring: 255 122 44;
+  --skin-art: url("/brand/ewc-fire.webp");
 }
 
-/* Banner. The artwork rides on top via `.ewc-fire`, so the gradients here have
+/* BLAST Open Porto 2026. Off the event's own key art: the city photographed at
+   dusk, scarlet burning out of the sky at the top and falling into the violet
+   the buildings sit in. The ring is the pink where those two meet, which is
+   the colour the lockup is set against. No artwork of its own yet, so the
+   floor does the whole job. */
+[data-skin="porto"] {
+  --skin-base: #12061c;
+  --skin-glow: 255 32 84;
+  --skin-deep: 96 22 150;
+  --skin-ring: 255 74 122;
+  --skin-art: none;
+}
+
+/* Banner. The artwork rides on top via `.skin-art`, so the gradients here have
    to give it a floor to sit on — and that floor has to carry real light, not
    just a dark tint. Unifying the banner with the card dimmed these pools to
    0.24/0.26 and dropped the bright upper-left core entirely, which left the
    artwork blending against near-black and reading as nothing at all. The
-   embers are back; `--ewc-base` still ties the two surfaces together. */
-.ewc-aura {
-  background-color: var(--ewc-base);
+   embers are back; `--skin-base` still ties the two surfaces together. */
+.skin-aura {
+  background-color: var(--skin-base);
   background-image:
     /* the hot streak, upper-left to centre */
-    linear-gradient(101deg, transparent 6%, rgb(255 168 32 / 0.20) 20%, rgb(var(--ewc-ember) / 0.10) 34%, transparent 58%),
+    linear-gradient(101deg, transparent 6%, rgb(255 168 32 / 0.20) 20%, rgb(var(--skin-glow) / 0.10) 34%, transparent 58%),
     radial-gradient(78% 120% at 12% 4%, rgb(255 168 32 / 0.30), transparent 58%),
-    radial-gradient(96% 130% at 42% 116%, rgb(var(--ewc-ember) / 0.42), transparent 62%),
-    radial-gradient(120% 130% at 88% 92%, rgb(var(--ewc-deep) / 0.55), transparent 68%);
+    radial-gradient(96% 130% at 42% 116%, rgb(var(--skin-glow) / 0.42), transparent 62%),
+    radial-gradient(120% 130% at 88% 92%, rgb(var(--skin-deep) / 0.55), transparent 68%);
   box-shadow: 0 1px 0 0 rgb(255 190 120 / 0.14) inset;
 }
 
-.ewc-fire::before {
+.skin-art::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("/brand/ewc-fire.webp");
+  background-image: var(--skin-art);
   background-size: cover;
   background-position: 50% 42%;
   opacity: 0.55;
@@ -662,26 +684,26 @@ body {
    top of all but the first — so colouring one shape leaves the other drawing
    in the default cold blue. Colouring all four edges of every row is
    indifferent to that choice, and edges with no width cost nothing. */
-.ewc-divide > * {
-  border-color: rgb(var(--ewc-ring) / 0.22);
+.skin-divide > * {
+  border-color: rgb(var(--skin-ring) / 0.22);
 }
-.ewc-hairline {
-  border-color: rgb(var(--ewc-ring) / 0.3);
+.skin-hairline {
+  border-color: rgb(var(--skin-ring) / 0.3);
 }
 
 /* Card. Same base, one long diagonal sweep so the ramp has no visible edge,
    and the ember ring that a match plate now shares. */
-.ewc-aura-card {
-  background-color: var(--ewc-base);
+.skin-aura-card {
+  background-color: var(--skin-base);
   background-image:
     linear-gradient(112deg,
-      rgb(var(--ewc-ember) / 0.20) 0%,
-      rgb(var(--ewc-deep) / 0.13) 38%,
-      rgb(var(--ewc-deep) / 0.06) 68%,
+      rgb(var(--skin-glow) / 0.20) 0%,
+      rgb(var(--skin-deep) / 0.13) 38%,
+      rgb(var(--skin-deep) / 0.06) 68%,
       transparent 100%),
-    radial-gradient(120% 150% at 100% 0%, rgb(var(--ewc-ember) / 0.16), transparent 62%);
+    radial-gradient(120% 150% at 100% 0%, rgb(var(--skin-glow) / 0.16), transparent 62%);
   box-shadow:
-    0 0 0 1px rgb(var(--ewc-ring) / 0.26),
+    0 0 0 1px rgb(var(--skin-ring) / 0.26),
     0 1px 0 0 rgb(255 180 120 / 0.07) inset,
     0 12px 34px -16px oklch(0 0 0 / 0.8);
 }
@@ -690,50 +712,50 @@ body {
    corners — that's how any match card is read — over the event's own floor,
    and wears the same ember ring as the tournament card so the two objects
    belong together. */
-.ewc-match {
-  background-color: var(--ewc-base);
+.skin-match {
+  background-color: var(--skin-base);
   background-image:
     radial-gradient(58% 130% at 0% 0%, color-mix(in oklch, var(--team-a, transparent) 16%, transparent), transparent 72%),
     radial-gradient(58% 130% at 100% 0%, color-mix(in oklch, var(--team-b, transparent) 16%, transparent), transparent 72%),
-    linear-gradient(112deg, rgb(var(--ewc-ember) / 0.18) 0%, rgb(var(--ewc-deep) / 0.12) 44%, transparent 100%),
-    radial-gradient(110% 150% at 100% 110%, rgb(var(--ewc-deep) / 0.22), transparent 64%);
+    linear-gradient(112deg, rgb(var(--skin-glow) / 0.18) 0%, rgb(var(--skin-deep) / 0.12) 44%, transparent 100%),
+    radial-gradient(110% 150% at 100% 110%, rgb(var(--skin-deep) / 0.22), transparent 64%);
   box-shadow:
-    0 0 0 1px rgb(var(--ewc-ring) / 0.26),
+    0 0 0 1px rgb(var(--skin-ring) / 0.26),
     0 1px 0 0 rgb(255 180 120 / 0.07) inset,
     0 12px 34px -16px oklch(0 0 0 / 0.8);
 }
 
 /* Roster tile — the team's own colour still rakes in, over the event floor. */
-.ewc-tile {
-  background-color: var(--ewc-base);
+.skin-tile {
+  background-color: var(--skin-base);
   background-image:
     linear-gradient(100deg, color-mix(in oklch, var(--team, transparent) 22%, transparent), transparent 54%),
-    radial-gradient(88% 150% at 6% 130%, rgb(var(--ewc-ember) / 0.20), transparent 62%),
-    radial-gradient(100% 150% at 104% -20%, rgb(var(--ewc-deep) / 0.26), transparent 66%);
-  box-shadow: 0 0 0 1px rgb(var(--ewc-ring) / 0.18);
+    radial-gradient(88% 150% at 6% 130%, rgb(var(--skin-glow) / 0.20), transparent 62%),
+    radial-gradient(100% 150% at 104% -20%, rgb(var(--skin-deep) / 0.26), transparent 66%);
+  box-shadow: 0 0 0 1px rgb(var(--skin-ring) / 0.18);
 }
 
 /* Leaderboard row at the event. Deliberately the quietest member of the set:
    ten of these stack, so it's the floor colour and a hairline rather than
    another lit plate. Your own row is the one that gets the ember. */
-.ewc-row {
-  background-color: color-mix(in oklch, var(--ewc-base) 80%, transparent);
-  box-shadow: 0 0 0 1px rgb(var(--ewc-ring) / 0.10);
+.skin-row {
+  background-color: color-mix(in oklch, var(--skin-base) 80%, transparent);
+  box-shadow: 0 0 0 1px rgb(var(--skin-ring) / 0.10);
 }
-.ewc-row:hover {
-  background-color: var(--ewc-base);
+.skin-row:hover {
+  background-color: var(--skin-base);
 }
-.ewc-row-you {
-  background-color: var(--ewc-base);
-  background-image: linear-gradient(100deg, rgb(var(--ewc-ember) / 0.22), transparent 62%);
-  box-shadow: 0 0 0 1px rgb(var(--ewc-ring) / 0.42);
+.skin-row-you {
+  background-color: var(--skin-base);
+  background-image: linear-gradient(100deg, rgb(var(--skin-glow) / 0.22), transparent 62%);
+  box-shadow: 0 0 0 1px rgb(var(--skin-ring) / 0.42);
 }
 
-.ewc-aura-soft {
-  background-color: var(--ewc-base);
+.skin-aura-soft {
+  background-color: var(--skin-base);
   background-image:
-    radial-gradient(64% 108% at 0% 118%, rgb(var(--ewc-ember) / 0.20), transparent 60%),
-    radial-gradient(64% 108% at 100% 118%, rgb(var(--ewc-deep) / 0.26), transparent 60%);
+    radial-gradient(64% 108% at 0% 118%, rgb(var(--skin-glow) / 0.20), transparent 60%),
+    radial-gradient(64% 108% at 100% 118%, rgb(var(--skin-deep) / 0.26), transparent 60%);
 }
 
 @media (prefers-reduced-motion: reduce) {

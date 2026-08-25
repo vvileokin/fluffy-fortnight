@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Check, Flame } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
-import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match } from "@/lib/data";
+import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match, isAuraSkin } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -205,7 +205,7 @@ export function QuestionCard({
     multiplier > 1 && !locked && !upcoming ? (
       <span
         title={`Серія ${streak} — виграш ×${multiplier}. Схибиш — серія згорить і далі рахуватиметься як звичайно.`}
-        className="mt-px flex shrink-0 cursor-help items-center gap-1 rounded bg-[rgb(255_154_64/0.14)] px-1.5 py-0.5 text-[0.6875rem] font-bold leading-none text-[rgb(255_154_64)]"
+        className="mt-px flex shrink-0 cursor-help items-center gap-1 rounded bg-[rgb(255_154_64/0.14)] px-1.5 py-0.5 text-[0.6875rem] font-bold leading-none text-[rgb(var(--skin-ring))]"
       >
         <Flame className="size-3" />
         {streak}
@@ -245,7 +245,7 @@ export function QuestionCard({
         // gap did. The gap itself is dealt with where it came from: the placed
         // slip is now close in height to the picker it replaces.
         "flex h-full flex-col overflow-hidden rounded-2xl",
-        isEwc ? "ewc-match" : "surface-1",
+        isEwc ? "skin-match" : "surface-1",
       )}
     >
       {/* The "which match is this" row belongs to feeds that mix matches
@@ -439,8 +439,8 @@ export function QuestionCard({
                       "tnum flex h-4 items-center gap-1 font-mono text-xs font-extrabold leading-none",
                       isEwc
                         ? selected
-                          ? "text-[rgb(255_154_64)]"
-                          : "text-[rgb(255_154_64)]/80"
+                          ? "text-[rgb(var(--skin-ring))]"
+                          : "text-[rgb(var(--skin-ring))]/80"
                         : selected
                           ? "text-accent"
                           : "text-accent/80",

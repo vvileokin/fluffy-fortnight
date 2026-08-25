@@ -240,7 +240,7 @@ function GroupPanel({
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
   return (
-    <div className="ewc-aura-card overflow-hidden rounded-xl">
+    <div className="skin-aura-card overflow-hidden rounded-xl">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -314,7 +314,7 @@ export function EwcBracket({ matches }: { matches: Match[] }) {
 function PlayoffsPanel({ resolve }: { resolve: (n: EwcMatchNode) => Resolved }) {
   const [open, setOpen] = React.useState(true);
   return (
-    <div className="ewc-aura-card overflow-hidden rounded-xl">
+    <div className="skin-aura-card overflow-hidden rounded-xl">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
