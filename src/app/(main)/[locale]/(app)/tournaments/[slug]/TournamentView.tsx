@@ -81,7 +81,10 @@ export function TournamentView({
       ? [
           {
             id: "predictor" as Tab,
-            label: "Прогнозатор",
+            // Named for the thing it holds, not for the slot it sits in. Porto
+            // has one card and it is the 0-2 club; "Прогнозатор" is the generic
+            // word for a tab whose contents vary by tournament.
+            label: "Клуб 0-2",
             icon: BlastMark,
             // The BLAST mark is a 139×166 block where the EWC lockup is a 5:1
             // strip, so they take different rules: this one is near square and

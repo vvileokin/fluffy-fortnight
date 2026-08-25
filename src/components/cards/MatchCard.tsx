@@ -81,6 +81,10 @@ export function MatchCard({ match }: { match: Match }) {
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const skin = matchSkin(match, tour);
   const isLive = match.status === "live";
+  // Same day in the tournament's own timezone, which is what `matchTimeLabel`
+  // phrases against — comparing local dates here would disagree with the words
+  // it prints for anyone not sitting in that zone.
+  const startsToday = matchTimeLabel(match).startsWith("Сьогодні");
   const isFinished = match.status === "finished";
   const showScore = isLive || isFinished;
   const hasQuestions = match.openQuestions > 0;
@@ -182,14 +186,37 @@ export function MatchCard({ match }: { match: Match }) {
           on the left of this rail on phones — so this slot never repeats it.
           It carries a state word or nothing. */}
       <div className="relative mx-3.5 mb-2.5 sm:mx-4 sm:mb-3 flex items-center justify-between gap-2 rounded-lg bg-fill-1 px-2.5 py-1.5 text-xs shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_6%,transparent)_inset,0_-1px_0_0_oklch(0_0_0/0.35)_inset]">
+        {/* On a phone the kickoff leads and the format follows.
+
+            It was the other way round, and dimmer: `BO3 · Завтра 12:00` with
+            the time the faintest thing on the card. The format is the one value
+            here that carries no information — every group match at Porto is a
+            BO3, so it reads the same on all twenty-four — while the time is the
+            only thing a person is scanning this rail for. Loudest goes to what
+            varies.
+
+            Today's matches take the accent on top of that: "Сьогодні 14:00" is
+            a different proposition from "28 сер 14:00", and the colour says so
+            before the words are read. */}
         <span className="flex min-w-0 items-center gap-1.5 text-ink-subtle">
-          {match.format}
           {!isLive && (
-            <span className="flex min-w-0 items-center gap-1.5 text-ink-dim sm:hidden">
+            <span className="flex min-w-0 items-center gap-1.5 sm:hidden">
+              <span
+                className={cn(
+                  "truncate font-bold",
+                  startsToday
+                    ? isAuraSkin(skin)
+                      ? "text-[rgb(var(--skin-ring))]"
+                      : "text-accent"
+                    : "text-ink",
+                )}
+              >
+                {matchTimeLabel(match)}
+              </span>
               <span aria-hidden className="text-ink-faint">·</span>
-              <span className="truncate">{matchTimeLabel(match)}</span>
             </span>
           )}
+          {match.format}
         </span>
         {isLive ? (
           <span className="shrink-0 font-semibold text-live">У прямому ефірі</span>
