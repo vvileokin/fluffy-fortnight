@@ -7,6 +7,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { useUser } from "@/lib/supabase/use-user";
+import { refreshProfile } from "@/lib/supabase/use-profile";
 import { getTeam, type Match } from "@/lib/data";
 import { cn, formatInt } from "@/lib/utils";
 
@@ -67,7 +68,21 @@ export function DuelBoard({ match }: { match: Match }) {
 
   const a = getTeam(match.a);
   const b = getTeam(match.b);
-  const mine = duels?.find((d) => d.challenger.id === me || d.opponent?.id === me);
+  /**
+   * Your live position on this fixture, or the result of one.
+   *
+   * The status test is the whole point. A cancelled challenge is still your row
+   * and still comes back from the API, so matching on "am I in it" alone left
+   * the card standing after a withdrawal — same stake, same ring colour, only
+   * the button gone — which reads as the cancel having failed. Worse, the card
+   * displaces the create form, so the fixture became unusable to the one person
+   * who had every right to challenge on it again.
+   */
+  const mine = (duels ?? []).find(
+    (d) =>
+      (d.challenger.id === me || d.opponent?.id === me) &&
+      !["expired", "cancelled", "declined", "void"].includes(d.status),
+  );
   // Open to anybody, from somebody else. A challenge with a name on it is not
   // board business even when the name is mine — it is answered above, and
   // listing it in both places offered the same duel twice.
@@ -106,6 +121,11 @@ export function DuelBoard({ match }: { match: Match }) {
     setSide(null);
     setConfirming(false);
     setNonce((n) => n + 1);
+    // Creating, accepting and cancelling all move points. The top bar reads the
+    // profile row once and caches it, so without this the deduction lands in the
+    // database and the screen keeps showing the old figure until a navigation —
+    // which reads exactly like the points were never taken.
+    refreshProfile();
   }
 
   return (

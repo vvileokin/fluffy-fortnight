@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { useUser } from "@/lib/supabase/use-user";
+import { refreshProfile } from "@/lib/supabase/use-profile";
 import { getTeam, type Match } from "@/lib/data";
 import { cn, formatInt } from "@/lib/utils";
 import type { Duel } from "@/components/match/DuelBoard";
@@ -27,6 +28,7 @@ export function MyDuels({ matches }: { matches: Match[] }) {
   const [duels, setDuels] = React.useState<Duel[] | null>(null);
   const [me, setMe] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
   const [nonce, setNonce] = React.useState(0);
 
   React.useEffect(() => {
@@ -47,16 +49,39 @@ export function MyDuels({ matches }: { matches: Match[] }) {
 
   const byId = React.useMemo(() => new Map(matches.map((m) => [m.id, m])), [matches]);
 
+  const REFUSAL: Record<string, string> = {
+    insufficient: "Не вистачає поінтів",
+    already_in: "У тебе вже є дуель на цей матч",
+    started: "Матч уже почався",
+    taken: "Виклик уже взяли",
+    not_open: "Виклик уже закрито",
+    not_found: "Виклику вже немає",
+  };
+
   /** Accept or turn down — one call, because they differ only in the verb. */
   async function act(id: string, method: "PATCH" | "DELETE") {
     setBusy(id);
-    await fetch("/api/duels", {
+    setError(null);
+    const res = await fetch("/api/duels", {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
-    }).catch(() => {});
+    }).catch(() => null);
+    const out = await res?.json().catch(() => ({}));
     setBusy(null);
+
+    // Accepting can be refused — the balance moved, the match started, somebody
+    // else got there first. A button that silently does nothing is the worst of
+    // the possible answers, so the row says why.
+    if (!out?.ok) {
+      setError(REFUSAL[out?.error as string] ?? "Не вдалося");
+      window.setTimeout(() => setError(null), 3000);
+      return;
+    }
     setNonce((n) => n + 1);
+    // Both verbs move points: accepting escrows a stake, declining hands one
+    // back. The top bar caches the profile row, so it has to be told.
+    refreshProfile();
   }
 
   if (!user) return null;
@@ -108,6 +133,12 @@ export function MyDuels({ matches }: { matches: Match[] }) {
             />
           ))}
         </div>
+      )}
+
+      {error && (
+        <p role="alert" className="text-center text-xs font-semibold text-danger">
+          {error}
+        </p>
       )}
     </div>
   );

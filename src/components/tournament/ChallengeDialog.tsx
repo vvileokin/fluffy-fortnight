@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { refreshProfile } from "@/lib/supabase/use-profile";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { getTeam, matchTimeLabel, type Match } from "@/lib/data";
 import { cn, formatInt } from "@/lib/utils";
@@ -89,6 +90,9 @@ export function ChallengeDialog({
       return;
     }
     setDone(true);
+    // The stake left the balance the instant the challenge was written, so the
+    // figure in the top bar is already wrong by the time this dialog says sent.
+    refreshProfile();
   }
 
   return (
