@@ -29,6 +29,7 @@ import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
 import { BracketPredictor } from "@/components/tournament/BracketPredictor";
 import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import { EwcBracket } from "@/components/tournament/EwcBracket";
+import { PortoBracket } from "@/components/tournament/PortoBracket";
 import { PlayoffBracketEntry } from "@/components/tournament/PlayoffBracketEntry";
 import { FavouriteTeam } from "@/components/tournament/FavouriteTeam";
 import type { CSSProperties } from "react";
@@ -340,7 +341,7 @@ export function TournamentView({
           <TeamsGrid slugs={t.teamSlugs} ranks={ranks} skin={t.skin} compact />
           {/* The event's ladder, below the field it's drawn from. It's a view of
               the admin's matches — see EwcBracket — not a second copy of them. */}
-          {t.skin === "ewc" && (
+          {isAuraSkin(t.skin) && (
             <section className="space-y-3">
               {/* No mark in front of the words. Every other section heading on
                   this page starts its text at the container edge, and the mark
@@ -351,7 +352,11 @@ export function TournamentView({
               <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">
                 Сітка турніру
               </h2>
-              <EwcBracket matches={matches} />
+              {t.skin === "porto" ? (
+                <PortoBracket matches={matches} />
+              ) : (
+                <EwcBracket matches={matches} />
+              )}
             </section>
           )}
           {/* The generic stage list is for tournaments with no bracket of their

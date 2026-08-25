@@ -10,6 +10,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { ImageField } from "@/components/admin/ImageField";
 import { teams, allTournaments, getTeam, inkForColor, type Team } from "@/lib/data";
 import { EWC_STAGES } from "@/lib/ewc-bracket";
+import { PORTO_STAGES } from "@/lib/porto-bracket";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -179,6 +180,27 @@ export default function MatchesAdmin() {
   const [statusTab, setStatusTab] = React.useState<MatchStatus>("live");
   const [tableMissing, setTableMissing] = React.useState(false);
   const [editing, setEditing] = React.useState<MatchForm | null>(null);
+  /**
+   * The closed list of stages this tournament's bracket can read, if it has
+   * one. Free text is a money bug here, not a tidiness one: the favourite-team
+   * payout is looked up by round and the ladder matches its playoff slots by
+   * stage, so a hand-typed "Плей-оф" pays nobody, slots nowhere, and reports
+   * nothing wrong while doing it.
+   */
+  const stageList =
+    editing?.tournament_slug === "ewc-2026"
+      ? {
+          id: "ewc",
+          stages: EWC_STAGES as readonly string[],
+          warning: "Не зі списку — виплати за улюблену команду не спрацюють.",
+        }
+      : editing?.tournament_slug === "blast-porto-2026"
+        ? {
+            id: "porto",
+            stages: PORTO_STAGES as readonly string[],
+            warning: "Не зі списку — матч не стане в сітку турніру.",
+          }
+        : null;
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -567,21 +589,26 @@ export default function MatchesAdmin() {
                     rewritten to the first option. */}
                 <input
                   className={inputCls}
-                  list={editing.tournament_slug === "ewc-2026" ? "ewc-stages" : undefined}
+                  list={stageList ? `${stageList.id}-stages` : undefined}
                   value={editing.stage}
                   onChange={(e) => up({ stage: e.target.value })}
-                  placeholder={editing.tournament_slug === "ewc-2026" ? "обери зі списку" : "Півфінал"}
+                  placeholder={stageList ? "обери зі списку" : "Півфінал"}
                 />
                 <datalist id="ewc-stages">
                   {EWC_STAGES.map((s) => (
                     <option key={s} value={s} />
                   ))}
                 </datalist>
-                {editing.tournament_slug === "ewc-2026" &&
+                <datalist id="porto-stages">
+                  {PORTO_STAGES.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+                {stageList &&
                   editing.stage.trim() !== "" &&
-                  !(EWC_STAGES as readonly string[]).includes(editing.stage) && (
+                  !stageList.stages.includes(editing.stage.trim()) && (
                     <p className="mt-1 text-xs font-semibold text-warning">
-                      Не зі списку — виплати за улюблену команду не спрацюють.
+                      {stageList.warning}
                     </p>
                   )}
               </Field>
