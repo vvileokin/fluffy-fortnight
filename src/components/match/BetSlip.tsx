@@ -273,7 +273,7 @@ export function BetSlip({
               className={cn(
                 "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
                 stake === c
-                  ? "bg-[rgb(198_96_40)] text-[#1a0a0d]"
+                  ? "bg-[rgb(var(--skin-ring)/0.22)] text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)]"
                   : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
                 c > balance && "cursor-not-allowed opacity-35 hover:bg-white/[0.06]",
               )}
@@ -336,7 +336,7 @@ export function BetSlip({
         aria-label="Зробити ставку"
         className={cn(
           "flex h-11 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-bold transition-colors",
-          "bg-[rgb(198_96_40)] text-[#1a0a0d] hover:bg-[rgb(219_112_52)]",
+          "bg-[rgb(var(--skin-ring))] text-black hover:brightness-110",
           "disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-white/35",
         )}
       >
