@@ -8,6 +8,7 @@ import { SwordsGlyph, TargetGlyph, type GlyphIcon } from "@/components/layout/Na
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { QuestionCard } from "@/components/match/QuestionCard";
+import { DuelBoard } from "@/components/match/DuelBoard";
 import { Tooltip } from "@/components/ui/Tooltip";
 import {
   getTeam,
@@ -302,6 +303,13 @@ export default async function MatchPage({
           </div>
         )}
       </section>
+
+      {/* Duels sit above the subordinate context, not inside it: a challenge is
+          an action on this fixture and expires with it, while the veto and the
+          head-to-head are things to read. Porto only — the mechanic does not
+          exist anywhere else, and an empty panel on every other match page
+          would be worse than none. */}
+      {skin === "porto" && <DuelBoard match={match} />}
 
       {/* CONTEXT: subordinate */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
