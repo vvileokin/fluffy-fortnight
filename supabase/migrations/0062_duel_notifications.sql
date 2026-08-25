@@ -144,10 +144,10 @@ begin
   -- the room, and the room is the board.
   if p_opponent is not null then
     select handle into v_from from public.profiles where id = p_user;
-    select coalesce(m.team_a_name, m.team_a) || ' — ' || coalesce(m.team_b_name, m.team_b),
+    select coalesce(m.team_a_name, initcap(m.team_a)) || ' — ' || coalesce(m.team_b_name, initcap(m.team_b)),
            coalesce(m.time_label, ''),
-           case when p_side = 'a' then coalesce(m.team_a_name, m.team_a)
-                else coalesce(m.team_b_name, m.team_b) end
+           case when p_side = 'a' then coalesce(m.team_a_name, initcap(m.team_a))
+                else coalesce(m.team_b_name, initcap(m.team_b)) end
       into v_match, v_when, v_side
       from public.matches m where m.id = p_match;
 
@@ -233,7 +233,7 @@ begin
   -- The challenger posted this and left. They should not have to come back and
   -- check whether anybody bit.
   select handle into v_from from public.profiles where id = p_user;
-  select coalesce(m.team_a_name, m.team_a) || ' — ' || coalesce(m.team_b_name, m.team_b)
+  select coalesce(m.team_a_name, initcap(m.team_a)) || ' — ' || coalesce(m.team_b_name, initcap(m.team_b))
     into v_match
     from public.matches m where m.id = d.match_id;
 

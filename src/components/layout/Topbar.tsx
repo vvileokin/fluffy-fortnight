@@ -337,9 +337,14 @@ export function Topbar() {
                         )}
                       >
                         <Icon
+                          {...(n.kind === "duel" ? { "data-skin": "porto" } : {})}
                           className={cn(
                             "mt-0.5 size-4 shrink-0",
-                            !n.read ? "text-accent" : "text-ink-subtle",
+                            !n.read
+                              ? n.kind === "duel"
+                                ? "text-[rgb(var(--skin-ring))]"
+                                : "text-accent"
+                              : "text-ink-subtle",
                           )}
                           strokeWidth={2.25}
                         />
@@ -356,11 +361,17 @@ export function Topbar() {
                               only while the duel is genuinely still open, which
                               is read from the duel and not from this row. */}
                           {duelId && pending.has(duelId) && (
-                            <div className="mt-2 flex items-center gap-1.5">
+                            /* Duels belong to Porto, so its palette comes with
+                               them. `data-skin` sits on this row and not on the
+                               bar: the bell mixes rewards, ranks and giveaways
+                               from every event, and the tokens inherit — put it
+                               higher and a World Cup row would wear Porto's
+                               colours too. */
+                            <div data-skin="porto" className="mt-2 flex items-center gap-1.5">
                               <button
                                 onClick={() => answer(duelId, "PATCH")}
                                 disabled={acting !== null}
-                                className="flex h-7 items-center gap-1 rounded-lg bg-accent px-2.5 text-[0.6875rem] font-bold text-black transition-[filter] hover:brightness-110 disabled:opacity-50"
+                                className="flex h-7 items-center gap-1 rounded-lg bg-[rgb(var(--skin-ring))] px-2.5 text-[0.6875rem] font-bold text-black transition-[filter] hover:brightness-110 disabled:opacity-50"
                               >
                                 {acting === duelId ? (
                                   <Loader2 className="size-3 animate-spin" />
@@ -372,7 +383,7 @@ export function Topbar() {
                               <button
                                 onClick={() => answer(duelId, "DELETE")}
                                 disabled={acting !== null}
-                                className="flex h-7 items-center gap-1 rounded-lg bg-[color-mix(in_oklch,var(--ink)_8%,transparent)] px-2.5 text-[0.6875rem] font-semibold text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+                                className="flex h-7 items-center gap-1 rounded-lg bg-[rgb(var(--skin-ring)/0.14)] px-2.5 text-[0.6875rem] font-semibold text-[rgb(var(--skin-ring))] transition-colors hover:bg-[rgb(var(--skin-ring)/0.24)] disabled:opacity-50"
                               >
                                 <X className="size-3" strokeWidth={2.75} />
                                 Відхилити
