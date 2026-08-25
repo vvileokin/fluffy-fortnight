@@ -272,8 +272,14 @@ export function BetSlip({
               onClick={() => setStake(c)}
               className={cn(
                 "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
+                // Solid, not outlined. A chip is a switch — one of the four is
+                // on — and a filled block says that at a glance where a ring
+                // reads as "focused" or "hovered". The 0-2 card outlines
+                // because eight tiles there can be on at once and a wall of
+                // solid colour would stop being readable; four chips with
+                // exactly one on is the opposite problem.
                 stake === c
-                  ? "bg-[rgb(var(--skin-ring)/0.22)] text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)]"
+                  ? "bg-[rgb(var(--skin-ring))] text-black"
                   : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
                 c > balance && "cursor-not-allowed opacity-35 hover:bg-white/[0.06]",
               )}
