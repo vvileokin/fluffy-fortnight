@@ -31,18 +31,29 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
       {promo.enabled && promo.image && (
         <Link
           href={promoHref(promo)}
-          className="group relative mx-3 mb-1 block h-[120px] overflow-hidden rounded-lg border border-border"
+          /* Held at the artwork's own ratio, like the hero. A fixed 120px height
+             cropped a 16:9 banner top and bottom, so whatever the art was built
+             around sat outside the frame; at 16:9 the whole thing is on screen
+             and nothing has to be guessed at. Swap the art for a different
+             shape and this class is the one line that follows it. */
+          className="group relative mx-3 mb-1 block aspect-[16/9] overflow-hidden rounded-lg border border-border"
           aria-label="Promo"
         >
           {/* Artwork, so it gets the same treatment as the covers and the hero
-              rather than the default 75 the icons are happy with. */}
+              rather than the default 75 the icons are happy with.
+
+              No hover zoom. A banner is a finished composition — scaling it
+              pushes its own edges out of the frame, which is the one thing a
+              banner cannot afford. The cards zoom because their covers are
+              backdrops with nothing to lose at the margin; the hero doesn't,
+              and this is a hero in a narrower column. */}
           <Image
             src={promo.image}
             alt=""
             width={448}
-            height={240}
+            height={252}
             quality={90}
-            className="h-full w-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+            className="h-full w-full object-cover object-center"
           />
           <span className="absolute inset-0 ring-1 ring-inset ring-white/5" />
         </Link>
