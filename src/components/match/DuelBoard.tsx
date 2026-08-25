@@ -104,13 +104,10 @@ export function DuelBoard({ match }: { match: Match }) {
           uppercase, a 16px glyph in the subtle ink — rather than approximated.
           A heading that is nearly the same as its neighbours is worse than one
           that is plainly different. */}
-      <div className="flex items-center justify-between gap-2 pl-1">
-        <h2 className="flex items-center gap-2.5 text-[0.8125rem] font-bold uppercase tracking-wide text-ink-muted">
-          <Swords className="size-4 shrink-0 text-ink-subtle" />
-          Дуелі
-        </h2>
-        <span className="text-xs text-ink-subtle">переможець забирає обидві ставки</span>
-      </div>
+      <h2 className="flex items-center gap-2.5 pl-1 text-[0.8125rem] font-bold uppercase tracking-wide text-ink-muted">
+        <Swords className="size-4 shrink-0 text-ink-subtle" />
+        Дуелі
+      </h2>
 
       <div className="skin-aura-card space-y-3 rounded-xl p-3 sm:p-4">
         {mine ? (

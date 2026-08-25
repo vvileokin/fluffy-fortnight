@@ -32,6 +32,7 @@ import { EwcBracket } from "@/components/tournament/EwcBracket";
 import { PortoBracket } from "@/components/tournament/PortoBracket";
 import { PortoGroupCard } from "@/components/tournament/PortoGroupCard";
 import { ChallengeDialog } from "@/components/tournament/ChallengeDialog";
+import { MyDuels } from "@/components/tournament/MyDuels";
 import { PlayoffBracketEntry } from "@/components/tournament/PlayoffBracketEntry";
 import { FavouriteTeam } from "@/components/tournament/FavouriteTeam";
 import type { CSSProperties } from "react";
@@ -427,7 +428,10 @@ export function TournamentView({
           which saves nothing and pays nothing. */}
       {tab === "predictor" &&
         (t.skin === "porto" ? (
-          <PortoGroupCard />
+          <div className="space-y-3">
+            <PortoGroupCard />
+            <MyDuels matches={matches} />
+          </div>
         ) : t.skin === "ewc" ? (
           <div className="space-y-3">
             {/* Above the bracket: it's one tap against sixteen, so it's the
