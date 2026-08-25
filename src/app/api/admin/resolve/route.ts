@@ -87,12 +87,10 @@ export async function POST(request: Request) {
   const { rows: preds, error: predsErr } = await fetchAllRows<{
     user_id: string;
     option_id: string;
-    /** Locked when the pick was made. NULL is a question with flat rewards. */
-    odds: number | null;
   }>((from, to) =>
     admin
       .from("predictions")
-      .select("user_id, option_id, odds")
+      .select("user_id, option_id")
       .eq("question_id", question_id)
       .order("user_id", { ascending: true })
       .range(from, to),
@@ -156,14 +154,9 @@ export async function POST(request: Request) {
   // one atomic statement. `award_predictions` pays a single figure to a whole
   // list, and a streak bonus is per-player — grouping is what lets both be true
   // at once, and there are only ever three or four distinct rates.
-  // The multiplier each player locked when they picked folds in here, before
-  // the streak. `odds` is null on every question that does not use floating
-  // odds, and null means one — so a flat question resolves to exactly the
-  // figure it always did.
   const byRate = new Map<number, string[]>();
   for (const p of winners) {
-    const base = Math.round(reward * (p.odds ?? 1));
-    const paid = applyStreak(base, byId.get(p.user_id)?.streak ?? 0);
+    const paid = applyStreak(reward, byId.get(p.user_id)?.streak ?? 0);
     const list = byRate.get(paid);
     if (list) list.push(p.user_id);
     else byRate.set(paid, [p.user_id]);

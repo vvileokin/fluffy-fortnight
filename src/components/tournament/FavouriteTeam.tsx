@@ -82,7 +82,7 @@ export function FavouriteTeam() {
     <div className="skin-aura-card space-y-2.5 rounded-xl p-3 sm:p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-extrabold tracking-tight text-white">Улюблена команда</p>
-        <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(255_154_64)]">
+        <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(var(--skin-ring))]">
           до {formatInt(FAVOURITE_MAX * 2)}
           <BrandIcon name="points-ewc" className="size-3.5" />
         </span>
@@ -126,7 +126,7 @@ export function FavouriteTeam() {
               </p>
             </div>
             {band && band.multiplier > 1 && (
-              <span className="tnum shrink-0 rounded-md bg-black/35 px-1.5 py-1 font-mono text-xs font-bold text-[rgb(255_178_112)]">
+              <span className="tnum shrink-0 rounded-md bg-black/35 px-1.5 py-1 font-mono text-xs font-bold text-[rgb(var(--skin-hot))]">
                 ×{band.multiplier}
               </span>
             )}
@@ -172,7 +172,7 @@ export function FavouriteTeam() {
                       on
                         ? "bg-black/20 text-[#1a0a0d]"
                         : band && band.multiplier > 1
-                          ? "bg-[rgb(255_154_64/0.18)] text-[rgb(255_178_112)]"
+                          ? "bg-[rgb(var(--skin-ring)/0.18)] text-[rgb(var(--skin-hot))]"
                           : "bg-white/[0.07] text-white/45",
                     )}
                   >

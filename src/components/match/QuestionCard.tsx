@@ -70,66 +70,6 @@ export function QuestionCard({
   /** The currency mark this event pays in. */
   const eventGem =
     skin === "ewc" ? "points-ewc" : skin === "porto" ? "points-porto" : "points";
-  // Floating odds are opt-in per tournament, the same list the trigger checks.
-  const floating = match?.tournamentSlug === "blast-porto-2026";
-
-  /**
-   * The live multiplier per option: how much rarer than average that pick is.
-   *
-   * It has to be on the button. The whole mechanic is a decision about timing —
-   * take a fat number early on an unpopular side, or wait for information and
-   * take a thinner one — and a number nobody can see before pressing is not a
-   * decision at all. Re-read after every save so the board moves as the crowd
-   * moves.
-   */
-  const [odds, setOdds] = React.useState<Record<string, number>>({});
-  const [oddsNonce, setOddsNonce] = React.useState(0);
-  React.useEffect(() => {
-    if (!floating) return;
-    let cancelled = false;
-
-    const read = () =>
-      createClient()
-        .rpc("question_odds", { p_question: question.id })
-        .then(({ data }) => {
-          if (cancelled || !Array.isArray(data)) return;
-          const next: Record<string, number> = {};
-          for (const r of data as { option_id: string; odds: number | null }[]) {
-            if (r.odds != null) next[r.option_id] = Number(r.odds);
-          }
-          setOdds(next);
-        });
-
-    void read();
-
-    /**
-     * Polled, not subscribed.
-     *
-     * Realtime would be the obvious choice and it cannot work here: RLS lets a
-     * player read only their own prediction row, and Realtime honours RLS — so
-     * a subscription would deliver exactly the one event that does not move the
-     * market, your own. The counts have to come from the function that is
-     * allowed to count them.
-     *
-     * Twenty seconds, and only while the tab is in front. A market that shifts
-     * a few times a minute is read as live; one that repaints every second is
-     * read as noise, and it would be polling on behalf of readers who are not
-     * looking at it.
-     */
-    const tick = window.setInterval(() => {
-      if (document.visibilityState === "visible") void read();
-    }, 20_000);
-    const onShow = () => {
-      if (document.visibilityState === "visible") void read();
-    };
-    document.addEventListener("visibilitychange", onShow);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(tick);
-      document.removeEventListener("visibilitychange", onShow);
-    };
-  }, [floating, question.id, oddsNonce]);
 
   // Load this user's saved answer.
   React.useEffect(() => {
@@ -210,8 +150,6 @@ export function QuestionCard({
       return;
     }
     setSaveError(null);
-    // The crowd just moved — this pick is part of it.
-    setOddsNonce((n) => n + 1);
     window.setTimeout(() => setJustSaved(false), 1600);
   }
 
@@ -274,7 +212,7 @@ export function QuestionCard({
     multiplier > 1 && !locked && !upcoming ? (
       <span
         title={`Серія ${streak} — виграш ×${multiplier}. Схибиш — серія згорить і далі рахуватиметься як звичайно.`}
-        className="mt-px flex shrink-0 cursor-help items-center gap-1 rounded bg-[rgb(255_154_64/0.14)] px-1.5 py-0.5 text-[0.6875rem] font-bold leading-none text-[rgb(var(--skin-ring))]"
+        className="mt-px flex shrink-0 cursor-help items-center gap-1 rounded bg-[rgb(var(--skin-ring)/0.14)] px-1.5 py-0.5 text-[0.6875rem] font-bold leading-none text-[rgb(var(--skin-ring))]"
       >
         <Flame className="size-3" />
         {streak}
@@ -434,10 +372,10 @@ export function QuestionCard({
                   dressed ? "bg-black/35" : "bg-surface-2",
                   selected
                     ? dressed
-                      ? "shadow-[0_0_0_1px_rgb(255_122_44/0.7),0_4px_18px_-14px_rgb(255_122_44/0.6)]"
+                      ? "shadow-[0_0_0_1px_rgb(var(--skin-ring)/0.7),0_4px_18px_-14px_rgb(var(--skin-ring)/0.6)]"
                       : "shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_65%,transparent),0_4px_16px_-14px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
                     : dressed
-                      ? "shadow-[0_0_0_1px_rgb(255_120_50/0.18)] hover:shadow-[0_0_0_1px_rgb(255_120_50/0.4)]"
+                      ? "shadow-[0_0_0_1px_rgb(var(--skin-ring)/0.18)] hover:shadow-[0_0_0_1px_rgb(var(--skin-ring)/0.4)]"
                       : "shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_18%,transparent)]",
                   (locked || upcoming) && !selected && "opacity-55",
                 )}
@@ -546,22 +484,9 @@ export function QuestionCard({
                         {/* The multiplied figure, not the base one with an
                             asterisk. The player is choosing between options on
                             what each pays *them*, so the number has to already
-                            be their number — the chips explain where it came
-                            from. The crowd's multiplier applies first, the
-                            streak on top, which is the order they are paid in. */}
-                        +{applyStreak(Math.round(opt.reward * (odds[opt.id] ?? 1)), streak)}
-                        {floating && (odds[opt.id] ?? 1) !== 1 && (
-                          <span
-                            className={cn(
-                              "tnum rounded px-1 py-px font-mono text-[0.625rem] font-bold",
-                              (odds[opt.id] ?? 1) > 1
-                                ? "bg-[rgb(var(--skin-ring)/0.18)] text-[rgb(var(--skin-ring))]"
-                                : "bg-white/[0.08] text-white/45",
-                            )}
-                          >
-                            ×{(odds[opt.id] ?? 1).toFixed(2)}
-                          </span>
-                        )}
+                            be their number — the ×N chip explains where it
+                            came from. */}
+                        +{applyStreak(opt.reward, streak)}
                         {multiplier > 1 && <StreakChip multiplier={multiplier} />}
                       </>
                     )}

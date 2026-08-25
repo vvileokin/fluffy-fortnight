@@ -135,7 +135,7 @@ export default async function GiveawayPage({
                     className={cn(
                       "grid size-5 shrink-0 place-items-center rounded-full",
                       g.skin === "ewc"
-                        ? "bg-[rgb(var(--skin-glow)/0.20)] text-[rgb(255_154_64)]"
+                        ? "bg-[rgb(var(--skin-glow)/0.20)] text-[rgb(var(--skin-ring))]"
                         : "bg-success/15 text-success",
                     )}
                   >

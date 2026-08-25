@@ -181,12 +181,12 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
 
   /* ---------------------------------------------------------------- render */
 
-  const orange = ewc ? "text-[rgb(255_154_64)]" : "text-accent";
+  const orange = ewc ? "text-[rgb(var(--skin-ring))]" : "text-accent";
   const buyButton = cn(
     "flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
     "disabled:cursor-not-allowed disabled:opacity-45",
     ewc
-      ? "bg-[rgb(255_122_44)] text-[#1a0a0d] hover:bg-[rgb(255_146_72)] disabled:hover:bg-[rgb(255_122_44)]"
+      ? "bg-[rgb(var(--skin-ring))] text-black hover:brightness-110 disabled:hover:brightness-100"
       : "bg-accent text-accent-ink hover:bg-accent-hover disabled:hover:bg-accent",
   );
 
@@ -264,7 +264,7 @@ export function GiveawayEntry({ giveaway }: { giveaway: Giveaway }) {
                         "size-2 rounded-full transition-colors",
                         i < tickets
                           ? ewc
-                            ? "bg-[rgb(255_154_64)]"
+                            ? "bg-[rgb(var(--skin-ring))]"
                             : "bg-accent"
                           : "bg-[color-mix(in_oklch,var(--ink)_16%,transparent)]",
                       )}
@@ -425,7 +425,7 @@ function Gate({
         className={cn(
           "flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
           ewc
-            ? "bg-[rgb(255_122_44)] text-[#1a0a0d] hover:bg-[rgb(255_146_72)]"
+            ? "bg-[rgb(var(--skin-ring))] text-black hover:brightness-110"
             : "bg-accent text-accent-ink hover:bg-accent-hover",
         )}
       >
@@ -553,7 +553,7 @@ function StepButton({
 
 /** Entries closed, draw still to come. */
 function Pending({ tickets, cap, ewc }: { tickets: number; cap: number; ewc: boolean }) {
-  const orange = ewc ? "text-[rgb(255_154_64)]" : "text-accent";
+  const orange = ewc ? "text-[rgb(var(--skin-ring))]" : "text-accent";
   return (
     <div className="mt-4 flex flex-1 flex-col gap-3">
       {cap > 1 && (
@@ -570,7 +570,7 @@ function Pending({ tickets, cap, ewc }: { tickets: number; cap: number; ewc: boo
                   "size-2 rounded-full",
                   i < tickets
                     ? ewc
-                      ? "bg-[rgb(255_154_64)]"
+                      ? "bg-[rgb(var(--skin-ring))]"
                       : "bg-accent"
                     : "bg-[color-mix(in_oklch,var(--ink)_16%,transparent)]",
                 )}

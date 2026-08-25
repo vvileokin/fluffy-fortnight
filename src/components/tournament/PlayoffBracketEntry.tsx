@@ -237,7 +237,7 @@ export function PlayoffBracketEntry() {
                 i === round
                   ? "bg-[rgb(198_96_40)] text-[#1a0a0d]"
                   : ok
-                    ? "bg-[rgb(198_96_40/0.28)] text-[rgb(255_178_112)]"
+                    ? "bg-[rgb(198_96_40/0.28)] text-[rgb(var(--skin-hot))]"
                     : "bg-black/30 text-white/35",
                 reachable(i) ? "cursor-pointer" : "cursor-not-allowed",
               )}
@@ -284,7 +284,7 @@ export function PlayoffBracketEntry() {
                       "flex h-11 w-full items-center gap-2 px-2.5 text-left transition-colors",
                       side === 1 && "shadow-[0_-1px_0_0_rgb(255_255_255/0.07)]",
                       on
-                        ? "bg-[rgb(255_122_44/0.22)]"
+                        ? "bg-[rgb(var(--skin-ring)/0.22)]"
                         : slug
                           ? "hover:bg-white/[0.05]"
                           : "",
@@ -305,7 +305,7 @@ export function PlayoffBracketEntry() {
                     </span>
                     {on && (
                       <Check
-                        className="size-3.5 shrink-0 text-[rgb(255_154_64)]"
+                        className="size-3.5 shrink-0 text-[rgb(var(--skin-ring))]"
                         strokeWidth={3}
                       />
                     )}
@@ -329,7 +329,7 @@ export function PlayoffBracketEntry() {
         className={cn(
           "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-colors",
           "bg-[rgb(198_96_40)] text-[#1a0a0d] hover:bg-[rgb(219_112_52)]",
-          "disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(255_122_44)]",
+          "disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(var(--skin-ring))]",
         )}
       >
         {busy && <Loader2 className="size-4 animate-spin" />}
@@ -353,7 +353,7 @@ function Head({ earned = 0 }: { earned?: number }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <p className="text-sm font-extrabold tracking-tight text-white">Сітка плей-офу</p>
-      <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(255_154_64)]">
+      <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(var(--skin-ring))]">
         {earned > 0 ? (
           <>
             {formatInt(earned)}

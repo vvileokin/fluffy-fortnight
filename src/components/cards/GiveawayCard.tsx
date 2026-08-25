@@ -94,7 +94,7 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
               // one line across the card instead of each finding its own centre.
               "tnum absolute right-3 top-3 flex h-[1.375rem] items-center gap-1 rounded-md px-2 font-mono text-xs font-bold",
               "bg-black/45 backdrop-blur-[2px]",
-              ewc ? "text-[rgb(255_154_64)]" : "text-accent",
+              ewc ? "text-[rgb(var(--skin-ring))]" : "text-accent",
             )}
           >
             <BrandIcon
@@ -121,7 +121,7 @@ export function GiveawayCard({ g }: { g: Giveaway }) {
           <span
             className={cn(
               "flex items-center gap-1 text-xs font-semibold",
-              ewc ? "text-[rgb(255_154_64)]" : "text-accent",
+              ewc ? "text-[rgb(var(--skin-ring))]" : "text-accent",
             )}
           >
             Участь

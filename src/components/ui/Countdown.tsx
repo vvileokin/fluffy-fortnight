@@ -95,7 +95,7 @@ export function Countdown({
             <span
               className={cn(
                 "font-mono tnum text-2xl font-bold leading-none sm:text-3xl",
-                ewc ? "text-[rgb(255_154_64)]" : "text-ink",
+                ewc ? "text-[rgb(var(--skin-ring))]" : "text-ink",
               )}
               suppressHydrationWarning
             >
@@ -104,7 +104,7 @@ export function Countdown({
             <span
               className={cn(
                 "mt-1 text-[0.625rem] font-medium uppercase tracking-wide",
-                ewc ? "text-[rgb(255_154_64)]/55" : "text-ink-subtle",
+                ewc ? "text-[rgb(var(--skin-ring))]/55" : "text-ink-subtle",
               )}
             >
               {u.label}
