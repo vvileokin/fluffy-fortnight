@@ -30,6 +30,7 @@ import { BracketPredictor } from "@/components/tournament/BracketPredictor";
 import { TournamentBracket } from "@/components/tournament/TournamentBracket";
 import { EwcBracket } from "@/components/tournament/EwcBracket";
 import { PortoBracket } from "@/components/tournament/PortoBracket";
+import { PortoGroupCard } from "@/components/tournament/PortoGroupCard";
 import { PlayoffBracketEntry } from "@/components/tournament/PlayoffBracketEntry";
 import { FavouriteTeam } from "@/components/tournament/FavouriteTeam";
 import type { CSSProperties } from "react";
@@ -75,10 +76,20 @@ export function TournamentView({
     // simulator a regular tournament shows — so on the event it flies the
     // event's own mark rather than a generic bracket glyph.
     //
-    // Porto has none yet: its mechanics are still being built, and a tab that
-    // opens EWC's bracket on a different tournament is worse than no tab.
+    // Each event flies its own mark rather than a generic bracket glyph.
     ...(t.skin === "porto"
-      ? []
+      ? [
+          {
+            id: "predictor" as Tab,
+            label: "Прогнозатор",
+            icon: BlastMark,
+            // The BLAST mark is a 139×166 block where the EWC lockup is a 5:1
+            // strip, so they take different rules: this one is near square and
+            // sits at the row's own size, the strip has to be cut to cap height
+            // or it reads as a banner wedged into a tab.
+            iconClass: "size-4 shrink-0",
+          },
+        ]
       : [
           t.skin === "ewc"
             ? {
@@ -400,7 +411,9 @@ export function TournamentView({
           one-shot entry; every other tournament gets the sandbox simulator,
           which saves nothing and pays nothing. */}
       {tab === "predictor" &&
-        (ewc ? (
+        (t.skin === "porto" ? (
+          <PortoGroupCard />
+        ) : t.skin === "ewc" ? (
           <div className="space-y-3">
             {/* Above the bracket: it's one tap against sixteen, so it's the
                 thing a player can finish before deciding whether to fill in a
