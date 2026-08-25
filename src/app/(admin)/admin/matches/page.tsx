@@ -40,6 +40,8 @@ type MatchForm = {
   veto: VetoRow[];
   h2h_a: number;
   h2h_b: number;
+  /** Where each past meeting happened, newest first. */
+  h2h_series: { event: string; score: string; winner: "a" | "b" }[];
   open_questions: number;
   max_reward: number;
   // custom team / tournament
@@ -88,6 +90,7 @@ function blank(): MatchForm {
     veto: [],
     h2h_a: 0,
     h2h_b: 0,
+    h2h_series: [],
     open_questions: 0,
     max_reward: 0,
     customA: false,
@@ -263,6 +266,7 @@ export default function MatchesAdmin() {
       veto: data.veto ?? [],
       h2h_a: data.h2h?.a ?? 0,
       h2h_b: data.h2h?.b ?? 0,
+      h2h_series: data.h2h?.series ?? [],
       open_questions: data.open_questions,
       max_reward: data.max_reward,
       customA: !!data.team_a_name,
@@ -289,7 +293,13 @@ export default function MatchesAdmin() {
     const payload = {
       ...e,
       start_at: e.start_at ? new Date(e.start_at).toISOString() : null,
-      h2h: { a: e.h2h_a, b: e.h2h_b },
+      // Blank rows are dropped rather than saved: an empty tournament name
+      // renders as a gap in the history with a score floating beside it.
+      h2h: {
+        a: e.h2h_a,
+        b: e.h2h_b,
+        series: e.h2h_series.filter((r) => r.event.trim() !== ""),
+      },
       tournament_slug: e.customTournament ? "custom" : e.tournament_slug,
       team_a_name: e.customA ? e.team_a_name : "",
       team_a_logo: e.customA ? e.team_a_logo : "",
@@ -734,6 +744,83 @@ export default function MatchesAdmin() {
                 <input type="number" className={cn(inputCls, "tnum font-mono")} value={editing.h2h_b} onChange={(e) => up({ h2h_b: Number(e.target.value) })} />
               </Field>
             </div>
+
+            {/* Where those wins happened. The tally says who is ahead; this
+                says on what, which is the part that changes how it reads — a
+                4-0 built at one event is a different fact from four across a
+                year. Rows are ordered newest first, the way the match page
+                prints them. */}
+            <Field label="H2H — де це було">
+              <div className="space-y-2">
+                {editing.h2h_series.map((row, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      className={cn(inputCls, "min-w-0 flex-1")}
+                      placeholder="IEM Cologne"
+                      value={row.event}
+                      onChange={(ev) =>
+                        up({
+                          h2h_series: editing.h2h_series.map((r, j) =>
+                            j === i ? { ...r, event: ev.target.value } : r,
+                          ),
+                        })
+                      }
+                    />
+                    <input
+                      className={cn(inputCls, "tnum w-20 shrink-0 font-mono")}
+                      placeholder="2:1"
+                      value={row.score}
+                      onChange={(ev) =>
+                        up({
+                          h2h_series: editing.h2h_series.map((r, j) =>
+                            j === i ? { ...r, score: ev.target.value } : r,
+                          ),
+                        })
+                      }
+                    />
+                    <select
+                      className={cn(inputCls, "w-28 shrink-0")}
+                      value={row.winner}
+                      onChange={(ev) =>
+                        up({
+                          h2h_series: editing.h2h_series.map((r, j) =>
+                            j === i ? { ...r, winner: ev.target.value as "a" | "b" } : r,
+                          ),
+                        })
+                      }
+                    >
+                      <option value="a">виграла A</option>
+                      <option value="b">виграла B</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        up({ h2h_series: editing.h2h_series.filter((_, j) => j !== i) })
+                      }
+                      aria-label="Прибрати рядок"
+                      className="grid size-9 shrink-0 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-surface-2 hover:text-danger"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    up({
+                      h2h_series: [
+                        ...editing.h2h_series,
+                        { event: "", score: "", winner: "a" as const },
+                      ],
+                    })
+                  }
+                  className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border-strong text-xs font-semibold text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+                >
+                  <Plus className="size-3.5" />
+                  Додати зустріч
+                </button>
+              </div>
+            </Field>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Відкритих питань">

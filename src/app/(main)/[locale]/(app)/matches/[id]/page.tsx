@@ -303,7 +303,17 @@ export default async function MatchPage({
               art, held to the right and masked so the labels always win. A map
               that survived the veto is lit; a banned one is drained to almost
               nothing and struck through. The team is its crest, not a tag. */}
-          <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)] overflow-hidden rounded-2xl surface-1">
+          {/* At an event, the ledger sits on the event's own plate: it was the
+              one panel on a skinned match page still wearing the generic
+              surface, so a Porto match had a grey slab under a scarlet header. */}
+          <div
+            className={cn(
+              "divide-y overflow-hidden rounded-2xl",
+              isAuraSkin(skin)
+                ? "skin-aura-card skin-divide"
+                : "surface-1 divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]",
+            )}
+          >
             {veto.map((v, i) => {
               const team = v.team === "a" ? a : v.team === "b" ? b : null;
               const isPick = v.action === "pick";
@@ -325,7 +335,12 @@ export default async function MatchPage({
                     {team ? (
                       <TeamLogo team={team} size="xs" />
                     ) : isDecider ? (
-                      <CircleCheck className="size-4 text-accent" />
+                      <CircleCheck
+                        className={cn(
+                          "size-4",
+                          isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent",
+                        )}
+                      />
                     ) : (
                       <Ban className="size-4 text-ink-faint" />
                     )}
@@ -346,12 +361,22 @@ export default async function MatchPage({
                   <span
                     className={cn(
                       "flex-1 font-bold tracking-tight",
-                      isPick || isDecider ? "text-ink" : "text-ink-muted",
+                      isPick || isDecider
+                        ? isAuraSkin(skin)
+                          ? "text-white"
+                          : "text-ink"
+                        : isAuraSkin(skin)
+                          ? "text-white/50"
+                          : "text-ink-muted",
                     )}
                   >
                     {v.map}
                   </span>
-                  <Badge tone={isDecider ? "accent" : isPick ? "accent" : "neutral"}>
+                  <Badge
+                    tone={
+                      isPick || isDecider ? (isAuraSkin(skin) ? "ewc" : "accent") : "neutral"
+                    }
+                  >
                     {isDecider ? "Decider" : isPick ? "Pick" : "Ban"}
                   </Badge>
                 </div>
@@ -364,7 +389,12 @@ export default async function MatchPage({
         <section className="space-y-4">
           <SectionLabel icon={History}>Історія зустрічей</SectionLabel>
           {match.h2h && (match.h2h.a > 0 || match.h2h.b > 0) ? (
-            <div className="rounded-lg surface-1 p-4">
+            <div
+              className={cn(
+                "rounded-lg p-4",
+                isAuraSkin(skin) ? "skin-aura-card" : "surface-1",
+              )}
+            >
               {/* `1fr auto 1fr`, not `justify-between`. With flex the middle
                   column is content-sized between two flexible flanks, so the
                   score drifted toward whichever team had the shorter name —
@@ -374,28 +404,72 @@ export default async function MatchPage({
               <div className="grid grid-cols-[1fr_auto_1fr] items-center">
                 <TeamMini team={a} />
                 <div className="px-4 text-center">
-                  <p className="font-mono text-2xl font-bold text-ink">
-                    <span className={cn(match.h2h.a >= match.h2h.b && "text-accent")}>
+                  <p
+                    className={cn(
+                      "font-mono text-2xl font-bold",
+                      isAuraSkin(skin) ? "text-white" : "text-ink",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        match.h2h.a >= match.h2h.b &&
+                          (isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent"),
+                      )}
+                    >
                       {match.h2h.a}
                     </span>
                     <span className="mx-1.5 text-ink-faint">–</span>
-                    <span className={cn(match.h2h.b > match.h2h.a && "text-accent")}>
+                    <span
+                      className={cn(
+                        match.h2h.b > match.h2h.a &&
+                          (isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent"),
+                      )}
+                    >
                       {match.h2h.b}
                     </span>
                   </p>
-                  <p className="text-[0.6875rem] text-ink-subtle">особисті зустрічі</p>
+                  <p
+                    className={cn(
+                      "text-[0.6875rem]",
+                      isAuraSkin(skin) ? "text-white/45" : "text-ink-subtle",
+                    )}
+                  >
+                    особисті зустрічі
+                  </p>
                 </div>
                 <TeamMini team={b} align="right" />
               </div>
+              {/* Where each meeting happened, newest first. The tally above
+                  says who is ahead; this says on what — a 4-0 built at one
+                  event reads very differently from four across a year. */}
               {match.h2h.series && match.h2h.series.length > 0 && (
-                <div className="mt-4 space-y-2 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] pt-3">
+                <div
+                  className={cn(
+                    "mt-4 space-y-2 pt-3",
+                    isAuraSkin(skin)
+                      ? "shadow-[0_-1px_0_0_rgb(var(--skin-ring)/0.22)]"
+                      : "shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]",
+                  )}
+                >
                   {match.h2h.series.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <span className="text-ink-subtle">{r.event}</span>
+                    <div key={i} className="flex items-center justify-between gap-3 text-xs">
                       <span
                         className={cn(
-                          "tnum font-mono font-semibold",
-                          r.winner === "a" ? "text-ink" : "text-ink-muted",
+                          "min-w-0 truncate",
+                          isAuraSkin(skin) ? "text-white/55" : "text-ink-subtle",
+                        )}
+                      >
+                        {r.event}
+                      </span>
+                      {/* The winner's colour, not the home side's. `winner` is
+                          which of the two teams above took it, so colouring by
+                          "a" alone told you nothing about who won. */}
+                      <span
+                        className={cn(
+                          "tnum shrink-0 font-mono font-semibold",
+                          isAuraSkin(skin)
+                            ? "text-[rgb(var(--skin-ring))]"
+                            : "text-ink",
                         )}
                       >
                         {r.score}
