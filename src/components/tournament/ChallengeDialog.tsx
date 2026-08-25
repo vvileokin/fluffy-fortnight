@@ -43,6 +43,13 @@ export function ChallengeDialog({
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [done, setDone] = React.useState(false);
+  /**
+   * A duel commits points to somebody else the instant it is sent, and it
+   * cannot be undone once they accept. One misread tap already cost two players
+   * a stake each and had to be reversed by hand — so the last press states who
+   * and how much, in words, and asks again.
+   */
+  const [confirming, setConfirming] = React.useState(false);
 
   React.useEffect(() => {
     if (!open) return;
@@ -51,6 +58,7 @@ export function ChallengeDialog({
     setStake("100");
     setError(null);
     setDone(false);
+    setConfirming(false);
   }, [open, target?.id]);
 
   const match = upcoming.find((m) => m.id === matchId) ?? null;
@@ -112,6 +120,7 @@ export function ChallengeDialog({
                     onClick={() => {
                       setMatchId(m.id);
                       setSide(null);
+                      setConfirming(false);
                     }}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-colors",
@@ -143,7 +152,10 @@ export function ChallengeDialog({
                   return (
                     <button
                       key={s}
-                      onClick={() => setSide(s)}
+                      onClick={() => {
+                        setSide(s);
+                        setConfirming(false);
+                      }}
                       className={cn(
                         "flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-colors",
                         side === s
@@ -165,7 +177,10 @@ export function ChallengeDialog({
               type="text"
               inputMode="numeric"
               value={stake}
-              onChange={(e) => setStake(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => {
+                setStake(e.target.value.replace(/\D/g, "").slice(0, 6));
+                setConfirming(false);
+              }}
               // Forced off, like every other numeric field on the site: the
               // site-wide focus ring is an offset outline meant for controls on
               // flat ground, and on a bordered input it doubles the frame.
@@ -179,8 +194,16 @@ export function ChallengeDialog({
             </p>
           )}
 
+          {confirming && match && side && (
+            <p className="rounded-xl bg-[rgb(var(--skin-ring)/0.12)] px-3 py-2.5 text-center text-xs leading-relaxed text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.35)]">
+              Кинути виклик <b>{target?.handle}</b> на{" "}
+              <b>{getTeam(side === "a" ? match.a : match.b).name}</b> за{" "}
+              <b>{formatInt(amount)}</b>? Поінти зарезервуються одразу.
+            </p>
+          )}
+
           <button
-            onClick={send}
+            onClick={() => (confirming ? send() : setConfirming(true))}
             disabled={!ready || busy}
             className={cn(
               "flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors",
@@ -189,7 +212,11 @@ export function ChallengeDialog({
             )}
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
-            {ready ? `Кинути виклик · ${formatInt(amount)}` : "Обери матч і бік"}
+            {!ready
+              ? "Обери матч і бік"
+              : confirming
+                ? "Так, кидаю"
+                : `Кинути виклик · ${formatInt(amount)}`}
           </button>
         </div>
       )}

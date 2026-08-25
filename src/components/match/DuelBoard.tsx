@@ -44,6 +44,9 @@ export function DuelBoard({ match }: { match: Match }) {
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [nonce, setNonce] = React.useState(0);
+  // A challenge reserves the stake the instant it is posted, so the last press
+  // says what it is about to do rather than doing it.
+  const [confirming, setConfirming] = React.useState(false);
 
   const open = match.status === "upcoming";
 
@@ -95,6 +98,7 @@ export function DuelBoard({ match }: { match: Match }) {
       return;
     }
     setSide(null);
+    setConfirming(false);
     setNonce((n) => n + 1);
   }
 
@@ -132,7 +136,10 @@ export function DuelBoard({ match }: { match: Match }) {
                 return (
                   <button
                     key={s}
-                    onClick={() => setSide(s)}
+                    onClick={() => {
+                      setSide(s);
+                      setConfirming(false);
+                    }}
                     aria-pressed={side === s}
                     className={cn(
                       "flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-colors",
@@ -152,7 +159,10 @@ export function DuelBoard({ match }: { match: Match }) {
               {TIERS.map((c) => (
                 <button
                   key={c}
-                  onClick={() => setStake(c)}
+                  onClick={() => {
+                    setStake(c);
+                    setConfirming(false);
+                  }}
                   className={cn(
                     "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
                     stake === c
@@ -165,8 +175,19 @@ export function DuelBoard({ match }: { match: Match }) {
               ))}
             </div>
 
+            {confirming && side && (
+              <p className="rounded-lg bg-[rgb(var(--skin-ring)/0.12)] px-3 py-2.5 text-center text-xs leading-relaxed text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.35)]">
+                Виставити виклик на <b>{(side === "a" ? a : b).name}</b> за{" "}
+                <b>{stake}</b>? Поінти зарезервуються одразу.
+              </p>
+            )}
+
             <button
-              onClick={() => send("POST", { match: match.id, side, stake }, "create")}
+              onClick={() =>
+                confirming
+                  ? send("POST", { match: match.id, side, stake }, "create")
+                  : setConfirming(true)
+              }
               disabled={!side || busy !== null}
               className={cn(
                 "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-opacity",
@@ -175,7 +196,7 @@ export function DuelBoard({ match }: { match: Match }) {
               )}
             >
               {busy === "create" && <Loader2 className="size-4 animate-spin" />}
-              {side ? `Кинути виклик · ${stake}` : "Обери бік"}
+              {!side ? "Обери бік" : confirming ? "Так, виставляю" : `Кинути виклик · ${stake}`}
             </button>
           </>
         )}
