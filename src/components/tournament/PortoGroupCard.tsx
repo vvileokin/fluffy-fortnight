@@ -71,9 +71,7 @@ export function PortoGroupCard() {
           groups below. */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
-          {/* The tab above already says "Клуб 0-2", so the panel says which
-              groups it covers instead of repeating the name back. */}
-          <p className="text-sm font-extrabold tracking-tight text-white">Дві групи</p>
+          <p className="text-sm font-extrabold tracking-tight text-white">Клуб 0-2</p>
           <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(var(--skin-ring))]">
             до {formatInt(PORTO_GROUP_MAX * GROUPS.length)}
             <BrandIcon name="points-porto" className="size-3.5" />

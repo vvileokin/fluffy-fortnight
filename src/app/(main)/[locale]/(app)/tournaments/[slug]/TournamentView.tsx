@@ -81,10 +81,10 @@ export function TournamentView({
       ? [
           {
             id: "predictor" as Tab,
-            // Named for the thing it holds, not for the slot it sits in. Porto
-            // has one card and it is the 0-2 club; "Прогнозатор" is the generic
-            // word for a tab whose contents vary by tournament.
-            label: "Клуб 0-2",
+            // The tab is the shelf, the panel is the thing on it. It held one
+            // card and was named after it, which left no room for the second —
+            // and every card that follows would have had to rename the tab.
+            label: "Інтерактиви",
             // The event's own lockup, which is what the match cards fly. The
             // generic BLAST A-mark was correct about the organiser and wrong
             // about the tournament: two views of the same event carried two
