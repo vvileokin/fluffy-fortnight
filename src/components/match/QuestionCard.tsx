@@ -63,6 +63,37 @@ export function QuestionCard({
   // ember on every selected/‌payout cue, so a prediction on an EWC match
   // doesn't look like it belongs to the season board.
   const isEwc = match?.tournamentSlug === "ewc-2026";
+  // Floating odds are opt-in per tournament, the same list the trigger checks.
+  const floating = match?.tournamentSlug === "blast-porto-2026";
+
+  /**
+   * The live multiplier per option: how much rarer than average that pick is.
+   *
+   * It has to be on the button. The whole mechanic is a decision about timing —
+   * take a fat number early on an unpopular side, or wait for information and
+   * take a thinner one — and a number nobody can see before pressing is not a
+   * decision at all. Re-read after every save so the board moves as the crowd
+   * moves.
+   */
+  const [odds, setOdds] = React.useState<Record<string, number>>({});
+  const [oddsNonce, setOddsNonce] = React.useState(0);
+  React.useEffect(() => {
+    if (!floating) return;
+    let cancelled = false;
+    createClient()
+      .rpc("question_odds", { p_question: question.id })
+      .then(({ data }) => {
+        if (cancelled || !Array.isArray(data)) return;
+        const next: Record<string, number> = {};
+        for (const r of data as { option_id: string; odds: number | null }[]) {
+          if (r.odds != null) next[r.option_id] = Number(r.odds);
+        }
+        setOdds(next);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [floating, question.id, oddsNonce]);
 
   // Load this user's saved answer.
   React.useEffect(() => {
@@ -143,6 +174,8 @@ export function QuestionCard({
       return;
     }
     setSaveError(null);
+    // The crowd just moved — this pick is part of it.
+    setOddsNonce((n) => n + 1);
     window.setTimeout(() => setJustSaved(false), 1600);
   }
 
@@ -473,9 +506,22 @@ export function QuestionCard({
                         {/* The multiplied figure, not the base one with an
                             asterisk. The player is choosing between options on
                             what each pays *them*, so the number has to already
-                            be their number — the ×N chip explains where it
-                            came from. */}
-                        +{applyStreak(opt.reward, streak)}
+                            be their number — the chips explain where it came
+                            from. The crowd's multiplier applies first, the
+                            streak on top, which is the order they are paid in. */}
+                        +{applyStreak(Math.round(opt.reward * (odds[opt.id] ?? 1)), streak)}
+                        {floating && (odds[opt.id] ?? 1) !== 1 && (
+                          <span
+                            className={cn(
+                              "tnum rounded px-1 py-px font-mono text-[0.625rem] font-bold",
+                              (odds[opt.id] ?? 1) > 1
+                                ? "bg-[rgb(var(--skin-ring)/0.18)] text-[rgb(var(--skin-ring))]"
+                                : "bg-white/[0.08] text-white/45",
+                            )}
+                          >
+                            ×{(odds[opt.id] ?? 1).toFixed(2)}
+                          </span>
+                        )}
                         {multiplier > 1 && <StreakChip multiplier={multiplier} />}
                       </>
                     )}
