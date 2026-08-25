@@ -137,15 +137,14 @@ function GroupPanel({
             <div key={label}>
               <p className="mb-2.5 text-xs font-bold text-white/70">{label}</p>
               <div className="no-scrollbar flex gap-4 overflow-x-auto">
-                {columns.map((col) => (
-                  // A final holds one card against columns of four, so it
-                  // centres in its own height instead of hanging at the top
-                  // where the ladder has visibly stopped feeding it.
-                  <Column
-                    key={col.title}
-                    title={col.title}
-                    spread={col.nodes.length === 1}
-                  >
+                {columns.map((col, i) => (
+                  // Every round after the first spreads. A bracket is read by
+                  // a match sitting between the two it feeds on, and spreading
+                  // only the single-card finals broke that: the semi-finals
+                  // stacked at the top of their column while the final floated
+                  // in the middle of its own, so the ladder stopped lining up
+                  // exactly where it should have converged.
+                  <Column key={col.title} title={col.title} spread={i > 0}>
                     {col.nodes.map((n) => (
                       <BracketMatch key={n.id} r={resolve(n)} />
                     ))}

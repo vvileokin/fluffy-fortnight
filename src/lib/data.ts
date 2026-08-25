@@ -28,7 +28,7 @@ export const teams: Record<string, Team> = {
   gaimin: { slug: "gaimin", name: "Gaimin Gladiators", tag: "GG", logo: "/teams/gaimin-gladiators.png", brand: "#5A2D91", ink: "white", region: "EU", worldRank: 27 },
   gamerlegion: { slug: "gamerlegion", name: "GamerLegion", tag: "GL", logo: "/teams/gamerlegion.svg", brand: "#D81E27", ink: "white", region: "EU", worldRank: 21 },
   heroic: { slug: "heroic", name: "HEROIC", tag: "HER", logo: "/teams/heroic.svg", brand: "#E4002B", ink: "white", region: "EU", worldRank: 34 },
-  lynn: { slug: "lynn", name: "Lynn Vision", tag: "LV", logo: "/teams/lynn.svg", brand: "#C1121C", ink: "white", region: "Asia", worldRank: 24 },
+  lynn: { slug: "lynn", name: "Lynn Vision", tag: "LV", logo: "/teams/lynn.svg", brand: "#B27F1D", ink: "white", region: "Asia", worldRank: 24 },
   m80: { slug: "m80", name: "M80", tag: "M80", logo: "/teams/m80.svg", brand: "#DAFE00", ink: "black", region: "NA", worldRank: 28 },
   mibr: { slug: "mibr", name: "MIBR", tag: "MIBR", logo: "/teams/mibr.svg", brand: "#14213D", ink: "white", region: "SA", worldRank: 18 },
   nrg: { slug: "nrg", name: "NRG", tag: "NRG", logo: "/teams/nrg.png", brand: "#1A1A1A", ink: "white", region: "NA", worldRank: 25 },
@@ -76,7 +76,7 @@ export const teams: Record<string, Team> = {
   legacy: { slug: "legacy", name: "Legacy", tag: "LEG", logo: "/teams/legacy.webp", brand: "#FCC800", ink: "black", region: "SA", worldRank: 39 },
   luminosity: { slug: "luminosity", name: "LUMINOSITY", tag: "LG", logo: "/teams/luminosity.svg", brand: "#3BBBDB", ink: "black", region: "NA", worldRank: 44 },
   parivision: { slug: "parivision", name: "PARIVISION", tag: "PARI", logo: "/teams/parivision.webp", brand: "#00C7B1", ink: "black", region: "EU", worldRank: 20 },
-  innercircle: { slug: "innercircle", name: "Inner Circle", tag: "ICE", logo: "/teams/innercircle.svg", brand: "#1B1B1F", ink: "white", region: "EU", worldRank: 48 },
+  innercircle: { slug: "innercircle", name: "Inner Circle", tag: "ICE", logo: "/teams/innercircle.svg", brand: "#FF3555", ink: "white", region: "EU", worldRank: 48 },
 };
 
 export type Tier = 1 | 2;
