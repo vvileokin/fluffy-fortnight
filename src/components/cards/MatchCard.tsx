@@ -81,15 +81,9 @@ export function MatchCard({ match }: { match: Match }) {
   const isEvent = match.isEvent ?? tour?.isEvent ?? false;
   const skin = matchSkin(match, tour);
   const isLive = match.status === "live";
-  // Same day in the tournament's own timezone, which is what `matchTimeLabel`
-  // phrases against — comparing local dates here would disagree with the words
-  // it prints for anyone not sitting in that zone.
-  const startsToday = matchTimeLabel(match).startsWith("Сьогодні");
   const isFinished = match.status === "finished";
   const showScore = isLive || isFinished;
   const hasQuestions = match.openQuestions > 0;
-  /** Whether the rail's right-hand side prints a state word at all. */
-  const hasState = isLive || isFinished || hasQuestions;
   const aLead = match.scoreA > match.scoreB;
   const bLead = match.scoreB > match.scoreA;
 
@@ -150,20 +144,29 @@ export function MatchCard({ match }: { match: Match }) {
           )}
           {/* Full name, trimmed by CSS only when it genuinely doesn't fit. */}
           <span className="truncate font-medium">{tour?.name ?? match.tournamentName}</span>
-          {match.stage && <span className="text-ink-faint">·</span>}
-          {match.stage && <span className="shrink-0">{match.stage}</span>}
+          {match.stage && <span className="text-ink-faint max-sm:hidden">·</span>}
+          {match.stage && <span className="shrink-0 max-sm:hidden">{match.stage}</span>}
         </span>
-        {/* Impeccable: Crafted Header Rail — on phones the date drops out of
-            this row entirely (it was fighting the tournament name for a
-            240px line) and reappears in the context rail below, where there's
-            room for it. LIVE always stays: it's the one thing worth crowding
-            for. */}
+        {/* Impeccable: Crafted Header Rail — the kickoff sits here on every
+            width now.
+
+            It used to drop off phones and reappear in the rail below, on the
+            grounds that it was fighting the tournament name for a 240px line.
+            It lost that fight in every form it was given down there: dim text
+            after the format, bold text before it, then a plate. The rail is
+            simply the wrong place — it holds the facts that rarely change, and
+            a reader looks to the top of a card for when something happens.
+
+            The name yields instead. It truncates, which is what `truncate` is
+            for, and it is the repeated value on a screen of cards from one
+            tournament — while the time is the one that differs on every row.
+            The stage stands down on phones for the same reason. */}
         {isLive ? (
           <LiveBadge />
         ) : (
           <span
             className={cn(
-              "hidden shrink-0 whitespace-nowrap text-xs font-semibold sm:inline",
+              "shrink-0 whitespace-nowrap text-xs font-semibold",
               isFinished
                 ? "text-ink-subtle"
                 : isAuraSkin(skin)
@@ -188,46 +191,10 @@ export function MatchCard({ match }: { match: Match }) {
           on the left of this rail on phones — so this slot never repeats it.
           It carries a state word or nothing. */}
       <div className="relative mx-3.5 mb-2.5 sm:mx-4 sm:mb-3 flex items-center justify-between gap-2 rounded-lg bg-fill-1 px-2.5 py-1.5 text-xs shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_6%,transparent)_inset,0_-1px_0_0_oklch(0_0_0/0.35)_inset]">
-        {/* On a phone the kickoff is a plate, not a word in a sentence.
-
-            It began as "BO3 · Завтра 12:00" with the time the faintest thing on
-            the card, which was backwards: every group match at Porto is a BO3,
-            so the format says the same thing on all twenty-four, while the time
-            is the only value anyone scans this rail for. Making it bold and
-            moving it first was not enough — a bold fragment next to a dim one
-            inside a recessed rail still reads as two loose words.
-
-            So it gets a shape. A plate is a different kind of object from the
-            text around it, and shape is what the eye finds before weight or
-            colour. The format moves over to the state word on the right, where
-            the two quiet facts sit together. */}
-        <span className="flex min-w-0 items-center gap-2">
-          {!isLive && (
-            <span
-              className={cn(
-                "tnum shrink-0 rounded-md px-1.5 py-0.5 text-[0.6875rem] font-bold leading-none sm:hidden",
-                startsToday
-                  ? isAuraSkin(skin)
-                    ? "bg-[rgb(var(--skin-ring)/0.18)] text-[rgb(var(--skin-ring))]"
-                    : "bg-accent/15 text-accent"
-                  : "bg-fill-2 text-ink",
-              )}
-            >
-              {matchTimeLabel(match)}
-            </span>
-          )}
-          <span className="truncate text-ink-subtle max-sm:hidden">{match.format}</span>
+        <span className="flex min-w-0 items-center gap-1.5 text-ink-subtle">
+          {match.format}
         </span>
         <span className="flex shrink-0 items-center gap-1.5">
-          <span className="text-ink-subtle sm:hidden">{match.format}</span>
-          {/* Only when something follows it. A card with no open questions and
-              no state word left the separator hanging at the end of the rail
-              with nothing on the other side of it. */}
-          {hasState && (
-            <span aria-hidden className="text-ink-faint sm:hidden">
-              ·
-            </span>
-          )}
         {isLive ? (
           <span className="shrink-0 font-semibold text-live">У прямому ефірі</span>
         ) : isFinished ? (
