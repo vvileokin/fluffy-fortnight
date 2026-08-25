@@ -215,12 +215,14 @@ function Podium({
   pointsIcon,
   showStreak,
   ewc = false,
+  onChallenge,
 }: {
   rows: LeaderRow[];
   blastPoints: boolean;
   pointsIcon: BrandIconName;
   showStreak: boolean;
   ewc?: boolean;
+  onChallenge?: (row: LeaderRow) => void;
 }) {
   // Visual order puts 2 – 1 – 3 across, while the DOM keeps 1 – 2 – 3 so screen
   // readers and keyboard order still get the real ranking.
@@ -293,6 +295,33 @@ function Podium({
                     stack (face → name → score) intact, and it's diagonally
                     opposite the rank badge so the two never collide. Hidden at
                     zero — an unlit flame would just be noise. */}
+                {/* Impeccable: Crafted Podium Challenge — on the frame, not
+                    under the name.
+
+                    The podium was left out of the challenge entirely on the
+                    grounds that a swords icon on a plinth reads oddly. That was
+                    backwards: the top three are exactly who a player wants to
+                    take on, and leaving them out put the button everywhere
+                    except where the motive is strongest.
+
+                    It sits bottom-left of the portrait, diagonally opposite the
+                    streak flame and clear of the rank badge below, so nothing
+                    on the frame collides and the face → name → score stack is
+                    untouched. */}
+                {onChallenge && row.userId && !row.isYou && (
+                  <button
+                    onClick={() => onChallenge(row)}
+                    aria-label={`Викликати ${row.handle}`}
+                    title={`Викликати ${row.handle}`}
+                    className={cn(
+                      "absolute -left-1.5 -bottom-1.5 grid place-items-center rounded-full bg-surface-2 text-ink-subtle shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_10%,transparent)] transition-colors hover:text-[rgb(var(--skin-ring))]",
+                      first ? "size-7" : "size-6",
+                    )}
+                  >
+                    <Swords className={first ? "size-3.5" : "size-3"} />
+                  </button>
+                )}
+
                 {showStreak && row.streak > 0 && (
                   <Tooltip
                     label={blastPoints ? STREAK_HINT_BOUNTY : STREAK_HINT}
@@ -407,7 +436,7 @@ export function LeaderboardTable({
          sitting 12px off the list, which read as a stray gap rather than a
          group break. */
       <div className={cn("space-y-1.5", className)}>
-        <Podium rows={onPodium} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} />
+        <Podium rows={onPodium} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} onChallenge={onChallenge} />
         <div className="flex flex-col gap-1.5">
           {inline.map((row, i) => (
             <Row key={`${i}-${row.handle}`} row={row} blastPoints={blastPoints} pointsIcon={pointsIcon} showStreak={showStreak} ewc={ewc} onChallenge={onChallenge} />
