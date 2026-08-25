@@ -763,34 +763,42 @@ export default function MatchesAdmin() {
               addLabel="Додати зустріч"
               blankRow={{ event: "", score: "", winner: "a" as const, date: "" }}
               render={(row, update) => (
-                <>
+                // Two tiers, not one row of five. The tournament name is the
+                // only free-text field here and the longest value in it, but
+                // in a single row it was last in line for width behind a date,
+                // a score, a winner and a delete button — so it ended up a slot
+                // too narrow to read what you had just typed. It gets the full
+                // width now and the three fixed-width fields sit under it.
+                <div className="min-w-0 flex-1 space-y-1.5">
                   <input
-                    type="date"
-                    className={cn(inputCls, "tnum w-36 shrink-0 font-mono")}
-                    value={row.date ?? ""}
-                    onChange={(e) => update({ date: e.target.value })}
-                  />
-                  <input
-                    className={cn(inputCls, "min-w-0 flex-1")}
-                    placeholder="IEM Cologne"
+                    className={cn(inputCls, "w-full")}
+                    placeholder="Турнір — напр. IEM Cologne 2026"
                     value={row.event}
                     onChange={(e) => update({ event: e.target.value })}
                   />
-                  <input
-                    className={cn(inputCls, "tnum w-20 shrink-0 font-mono")}
-                    placeholder="2:1"
-                    value={row.score}
-                    onChange={(e) => update({ score: e.target.value })}
-                  />
-                  <select
-                    className={cn(inputCls, "w-32 shrink-0")}
-                    value={row.winner}
-                    onChange={(e) => update({ winner: e.target.value as "a" | "b" })}
-                  >
-                    <option value="a">виграла A</option>
-                    <option value="b">виграла B</option>
-                  </select>
-                </>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      className={cn(inputCls, "tnum min-w-0 flex-1 font-mono")}
+                      value={row.date ?? ""}
+                      onChange={(e) => update({ date: e.target.value })}
+                    />
+                    <input
+                      className={cn(inputCls, "tnum w-20 shrink-0 text-center font-mono")}
+                      placeholder="2:1"
+                      value={row.score}
+                      onChange={(e) => update({ score: e.target.value })}
+                    />
+                    <select
+                      className={cn(inputCls, "w-32 shrink-0")}
+                      value={row.winner}
+                      onChange={(e) => update({ winner: e.target.value as "a" | "b" })}
+                    >
+                      <option value="a">виграла A</option>
+                      <option value="b">виграла B</option>
+                    </select>
+                  </div>
+                </div>
               )}
             />
 
@@ -933,7 +941,7 @@ function ListEditor<T extends object>({
       <span className="mb-1.5 block text-xs font-semibold text-ink-muted">{label}</span>
       <div className="space-y-2">
         {rows.map((row, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={i} className="flex items-start gap-2">
             {render(row, (patch) => onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r))))}
             <button
               onClick={() => onChange(rows.filter((_, j) => j !== i))}
