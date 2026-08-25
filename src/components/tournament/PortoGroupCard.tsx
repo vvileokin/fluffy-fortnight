@@ -63,23 +63,31 @@ export function PortoGroupCard() {
 
   return (
     <div className="skin-aura-card space-y-3 rounded-xl p-3 sm:p-4">
-      <div className="flex items-center justify-between gap-2">
-        {/* The tab above already says "Клуб 0-2", so the panel says which
-            groups it covers instead of repeating the name back. */}
-        <p className="text-sm font-extrabold tracking-tight text-white">Дві групи</p>
-        <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(var(--skin-ring))]">
-          до {formatInt(PORTO_GROUP_MAX * GROUPS.length)}
-          <BrandIcon name="points-porto" className="size-3.5" />
-        </span>
+      {/* The heading and the sentence explaining it are one block, so they take
+          a tighter gap than the panel's own rhythm. At the container's 12px
+          they read as two separate announcements — a title floating over an
+          unrelated paragraph — when the second is simply the first said in
+          full. The 12px stays where it belongs: between this pair and the
+          groups below. */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          {/* The tab above already says "Клуб 0-2", so the panel says which
+              groups it covers instead of repeating the name back. */}
+          <p className="text-sm font-extrabold tracking-tight text-white">Дві групи</p>
+          <span className="tnum flex shrink-0 items-center gap-1 text-xs font-bold text-[rgb(var(--skin-ring))]">
+            до {formatInt(PORTO_GROUP_MAX * GROUPS.length)}
+            <BrandIcon name="points-porto" className="size-3.5" />
+          </span>
+        </div>
+        <p className="text-xs leading-relaxed text-white/55">
+          З восьми виходять троє, а двоє їдуть додому без жодної перемоги. Назви
+          і тих, і тих: {PORTO_GROUP_SCORING.advance} за вихід,{" "}
+          <span className="font-semibold text-white/75">
+            {PORTO_GROUP_SCORING.zeroTwo} за виліт
+          </span>{" "}
+          — і {PORTO_GROUP_SCORING.perfect} зверху, якщо вся група в яблучко.
+        </p>
       </div>
-      <p className="text-xs leading-relaxed text-white/55">
-        З восьми виходять троє, а двоє їдуть додому без жодної перемоги. Назви і
-        тих, і тих: {PORTO_GROUP_SCORING.advance} за вихід,{" "}
-        <span className="font-semibold text-white/75">
-          {PORTO_GROUP_SCORING.zeroTwo} за виліт
-        </span>{" "}
-        — і {PORTO_GROUP_SCORING.perfect} зверху, якщо вся група в яблучко.
-      </p>
 
       {failed ? (
         <Note>Не вдалося завантажити. Онови сторінку.</Note>
