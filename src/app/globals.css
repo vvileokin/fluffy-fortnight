@@ -623,6 +623,10 @@ body {
   --skin-glow: 255 96 20;
   --skin-deep: 172 32 8;
   --skin-ring: 255 122 44;
+  /* The hot core of the banner and the light along a plate's top edge. A
+     separate value because it is not the glow lightened — EWC's is amber
+     against fire, and lightening the glow gives a washed pink. */
+  --skin-hot: 255 168 32;
   --skin-art: url("/brand/ewc-fire.webp");
 }
 
@@ -632,10 +636,20 @@ body {
    the colour the lockup is set against. No artwork of its own yet, so the
    floor does the whole job. */
 [data-skin="porto"] {
-  --skin-base: #12061c;
-  --skin-glow: 255 32 84;
-  --skin-deep: 96 22 150;
-  --skin-ring: 255 74 122;
+  /* Sampled out of the key art rather than guessed at. The floor is the violet
+     the city sits in (#160c26 is 11% of the image on its own), the glow is the
+     scarlet of the sky, and the deep is the violet between them.
+
+     The ring is the one value that could not be taken literally: the art's red
+     is #d60c09, which scores 3.59 against the floor and so cannot carry small
+     text. Lifting it to 255 74 62 keeps the hue and reaches 5.6. Pink would
+     have scored too, which is what the first pass did — and pink is not a
+     colour in this image. */
+  --skin-base: #130a1f;
+  --skin-glow: 224 16 12;
+  --skin-deep: 64 26 116;
+  --skin-ring: 255 74 62;
+  --skin-hot: 255 58 40;
   --skin-art: none;
 }
 
@@ -649,11 +663,11 @@ body {
   background-color: var(--skin-base);
   background-image:
     /* the hot streak, upper-left to centre */
-    linear-gradient(101deg, transparent 6%, rgb(255 168 32 / 0.20) 20%, rgb(var(--skin-glow) / 0.10) 34%, transparent 58%),
-    radial-gradient(78% 120% at 12% 4%, rgb(255 168 32 / 0.30), transparent 58%),
+    linear-gradient(101deg, transparent 6%, rgb(var(--skin-hot) / 0.20) 20%, rgb(var(--skin-glow) / 0.10) 34%, transparent 58%),
+    radial-gradient(78% 120% at 12% 4%, rgb(var(--skin-hot) / 0.30), transparent 58%),
     radial-gradient(96% 130% at 42% 116%, rgb(var(--skin-glow) / 0.42), transparent 62%),
     radial-gradient(120% 130% at 88% 92%, rgb(var(--skin-deep) / 0.55), transparent 68%);
-  box-shadow: 0 1px 0 0 rgb(255 190 120 / 0.14) inset;
+  box-shadow: 0 1px 0 0 rgb(var(--skin-hot) / 0.14) inset;
 }
 
 .skin-art::before {
@@ -704,7 +718,7 @@ body {
     radial-gradient(120% 150% at 100% 0%, rgb(var(--skin-glow) / 0.16), transparent 62%);
   box-shadow:
     0 0 0 1px rgb(var(--skin-ring) / 0.26),
-    0 1px 0 0 rgb(255 180 120 / 0.07) inset,
+    0 1px 0 0 rgb(var(--skin-hot) / 0.07) inset,
     0 12px 34px -16px oklch(0 0 0 / 0.8);
 }
 
@@ -721,7 +735,7 @@ body {
     radial-gradient(110% 150% at 100% 110%, rgb(var(--skin-deep) / 0.22), transparent 64%);
   box-shadow:
     0 0 0 1px rgb(var(--skin-ring) / 0.26),
-    0 1px 0 0 rgb(255 180 120 / 0.07) inset,
+    0 1px 0 0 rgb(var(--skin-hot) / 0.07) inset,
     0 12px 34px -16px oklch(0 0 0 / 0.8);
 }
 

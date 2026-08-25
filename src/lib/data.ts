@@ -312,7 +312,10 @@ export const allTournaments: Tournament[] = [
       "vitality", "innercircle", "mouz", "ninez", "legacy", "fut", "falcons", "lynn",
     ],
     format: "2 × GSL (BO3) → Playoffs",
-    accent: "oklch(0.6 0.25 10)",
+    // Sampled off the key art: the scarlet the sky burns at, so the card's own
+    // tint and the artwork above it are the same colour rather than two reds.
+    accent: "oklch(0.55 0.24 29)",
+    coverImage: "/brand/porto-cover.webp",
     // Deliberately not `isEvent`. That flag routes the page to the Bounty
     // leaderboard and the Bounty predictor, neither of which Porto uses; it
     // gets turned on with the mechanics it belongs to, not with the dress.

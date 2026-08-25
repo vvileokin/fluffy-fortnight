@@ -107,6 +107,9 @@ export function TournamentView({
   // control sitting on the EWC's maroon floor reads as belonging to a
   // different page.
   const ewc = isAuraSkin(t.skin);
+  /* The chip plate used over artwork: opaque enough to stay legible on a bright
+     photo, quiet enough that three of them in a row are one object. */
+  const glass = "border-white/20 bg-black/45 text-white backdrop-blur-sm";
   const teams = t.teamSlugs.map(getTeam);
   const finishedMatches = matches.filter((m) => m.status === "finished");
   const upcomingMatches = matches.filter((m) => m.status !== "finished");
@@ -168,15 +171,25 @@ export function TournamentView({
                 the LIVE chip beside it — two implementations of the same object.
                 It's the real Badge now, so the 22px box, the padding and the
                 baseline are shared; only the skin-over-artwork colours differ. */}
+            {/* One plate for all three, over artwork.
+
+                They used to be three different objects side by side — a glass
+                chip, a filled blue one and a filled pink one — which is why the
+                row read as unbalanced rather than as a set: three weights, three
+                shapes, three colours competing above a title. On a skinned
+                banner they now share the glass plate and differ only in what
+                they say, with the event's ring carrying the one accent. Off a
+                banner (no skin, no artwork) the filled tones still read best,
+                so they stay. */}
             {t.skin && (
-              <Badge
-                tone="neutral"
-                className="border-white/20 bg-black/40 text-white backdrop-blur-sm"
-              >
-                {t.skin === "blast" ? (
-                  <BlastMark className="size-[0.6875rem]" />
-                ) : (
+              <Badge tone="neutral" className={glass}>
+                {/* Porto is a BLAST event and wears the BLAST mark. It used to
+                    fall through to the EWC one, so a BLAST tournament was
+                    chipped with a rival's logo. */}
+                {t.skin === "ewc" ? (
                   <EwcMark className="h-[0.4375rem] w-auto" />
+                ) : (
+                  <BlastMark className="size-[0.6875rem]" />
                 )}
                 Event
               </Badge>
@@ -184,11 +197,22 @@ export function TournamentView({
             {t.status === "live" ? (
               <LiveBadge />
             ) : t.status === "upcoming" ? (
-              <Badge tone="info">Незабаром</Badge>
+              <Badge tone={t.skin ? "neutral" : "info"} className={t.skin ? glass : undefined}>
+                Незабаром
+              </Badge>
             ) : (
-              <Badge tone="neutral">Завершено</Badge>
+              <Badge tone="neutral" className={t.skin ? glass : undefined}>
+                Завершено
+              </Badge>
             )}
-            <Badge tone={ewc ? "ewc" : t.tier === 1 ? "tier1" : "tier2"}>
+            <Badge
+              tone={t.skin ? "neutral" : t.tier === 1 ? "tier1" : "tier2"}
+              className={
+                t.skin
+                  ? cn(glass, isAuraSkin(t.skin) && "text-[rgb(var(--skin-ring))]")
+                  : undefined
+              }
+            >
               Tier {t.tier}
             </Badge>
           </div>
@@ -198,28 +222,31 @@ export function TournamentView({
           {/* Laptop and up: the facts run as one tight line under the title,
               prize last and in the accent — it's the number people look for.
               On phones they move into the Огляд tab, keeping the banner clean. */}
+          {/* 16px glyphs, not 14. Against 14px text these sat a shade under
+              the cap height and read as faint marks rather than as labels for
+              the facts beside them. */}
           <dl className="mt-2.5 hidden flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-muted sm:flex">
             <div className="flex items-center gap-1.5">
-              <DateGlyph className="size-3.5 shrink-0 text-ink-subtle" />
+              <DateGlyph className="size-4 shrink-0 text-ink-subtle" />
               {t.dateLabel}
             </div>
             <Dot />
             <div className="flex items-center gap-1.5">
               {t.online ? (
-                <Wifi className="size-3.5 shrink-0 text-ink-subtle" />
+                <Wifi className="size-4 shrink-0 text-ink-subtle" />
               ) : (
-                <GeoGlyph className="size-3.5 shrink-0 text-ink-subtle" />
+                <GeoGlyph className="size-4 shrink-0 text-ink-subtle" />
               )}
               {t.location}
             </div>
             <Dot />
             <div className="flex items-center gap-1.5">
-              <TeamGlyph className="size-3.5 shrink-0 text-ink-subtle" />
+              <TeamGlyph className="size-4 shrink-0 text-ink-subtle" />
               {teams.length} команд
             </div>
             <Dot />
             <div className="flex items-center gap-1.5">
-              <SwordsGlyph className="size-3.5 shrink-0 text-ink-subtle" />
+              <SwordsGlyph className="size-4 shrink-0 text-ink-subtle" />
               {t.format}
             </div>
             <div
@@ -228,7 +255,7 @@ export function TournamentView({
                 ewc ? "text-[rgb(var(--skin-ring))]" : "text-accent",
               )}
             >
-              <TrophyGlyph className="size-3.5 shrink-0" />
+              <TrophyGlyph className="size-4 shrink-0" />
               {formatPrize(t.prizeUSD)}
             </div>
           </dl>
@@ -460,7 +487,7 @@ function TeamsGrid({
                 isAuraSkin(skin) && "skin-tile",
               )}
               style={
-                skin === "ewc"
+                isAuraSkin(skin)
                   ? ({ "--team": team.brand } as CSSProperties)
                   : {
                       backgroundImage: `linear-gradient(100deg, color-mix(in oklch, ${team.brand} 14%, transparent), transparent 58%)`,
@@ -471,7 +498,15 @@ function TeamsGrid({
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold tracking-tight text-ink">{team.name}</p>
                 {rank > 0 && (
-                  <p className="tnum whitespace-nowrap text-xs text-ink-subtle">
+                  <p
+                    className={cn(
+                      "tnum whitespace-nowrap text-xs",
+                      // The rank takes the event's accent on a skinned tile —
+                      // it is the one number on the tile, and grey on a lit
+                      // plate reads as switched off.
+                      isAuraSkin(skin) ? "font-semibold text-[rgb(var(--skin-ring))]" : "text-ink-subtle",
+                    )}
+                  >
                     #{rank} у світі
                   </p>
                 )}
