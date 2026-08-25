@@ -198,14 +198,6 @@ export function ChallengeDialog({
             </p>
           )}
 
-          {confirming && match && side && (
-            <p className="rounded-xl bg-[rgb(var(--skin-ring)/0.12)] px-3 py-2.5 text-center text-xs leading-relaxed text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.35)]">
-              Кинути виклик <b>{target?.handle}</b> на{" "}
-              <b>{getTeam(side === "a" ? match.a : match.b).name}</b> за{" "}
-              <b>{formatInt(amount)}</b>? Поінти зарезервуються одразу.
-            </p>
-          )}
-
           <button
             onClick={() => (confirming ? send() : setConfirming(true))}
             disabled={!ready || busy}
@@ -222,6 +214,13 @@ export function ChallengeDialog({
                 ? "Так, кидаю"
                 : `Кинути виклик · ${formatInt(amount)}`}
           </button>
+
+          {confirming && match && side && (
+            <p className="px-1 text-center text-[0.6875rem] leading-snug text-white/45">
+              {formatInt(amount)} поінтів зарезервуються одразу, доки{" "}
+              {target?.handle} не відповість.
+            </p>
+          )}
         </div>
       )}
       </div>

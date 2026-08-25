@@ -201,13 +201,6 @@ export function DuelBoard({ match }: { match: Match }) {
               ))}
             </div>
 
-            {confirming && side && (
-              <p className="rounded-lg bg-[rgb(var(--skin-ring)/0.12)] px-3 py-2.5 text-center text-xs leading-relaxed text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.35)]">
-                Виставити виклик на <b>{(side === "a" ? a : b).name}</b> за{" "}
-                <b>{stake}</b>? Поінти зарезервуються одразу.
-              </p>
-            )}
-
             <button
               onClick={() =>
                 confirming
@@ -224,6 +217,16 @@ export function DuelBoard({ match }: { match: Match }) {
               {busy === "create" && <Loader2 className="size-4 animate-spin" />}
               {!side ? "Обери бік" : confirming ? "Так, виставляю" : `Кинути виклик · ${stake}`}
             </button>
+
+            {/* A caption under the control it qualifies, not a panel above it.
+                The warning is one short sentence and the plate it used to sit
+                in was as loud as the button, which made the quieter of the two
+                look like the thing being confirmed. */}
+            {confirming && side && (
+              <p className="px-1 text-center text-[0.6875rem] leading-snug text-white/45">
+                {stake} поінтів зарезервуються одразу, доки виклик хтось не візьме.
+              </p>
+            )}
           </>
         )}
 
@@ -276,11 +279,6 @@ export function DuelBoard({ match }: { match: Match }) {
           </div>
         )}
 
-        {duels && board.length === 0 && !mine && open && user && (
-          <p className="text-center text-[0.6875rem] text-white/35">
-            Відкритих викликів на цей матч ще немає.
-          </p>
-        )}
       </div>
     </section>
   );
@@ -361,12 +359,6 @@ function MyDuel({
           {/* Accepting is the only one of the two that costs anything, so it is
               the only one that asks twice. Declining moves nobody's points but
               the challenger's, and moves them home. */}
-          {confirming && (
-            <p className="rounded-lg bg-[rgb(var(--skin-ring)/0.12)] px-3 py-2.5 text-center text-xs leading-relaxed text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.35)]">
-              Прийняти виклик і поставити <b>{formatInt(duel.stake)}</b> на{" "}
-              <b>{backed.name}</b>? Переможець забирає {formatInt(duel.stake * 2)}.
-            </p>
-          )}
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <button
               onClick={() =>
@@ -395,6 +387,13 @@ function MyDuel({
               Відхилити
             </button>
           </div>
+
+          {confirming && (
+            <p className="px-1 text-center text-[0.6875rem] leading-snug text-white/45">
+              Ставиш {formatInt(duel.stake)} на {backed.name}. Переможець забирає{" "}
+              {formatInt(duel.stake * 2)}.
+            </p>
+          )}
         </div>
       ))}
     </div>

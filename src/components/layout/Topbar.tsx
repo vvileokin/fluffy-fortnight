@@ -3,12 +3,12 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Bell, Target, Swords, Gift, TrendingUp, Check, LogIn } from "lucide-react";
+import { Bell, Target, Swords, Gift, TrendingUp, Check, LogIn, Loader2, X } from "lucide-react";
 import { Brand } from "./Brand";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { displayName } from "@/lib/supabase/use-user";
-import { useProfile } from "@/lib/supabase/use-profile";
+import { useProfile, refreshProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
 import { formatInt } from "@/lib/utils";
 import { type NotifKind } from "@/lib/data";
@@ -19,9 +19,18 @@ const kindIcon: Record<NotifKind, typeof Bell> = {
   match: Swords,
   giveaway: Gift,
   rank: TrendingUp,
+  duel: Swords,
 };
 
-type Notif = { id: string; kind: NotifKind; title: string; created_at: string; read: boolean };
+type Notif = {
+  id: string;
+  kind: NotifKind;
+  title: string;
+  created_at: string;
+  read: boolean;
+  /** Present on duel rows: `{ duel, match }`. Absent before migration 0062. */
+  data?: { duel?: string; match?: string } | null;
+};
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -39,6 +48,10 @@ export function Topbar() {
   const { user, profile } = useProfile();
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<Notif[]>([]);
+  const [pending, setPending] = React.useState<Set<string>>(new Set());
+  const [acting, setActing] = React.useState<string | null>(null);
+  const [actError, setActError] = React.useState<string | null>(null);
+  const [nonce, setNonce] = React.useState(0);
   const unread = items.filter((n) => !n.read).length;
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -65,19 +78,86 @@ export function Topbar() {
       return;
     }
     let cancelled = false;
-    createClient()
-      .from("notifications")
-      .select("id, kind, title, created_at, read")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
-        if (!cancelled && data) setItems(data as Notif[]);
+    const db = createClient();
+    const read = (columns: string) =>
+      db
+        .from("notifications")
+        .select(columns)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+    // `data` arrives with migration 0062, and PostgREST fails the whole select
+    // on one unknown column — which would empty the bell rather than just drop
+    // the duel buttons. Step down instead.
+    read("id, kind, title, created_at, read, data").then(({ data, error }) => {
+      if (cancelled) return;
+      if (!error) {
+        setItems((data ?? []) as unknown as Notif[]);
+        return;
+      }
+      read("id, kind, title, created_at, read").then(({ data: base }) => {
+        if (!cancelled) setItems((base ?? []) as unknown as Notif[]);
       });
+    });
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, nonce]);
+
+  /**
+   * Which of the duels mentioned in the bell are still waiting on an answer.
+   *
+   * Read fresh each time the panel opens rather than trusted from the
+   * notification, because the notification is a record of a moment and the duel
+   * is the thing that changes: accepted from the match page, cancelled by the
+   * challenger, or closed when the match started. Offering "Прийняти" on a duel
+   * that is already settled is worse than offering nothing.
+   */
+  React.useEffect(() => {
+    if (!open || !user) return;
+    let cancelled = false;
+    fetch("/api/duels?mine=1", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d.ok) return;
+        const answerable = new Set<string>(
+          (d.duels as { id: string; status: string; opponent: { id: string } | null }[])
+            .filter((x) => x.status === "open" && x.opponent?.id === d.me)
+            .map((x) => x.id),
+        );
+        setPending(answerable);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, user, nonce]);
+
+  /** Answer a challenge from inside the bell. */
+  async function answer(duelId: string, method: "PATCH" | "DELETE") {
+    setActing(duelId);
+    const res = await fetch("/api/duels", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: duelId }),
+    }).catch(() => null);
+    const out = await res?.json().catch(() => ({}));
+    setActing(null);
+    if (!out?.ok) {
+      setActError(duelId);
+      window.setTimeout(() => setActError(null), 3000);
+      return;
+    }
+    setPending((prev) => {
+      const next = new Set(prev);
+      next.delete(duelId);
+      return next;
+    });
+    // Both verbs move points, and this bar is the thing showing them.
+    refreshProfile();
+    setNonce((n) => n + 1);
+  }
 
   function markAll() {
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
@@ -247,6 +327,7 @@ export function Topbar() {
                   )}
                   {items.map((n) => {
                     const Icon = kindIcon[n.kind] ?? Bell;
+                    const duelId = n.kind === "duel" ? n.data?.duel : undefined;
                     return (
                       <li
                         key={n.id}
@@ -267,6 +348,42 @@ export function Topbar() {
                           <p className="text-[0.6875rem] leading-snug text-ink-subtle">
                             {timeAgo(n.created_at)}
                           </p>
+
+                          {/* Answerable in place. A challenge is the only thing
+                              in this panel that somebody else is waiting on, and
+                              sending the player to the match page to type two
+                              words is a trip for nothing. The buttons appear
+                              only while the duel is genuinely still open, which
+                              is read from the duel and not from this row. */}
+                          {duelId && pending.has(duelId) && (
+                            <div className="mt-2 flex items-center gap-1.5">
+                              <button
+                                onClick={() => answer(duelId, "PATCH")}
+                                disabled={acting !== null}
+                                className="flex h-7 items-center gap-1 rounded-lg bg-accent px-2.5 text-[0.6875rem] font-bold text-black transition-[filter] hover:brightness-110 disabled:opacity-50"
+                              >
+                                {acting === duelId ? (
+                                  <Loader2 className="size-3 animate-spin" />
+                                ) : (
+                                  <Check className="size-3" strokeWidth={2.75} />
+                                )}
+                                Прийняти
+                              </button>
+                              <button
+                                onClick={() => answer(duelId, "DELETE")}
+                                disabled={acting !== null}
+                                className="flex h-7 items-center gap-1 rounded-lg bg-[color-mix(in_oklch,var(--ink)_8%,transparent)] px-2.5 text-[0.6875rem] font-semibold text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+                              >
+                                <X className="size-3" strokeWidth={2.75} />
+                                Відхилити
+                              </button>
+                            </div>
+                          )}
+                          {actError === duelId && (
+                            <p role="alert" className="mt-1.5 text-[0.6875rem] font-semibold text-danger">
+                              Не вдалося — виклик уже закрито
+                            </p>
+                          )}
                         </div>
                         {!n.read && (
                           <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent" />

@@ -1211,7 +1211,7 @@ export function getGiveaway(slug: string): Giveaway | undefined {
 
 /* --- Notifications --- */
 
-export type NotifKind = "reward" | "match" | "giveaway" | "rank";
+export type NotifKind = "reward" | "match" | "giveaway" | "rank" | "duel";
 
 export type Notification = {
   id: string;
