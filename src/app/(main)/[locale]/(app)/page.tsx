@@ -51,6 +51,11 @@ export default async function HomePage() {
   const liveGiveaways = giveaways.filter(
     (g) => !g.drawnAt && g.winners.length === 0 && g.status !== "finished",
   );
+  // The event on now, or the next one up: the running tournament that carries
+  // a dress of its own. Derived rather than named, so it moves on by itself.
+  const currentEvent = (await listTournaments()).find(
+    (x) => x.skin && x.status !== "finished",
+  );
   const matchById = new Map(matches.map((m) => [m.id, m]));
   const currentTournaments = applyCovers(
     (await listTournaments()).filter((t) => t.status !== "finished").slice(0, 3),
@@ -80,7 +85,15 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6 sm:space-y-12">
-      <Hero image={heroImage || undefined} href="/tournaments/ewc-2026" />
+      {/* The hero points at whichever event is actually running, and falls
+          back to that event's own banner when the CMS has none set. Both were
+          pinned to EWC: after it finished, the front door of the site was still
+          advertising a tournament that had ended, and there was no way to
+          change the destination from the admin at all. */}
+      <Hero
+        image={heroImage || currentEvent?.heroImage}
+        href={currentEvent ? `/tournaments/${currentEvent.slug}` : "/tournaments"}
+      />
 
       {/* Tournaments and giveaways share the top row. With one event running,
           a three-across tournament grid left two thirds of the row empty while

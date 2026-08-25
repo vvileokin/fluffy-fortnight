@@ -43,6 +43,15 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * `2026-03-09` → `09.03.26`. Short enough for a 56px column and unambiguous in
+ * a Ukrainian reading, where day-first is what the rest of the site prints.
+ */
+function shortDate(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return y && m && d ? `${d}.${m}.${y.slice(2)}` : iso;
+}
+
 export default async function MatchPage({
   params,
 }: {
@@ -439,43 +448,66 @@ export default async function MatchPage({
                 </div>
                 <TeamMini team={b} align="right" />
               </div>
-              {/* Where each meeting happened, newest first. The tally above
-                  says who is ahead; this says on what — a 4-0 built at one
-                  event reads very differently from four across a year. */}
+              {/* Impeccable: Crafted Meeting Ledger — when, who won, where, how.
+                  Four columns read left to right in the order the question is
+                  actually asked.
+
+                  It used to be a loose stack of event names against scores,
+                  divided from the tally by one hairline: no date, so four wins
+                  could be four years or four days apart; no crest, so the
+                  colour of a score was the only clue who took it, and it was
+                  the wrong clue — it keyed off side A rather than the winner.
+                  A ledger of ruled rows is also what the veto block directly
+                  above it already is, so the two panels now read as one
+                  material instead of two ideas about the same page. */}
               {match.h2h.series && match.h2h.series.length > 0 && (
                 <div
                   className={cn(
-                    "mt-4 space-y-2 pt-3",
+                    "mt-4 divide-y overflow-hidden rounded-lg",
                     isAuraSkin(skin)
-                      ? "shadow-[0_-1px_0_0_rgb(var(--skin-ring)/0.22)]"
-                      : "shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)]",
+                      ? "skin-divide bg-black/25"
+                      : "divide-[color-mix(in_oklch,var(--ink)_7%,transparent)] bg-fill-1",
                   )}
                 >
-                  {match.h2h.series.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between gap-3 text-xs">
-                      <span
-                        className={cn(
-                          "min-w-0 truncate",
-                          isAuraSkin(skin) ? "text-white/55" : "text-ink-subtle",
-                        )}
+                  {match.h2h.series.map((r, i) => {
+                    const won = r.winner === "a" ? a : b;
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs sm:gap-3 sm:px-3.5"
                       >
-                        {r.event}
-                      </span>
-                      {/* The winner's colour, not the home side's. `winner` is
-                          which of the two teams above took it, so colouring by
-                          "a" alone told you nothing about who won. */}
-                      <span
-                        className={cn(
-                          "tnum shrink-0 font-mono font-semibold",
-                          isAuraSkin(skin)
-                            ? "text-[rgb(var(--skin-ring))]"
-                            : "text-ink",
-                        )}
-                      >
-                        {r.score}
-                      </span>
-                    </div>
-                  ))}
+                        {/* Two digits a field, so the column is a column even
+                            when a row has no date to print. */}
+                        <span
+                          className={cn(
+                            "tnum w-14 shrink-0 font-mono",
+                            isAuraSkin(skin) ? "text-white/40" : "text-ink-faint",
+                          )}
+                        >
+                          {r.date ? shortDate(r.date) : ""}
+                        </span>
+                        <TeamLogo team={won} size="xs" />
+                        <span
+                          className={cn(
+                            "min-w-0 flex-1 truncate",
+                            isAuraSkin(skin) ? "text-white/70" : "text-ink-muted",
+                          )}
+                        >
+                          {r.event}
+                        </span>
+                        <span
+                          className={cn(
+                            "tnum shrink-0 font-mono font-bold",
+                            isAuraSkin(skin)
+                              ? "text-[rgb(var(--skin-ring))]"
+                              : "text-accent",
+                          )}
+                        >
+                          {r.score}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

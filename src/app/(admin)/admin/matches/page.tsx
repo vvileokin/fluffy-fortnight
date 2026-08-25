@@ -41,7 +41,7 @@ type MatchForm = {
   h2h_a: number;
   h2h_b: number;
   /** Where each past meeting happened, newest first. */
-  h2h_series: { event: string; score: string; winner: "a" | "b" }[];
+  h2h_series: { event: string; score: string; winner: "a" | "b"; date?: string }[];
   open_questions: number;
   max_reward: number;
   // custom team / tournament
@@ -755,6 +755,18 @@ export default function MatchesAdmin() {
                 {editing.h2h_series.map((row, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <input
+                      type="date"
+                      className={cn(inputCls, "w-36 shrink-0 tnum font-mono")}
+                      value={row.date ?? ""}
+                      onChange={(ev) =>
+                        up({
+                          h2h_series: editing.h2h_series.map((r, j) =>
+                            j === i ? { ...r, date: ev.target.value || undefined } : r,
+                          ),
+                        })
+                      }
+                    />
+                    <input
                       className={cn(inputCls, "min-w-0 flex-1")}
                       placeholder="IEM Cologne"
                       value={row.event}
@@ -810,7 +822,7 @@ export default function MatchesAdmin() {
                     up({
                       h2h_series: [
                         ...editing.h2h_series,
-                        { event: "", score: "", winner: "a" as const },
+                        { event: "", score: "", winner: "a" as const, date: undefined },
                       ],
                     })
                   }

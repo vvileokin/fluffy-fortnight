@@ -98,6 +98,8 @@ export type Tournament = {
   format: string;
   accent: string; // subtle cover tint (oklch)
   coverImage?: string; // optional cover photo, recommended 800×300
+  /** Wide key art for the home page hero, when the event ships its own. */
+  heroImage?: string;
   isEvent?: boolean; // special featured event (Bounty predictor, bounty points)
   skin?: EventSkin; // dress only — see EventSkin
 };
@@ -316,6 +318,7 @@ export const allTournaments: Tournament[] = [
     // tint and the artwork above it are the same colour rather than two reds.
     accent: "oklch(0.55 0.24 29)",
     coverImage: "/brand/porto-cover.webp",
+    heroImage: "/brand/hero-porto.webp",
     // Deliberately not `isEvent`. That flag routes the page to the Bounty
     // leaderboard and the Bounty predictor, neither of which Porto uses; it
     // gets turned on with the mechanics it belongs to, not with the dress.
@@ -701,7 +704,15 @@ export type VetoStep = { team: string; action: "ban" | "pick" | "decider"; map: 
 export type H2H = {
   a: number;
   b: number;
-  series?: { event: string; score: string; winner: "a" | "b" }[];
+  /**
+   * Past meetings, newest first.
+   *
+   * `date` is ISO `YYYY-MM-DD` and optional — a record typed in by hand may not
+   * have one, and a row without a date is still worth showing. `score` is
+   * always written from A's side, the same way the two teams are ordered above
+   * it, so it can be read without checking which way round it goes.
+   */
+  series?: { event: string; score: string; winner: "a" | "b"; date?: string }[];
 };
 
 export type MapStatus = "finished" | "live" | "upcoming" | "skipped";
