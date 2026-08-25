@@ -233,14 +233,24 @@ function GroupBlock({
           {/* The two counters are the instructions. A line of prose telling you
               to pick three and two would say the same thing and go unread; a
               counter that moves as you tap says it while you are doing it. */}
+          {/* Lit and struck out, not green and red.
+
+              Two opposite states in one event palette cannot be told apart by
+              hue — scarlet against scarlet is one colour. So the event's colour
+              marks who *survives*, and being crossed out marks who doesn't,
+              which is the same language the veto ledger on this site already
+              speaks: a picked map is lit, a banned one is drained and struck
+              through. It also happens to be literal — "виліт 0-2" is a team
+              crossed off the tournament. */}
           <div className="mb-2 flex items-center gap-3 text-[0.6875rem] font-semibold">
-            <span className="flex items-center gap-1.5 text-success">
+            <span className="flex items-center gap-1.5 text-[rgb(var(--skin-ring))]">
               <Trophy className="size-3.5" />
               Вийдуть {advance.length}/{PORTO_GROUP_SIZES.advance}
             </span>
-            <span className="flex items-center gap-1.5 text-[rgb(var(--skin-ring))]">
+            <span className="flex items-center gap-1.5 text-white/45">
               <Skull className="size-3.5" />
-              Виліт 0-2 {zeroTwo.length}/{PORTO_GROUP_SIZES.zeroTwo}
+              <span className="line-through decoration-white/35">Виліт 0-2</span>{" "}
+              {zeroTwo.length}/{PORTO_GROUP_SIZES.zeroTwo}
             </span>
           </div>
 
@@ -257,16 +267,25 @@ function GroupBlock({
                   className={cn(
                     "flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-semibold transition-colors",
                     isUp
-                      ? "bg-[color-mix(in_oklch,var(--success)_18%,transparent)] text-success shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--success)_45%,transparent)]"
+                      ? "bg-[rgb(var(--skin-ring)/0.20)] text-[rgb(var(--skin-ring))] shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.55)]"
                       : isOut
-                        ? "bg-[rgb(var(--skin-ring)/0.18)] text-[rgb(var(--skin-ring))] shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.5)]"
+                        ? "bg-black/45 text-white/40 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.09)]"
                         : "bg-black/30 text-white/70 hover:bg-black/45",
                   )}
                 >
-                  <TeamLogo team={t} size="xs" />
-                  <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                  <span className={cn("shrink-0", isOut && "opacity-45 grayscale")}>
+                    <TeamLogo team={t} size="xs" />
+                  </span>
+                  <span
+                    className={cn(
+                      "min-w-0 flex-1 truncate",
+                      isOut && "line-through decoration-white/40",
+                    )}
+                  >
+                    {t.name}
+                  </span>
                   {isUp && <Trophy className="size-3 shrink-0" />}
-                  {isOut && <Skull className="size-3 shrink-0" />}
+                  {isOut && <Skull className="size-3 shrink-0 opacity-70" />}
                 </button>
               );
             })}
@@ -307,8 +326,8 @@ function GroupBlock({
 /** A submitted card, read-only. */
 function Filled({ advance, zeroTwo }: { advance: string[]; zeroTwo: string[] }) {
   const rows = [
-    { label: "Вийдуть", teams: advance, tone: "text-success" },
-    { label: "Виліт 0-2", teams: zeroTwo, tone: "text-[rgb(var(--skin-ring))]" },
+    { label: "Вийдуть", teams: advance, out: false, tone: "text-[rgb(var(--skin-ring))]" },
+    { label: "Виліт 0-2", teams: zeroTwo, out: true, tone: "text-white/40" },
   ];
   return (
     <div className="space-y-1.5">
@@ -328,10 +347,17 @@ function Filled({ advance, zeroTwo }: { advance: string[]; zeroTwo: string[] }) 
               return (
                 <span
                   key={slug}
-                  className="flex items-center gap-1 rounded bg-black/35 px-1.5 py-1 text-[0.6875rem] font-semibold text-white"
+                  className={cn(
+                    "flex items-center gap-1 rounded bg-black/35 px-1.5 py-1 text-[0.6875rem] font-semibold",
+                    r.out ? "text-white/40" : "text-white",
+                  )}
                 >
-                  <TeamLogo team={t} size="xs" />
-                  {t.name}
+                  <span className={cn("shrink-0", r.out && "opacity-45 grayscale")}>
+                    <TeamLogo team={t} size="xs" />
+                  </span>
+                  <span className={cn(r.out && "line-through decoration-white/35")}>
+                    {t.name}
+                  </span>
                 </span>
               );
             })}
