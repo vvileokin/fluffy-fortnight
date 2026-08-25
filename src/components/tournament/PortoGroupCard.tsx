@@ -247,10 +247,14 @@ function GroupBlock({
               <Trophy className="size-3.5" />
               Вийдуть {advance.length}/{PORTO_GROUP_SIZES.advance}
             </span>
-            <span className="flex items-center gap-1.5 text-white/45">
+            {/* The labels are a pair, so they stay one colour at two
+                intensities. Striking the heading was wrong — a heading is not a
+                team, and crossing it out read as "this section is disabled".
+                The strike belongs on the names underneath, which is where it
+                means something. */}
+            <span className="flex items-center gap-1.5 text-[rgb(var(--skin-ring)/0.55)]">
               <Skull className="size-3.5" />
-              <span className="line-through decoration-white/35">Виліт 0-2</span>{" "}
-              {zeroTwo.length}/{PORTO_GROUP_SIZES.zeroTwo}
+              Виліт 0-2 {zeroTwo.length}/{PORTO_GROUP_SIZES.zeroTwo}
             </span>
           </div>
 
@@ -327,7 +331,7 @@ function GroupBlock({
 function Filled({ advance, zeroTwo }: { advance: string[]; zeroTwo: string[] }) {
   const rows = [
     { label: "Вийдуть", teams: advance, out: false, tone: "text-[rgb(var(--skin-ring))]" },
-    { label: "Виліт 0-2", teams: zeroTwo, out: true, tone: "text-white/40" },
+    { label: "Виліт 0-2", teams: zeroTwo, out: true, tone: "text-[rgb(var(--skin-ring)/0.55)]" },
   ];
   return (
     <div className="space-y-1.5">

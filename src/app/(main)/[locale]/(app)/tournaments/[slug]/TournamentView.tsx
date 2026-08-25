@@ -23,7 +23,6 @@ import {
 } from "@/components/layout/NavGlyphs";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { EwcMark } from "@/components/ui/EwcMark";
-import { PortoMark } from "@/components/ui/PortoMark";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
@@ -90,9 +89,11 @@ export function TournamentView({
             // generic BLAST A-mark was correct about the organiser and wrong
             // about the tournament: two views of the same event carried two
             // different logos.
-            icon: PortoMark,
-            // 1.4:1, so height-matched — a square class would fit it by width
-            // and leave it short, the same fault the roster glyph had.
+            icon: BlastMark,
+            // The bare mark, not the lockup: `ŌPEN` stacked under the A turns
+            // to a smudge at tab size. 139×166 is taller than wide, so it is
+            // height-matched — a square class fits it by width and leaves it
+            // short, the same fault the roster glyph had.
             iconClass: "h-4 w-auto shrink-0",
           },
         ]
@@ -208,8 +209,6 @@ export function TournamentView({
                       carrying two different logos. */}
                   {t.skin === "ewc" ? (
                     <EwcMark className="h-[0.4375rem] w-auto" />
-                  ) : t.skin === "porto" ? (
-                    <PortoMark className="h-[0.6875rem] w-auto" />
                   ) : (
                     <BlastMark className="size-[0.6875rem]" />
                   )}

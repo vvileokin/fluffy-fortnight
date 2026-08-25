@@ -8,8 +8,8 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { LiveBadge } from "@/components/ui/Badge";
 import { BlastMark } from "@/components/ui/BlastMark";
-import { EwcMark } from "@/components/ui/EwcMark";
 import { PortoMark } from "@/components/ui/PortoMark";
+import { EwcMark } from "@/components/ui/EwcMark";
 import {
   getTournament,
   matchSkin,
@@ -134,8 +134,11 @@ export function MatchCard({ match }: { match: Match }) {
               className="size-3.5 shrink-0 object-contain"
             />
           ) : skin === "porto" ? (
-            /* A stacked block, not a strip: sized to the text's cap height it
-               matches the 14px tournament icons beside it. */
+            /* The full lockup here: a match card names its tournament in words
+               beside the mark, so the mark is free to be the event's own. The
+               tournament page carries the bare BLAST mark instead, because
+               there it sits at tab and chip sizes where `ŌPEN` stacked under
+               the A has no room to be a word. */
             <PortoMark className="h-3.5 w-auto shrink-0 text-[rgb(var(--skin-ring))]" />
           ) : skin === "ewc" ? (
             <EwcMark className="h-2 w-auto shrink-0 text-[rgb(var(--skin-ring))]" />
