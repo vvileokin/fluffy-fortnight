@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ArrowRight, ChevronLeft, Loader2, Plus, X } from "lucide-react";
 import { BrandIcon } from "@/components/ui/BrandIcon";
+import { eventPointsLabel } from "@/lib/data";
 import { refreshProfile } from "@/lib/supabase/use-profile";
 import { useConvertLimit, invalidateConvertLimit } from "@/lib/convert-limit";
 import { cn, formatInt } from "@/lib/utils";
@@ -232,7 +233,7 @@ export function BetSlip({
             type="text"
             inputMode="numeric"
             value={stake || ""}
-            placeholder="EWC Points"
+            placeholder={eventPointsLabel()}
             aria-label="Своя сума"
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, "").slice(0, 7);

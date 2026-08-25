@@ -6,7 +6,7 @@ import { AdminHead, Panel } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { getTeam } from "@/lib/data";
+import { getTeam, eventPointsLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -342,10 +342,10 @@ export default function QuestionsAdmin() {
               />
               <span className="min-w-0">
                 <span className="block text-sm font-semibold text-ink">
-                  Ставки на EWC Points
+                  Ставки на {eventPointsLabel()}
                 </span>
                 <span className="block text-xs text-ink-subtle">
-                  Гравець ставить свої EWC Points, виграш = ставка × коефіцієнт.
+                  Гравець ставить свої {eventPointsLabel()}, виграш = ставка × коефіцієнт.
                   Мінімальна ставка 50, змінити ставку не можна.
                 </span>
               </span>

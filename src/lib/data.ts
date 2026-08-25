@@ -128,6 +128,19 @@ export type EventSkin = "blast" | "ewc" | "porto";
  * instead of `skin === "ewc"` is what stops every new event adding a branch to
  * the twenty-odd places that decide whether a card is dressed.
  */
+/**
+ * What the running event's currency is called, for anything user-facing.
+ *
+ * Hardcoding "EWC Points" is how a label outlives its tournament: it was still
+ * on the betting controls after the World Cup ended. Derived from the event
+ * that is actually on, it moves by itself — and falls back to a neutral phrase
+ * between events, when no tournament owns the word.
+ */
+export function eventPointsLabel(): string {
+  const live = tournaments.find((t) => t.skin && t.status !== "finished");
+  return live ? `${live.shortName} Points` : "івент-поінти";
+}
+
 export function isAuraSkin(skin?: EventSkin | null): boolean {
   return skin === "ewc" || skin === "porto";
 }

@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   // results must not land in `bounty_points` and quietly inflate it.
   // The match label also goes into the notification so it names the game,
   // not just the question.
-  let eventColumns: "bounty" | "ewc" | null = null;
+  let eventColumns: "bounty" | "ewc" | "event" | null = null;
   let matchLabel = "";
   if (q?.match_id) {
     const { data: match } = await admin
@@ -54,6 +54,11 @@ export async function POST(request: Request) {
     // about which tournament the match belongs to. Read the fact.
     if (match?.tournament_slug === "ewc-2026") {
       eventColumns = "ewc";
+    } else if (match?.tournament_slug === "blast-porto-2026") {
+      // The running event's own balance. `ewc` and `bounty` still write the
+      // columns their finished events are ranked on, so those boards stay the
+      // historical records they are.
+      eventColumns = "event";
     } else if (match?.is_event) {
       eventColumns = "bounty";
     }

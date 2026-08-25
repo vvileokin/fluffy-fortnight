@@ -80,18 +80,47 @@ export function QuestionCard({
   React.useEffect(() => {
     if (!floating) return;
     let cancelled = false;
-    createClient()
-      .rpc("question_odds", { p_question: question.id })
-      .then(({ data }) => {
-        if (cancelled || !Array.isArray(data)) return;
-        const next: Record<string, number> = {};
-        for (const r of data as { option_id: string; odds: number | null }[]) {
-          if (r.odds != null) next[r.option_id] = Number(r.odds);
-        }
-        setOdds(next);
-      });
+
+    const read = () =>
+      createClient()
+        .rpc("question_odds", { p_question: question.id })
+        .then(({ data }) => {
+          if (cancelled || !Array.isArray(data)) return;
+          const next: Record<string, number> = {};
+          for (const r of data as { option_id: string; odds: number | null }[]) {
+            if (r.odds != null) next[r.option_id] = Number(r.odds);
+          }
+          setOdds(next);
+        });
+
+    void read();
+
+    /**
+     * Polled, not subscribed.
+     *
+     * Realtime would be the obvious choice and it cannot work here: RLS lets a
+     * player read only their own prediction row, and Realtime honours RLS — so
+     * a subscription would deliver exactly the one event that does not move the
+     * market, your own. The counts have to come from the function that is
+     * allowed to count them.
+     *
+     * Twenty seconds, and only while the tab is in front. A market that shifts
+     * a few times a minute is read as live; one that repaints every second is
+     * read as noise, and it would be polling on behalf of readers who are not
+     * looking at it.
+     */
+    const tick = window.setInterval(() => {
+      if (document.visibilityState === "visible") void read();
+    }, 20_000);
+    const onShow = () => {
+      if (document.visibilityState === "visible") void read();
+    };
+    document.addEventListener("visibilitychange", onShow);
+
     return () => {
       cancelled = true;
+      window.clearInterval(tick);
+      document.removeEventListener("visibilitychange", onShow);
     };
   }, [floating, question.id, oddsNonce]);
 
