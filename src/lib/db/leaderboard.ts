@@ -205,10 +205,14 @@ export async function getEventLeaderboard(limit = 50): Promise<LeaderRow[]> {
       data: { user },
     } = await sb.auth.getUser();
 
+    // Everyone holds the same starting stake, so a board filtered on "has
+    // points" would list all 556 accounts tied on 500 — a register, not a
+    // ranking. `event_joined_at` is stamped by the first real action: a bet, a
+    // duel, or a scored prediction. Untouched stake, no row.
     const { data, error } = await sb
       .from("profiles")
       .select("id, handle, avatar_url, event_points")
-      .gt("event_points", 0)
+      .not("event_joined_at", "is", null)
       .order("event_points", { ascending: false })
       .limit(Math.max(limit, 200));
     // Pre-migration the column doesn't exist; an empty board is the right
