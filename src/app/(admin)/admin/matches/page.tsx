@@ -181,7 +181,10 @@ const statusTabs: { id: MatchStatus; label: string }[] = [
 export default function MatchesAdmin() {
   const [rows, setRows] = React.useState<Row[] | null>(null);
   const [statusTab, setStatusTab] = React.useState<MatchStatus>("live");
-  const [tableMissing, setTableMissing] = React.useState(false);
+  /** The real reason the list is empty, or null when it loaded. */
+  const [loadError, setLoadError] = React.useState<{ missing: boolean; message: string } | null>(
+    null,
+  );
   const [editing, setEditing] = React.useState<MatchForm | null>(null);
   /** Tournaments that carry a dress of their own, newest first. */
   const skinnedTournaments = React.useMemo(
@@ -234,10 +237,16 @@ export default function MatchesAdmin() {
       )
       .order("start_at", { ascending: true, nullsFirst: false });
     if (error) {
-      setTableMissing(true);
+      // Only 42P01 / PGRST205 actually mean the table isn't there. Reporting
+      // every failure as a missing migration sent two people looking in the
+      // wrong place for a session that had simply expired — the message has to
+      // say what happened, not what is easiest to guess.
+      const missing = error.code === "42P01" || error.code === "PGRST205";
+      setLoadError({ missing, message: error.message || String(error) });
       setRows([]);
       return;
     }
+    setLoadError(null);
     setRows((data as Row[]) ?? []);
   }, []);
 
@@ -356,14 +365,28 @@ export default function MatchesAdmin() {
         }
       />
 
-      {tableMissing && (
+      {loadError && (
         <div className="mb-4 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm text-ink">
           <TriangleAlert className="mt-0.5 size-5 shrink-0 text-warning" />
-          <div>
-            Таблиця <code>matches</code> ще не створена. Запусти{" "}
-            <code>supabase/migrations/0003_matches.sql</code> у Supabase → SQL Editor,
-            потім онови сторінку.
-          </div>
+          {loadError.missing ? (
+            <div>
+              Таблиця <code>matches</code> ще не створена. Запусти{" "}
+              <code>supabase/migrations/0003_matches.sql</code> у Supabase → SQL Editor,
+              потім онови сторінку.
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <p className="font-semibold">Не вдалося завантажити матчі.</p>
+              <p className="font-mono text-xs text-ink-muted">{loadError.message}</p>
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="mt-1 text-xs font-semibold text-accent hover:underline"
+              >
+                Спробувати ще раз
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -466,7 +489,7 @@ export default function MatchesAdmin() {
                 </tr>
                 );
               })}
-              {rows && rows.length === 0 && !tableMissing && (
+              {rows && rows.length === 0 && !loadError && (
                 <tr>
                   <td colSpan={5} className="px-4 py-10 text-center text-sm text-ink-subtle">
                     Матчів ще немає. Створи перший.
