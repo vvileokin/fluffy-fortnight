@@ -23,6 +23,7 @@ import {
 } from "@/components/layout/NavGlyphs";
 import { BlastMark } from "@/components/ui/BlastMark";
 import { EwcMark } from "@/components/ui/EwcMark";
+import { PortoMark } from "@/components/ui/PortoMark";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { MatchDayGroups } from "@/components/cards/MatchDayGroups";
 import { LeaderboardTable } from "@/components/leaderboard/LeaderboardTable";
@@ -85,12 +86,14 @@ export function TournamentView({
             // has one card and it is the 0-2 club; "Прогнозатор" is the generic
             // word for a tab whose contents vary by tournament.
             label: "Клуб 0-2",
-            icon: BlastMark,
-            // The BLAST mark is a 139×166 block where the EWC lockup is a 5:1
-            // strip, so they take different rules: this one is near square and
-            // sits at the row's own size, the strip has to be cut to cap height
-            // or it reads as a banner wedged into a tab.
-            iconClass: "size-4 shrink-0",
+            // The event's own lockup, which is what the match cards fly. The
+            // generic BLAST A-mark was correct about the organiser and wrong
+            // about the tournament: two views of the same event carried two
+            // different logos.
+            icon: PortoMark,
+            // 1.4:1, so height-matched — a square class would fit it by width
+            // and leave it short, the same fault the roster glyph had.
+            iconClass: "h-4 w-auto shrink-0",
           },
         ]
       : [
@@ -199,8 +202,14 @@ export function TournamentView({
             {t.skin ? (
               <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-white/60 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]">
                 <span className="flex items-center gap-1.5 text-white">
+                  {/* The event's own lockup, the same one the match cards fly.
+                      The generic BLAST A-mark was right about the organiser and
+                      wrong about the tournament: two views of one event were
+                      carrying two different logos. */}
                   {t.skin === "ewc" ? (
                     <EwcMark className="h-[0.4375rem] w-auto" />
+                  ) : t.skin === "porto" ? (
+                    <PortoMark className="h-[0.6875rem] w-auto" />
                   ) : (
                     <BlastMark className="size-[0.6875rem]" />
                   )}

@@ -88,6 +88,8 @@ export function MatchCard({ match }: { match: Match }) {
   const isFinished = match.status === "finished";
   const showScore = isLive || isFinished;
   const hasQuestions = match.openQuestions > 0;
+  /** Whether the rail's right-hand side prints a state word at all. */
+  const hasState = isLive || isFinished || hasQuestions;
   const aLead = match.scoreA > match.scoreB;
   const bLead = match.scoreB > match.scoreA;
 
@@ -186,38 +188,46 @@ export function MatchCard({ match }: { match: Match }) {
           on the left of this rail on phones — so this slot never repeats it.
           It carries a state word or nothing. */}
       <div className="relative mx-3.5 mb-2.5 sm:mx-4 sm:mb-3 flex items-center justify-between gap-2 rounded-lg bg-fill-1 px-2.5 py-1.5 text-xs shadow-[0_1px_0_0_color-mix(in_oklch,var(--ink)_6%,transparent)_inset,0_-1px_0_0_oklch(0_0_0/0.35)_inset]">
-        {/* On a phone the kickoff leads and the format follows.
+        {/* On a phone the kickoff is a plate, not a word in a sentence.
 
-            It was the other way round, and dimmer: `BO3 · Завтра 12:00` with
-            the time the faintest thing on the card. The format is the one value
-            here that carries no information — every group match at Porto is a
-            BO3, so it reads the same on all twenty-four — while the time is the
-            only thing a person is scanning this rail for. Loudest goes to what
-            varies.
+            It began as "BO3 · Завтра 12:00" with the time the faintest thing on
+            the card, which was backwards: every group match at Porto is a BO3,
+            so the format says the same thing on all twenty-four, while the time
+            is the only value anyone scans this rail for. Making it bold and
+            moving it first was not enough — a bold fragment next to a dim one
+            inside a recessed rail still reads as two loose words.
 
-            Today's matches take the accent on top of that: "Сьогодні 14:00" is
-            a different proposition from "28 сер 14:00", and the colour says so
-            before the words are read. */}
-        <span className="flex min-w-0 items-center gap-1.5 text-ink-subtle">
+            So it gets a shape. A plate is a different kind of object from the
+            text around it, and shape is what the eye finds before weight or
+            colour. The format moves over to the state word on the right, where
+            the two quiet facts sit together. */}
+        <span className="flex min-w-0 items-center gap-2">
           {!isLive && (
-            <span className="flex min-w-0 items-center gap-1.5 sm:hidden">
-              <span
-                className={cn(
-                  "truncate font-bold",
-                  startsToday
-                    ? isAuraSkin(skin)
-                      ? "text-[rgb(var(--skin-ring))]"
-                      : "text-accent"
-                    : "text-ink",
-                )}
-              >
-                {matchTimeLabel(match)}
-              </span>
-              <span aria-hidden className="text-ink-faint">·</span>
+            <span
+              className={cn(
+                "tnum shrink-0 rounded-md px-1.5 py-0.5 text-[0.6875rem] font-bold leading-none sm:hidden",
+                startsToday
+                  ? isAuraSkin(skin)
+                    ? "bg-[rgb(var(--skin-ring)/0.18)] text-[rgb(var(--skin-ring))]"
+                    : "bg-accent/15 text-accent"
+                  : "bg-fill-2 text-ink",
+              )}
+            >
+              {matchTimeLabel(match)}
             </span>
           )}
-          {match.format}
+          <span className="truncate text-ink-subtle max-sm:hidden">{match.format}</span>
         </span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          <span className="text-ink-subtle sm:hidden">{match.format}</span>
+          {/* Only when something follows it. A card with no open questions and
+              no state word left the separator hanging at the end of the rail
+              with nothing on the other side of it. */}
+          {hasState && (
+            <span aria-hidden className="text-ink-faint sm:hidden">
+              ·
+            </span>
+          )}
         {isLive ? (
           <span className="shrink-0 font-semibold text-live">У прямому ефірі</span>
         ) : isFinished ? (
@@ -232,6 +242,7 @@ export function MatchCard({ match }: { match: Match }) {
             {t("predictionsOpen")}
           </span>
         ) : null}
+        </span>
       </div>
 
       {/* Hairline of light instead of a hard divider — reads as a seam, not a rule. */}
