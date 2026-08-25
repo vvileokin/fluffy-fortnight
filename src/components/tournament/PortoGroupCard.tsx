@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/i18n/navigation";
-import { Check, Loader2, Lock, LogIn, Pencil, Skull, Trophy } from "lucide-react";
+import { ArrowUp, Check, Loader2, Lock, LogIn, Pencil, X } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
 import { useUser } from "@/lib/supabase/use-user";
@@ -244,7 +244,7 @@ function GroupBlock({
               crossed off the tournament. */}
           <div className="mb-2 flex items-center gap-3 text-[0.6875rem] font-semibold">
             <span className="flex items-center gap-1.5 text-[rgb(var(--skin-ring))]">
-              <Trophy className="size-3.5" />
+              <ArrowUp className="size-3.5" strokeWidth={3} />
               Вийдуть {advance.length}/{PORTO_GROUP_SIZES.advance}
             </span>
             {/* The labels are a pair, so they stay one colour at two
@@ -253,7 +253,7 @@ function GroupBlock({
                 The strike belongs on the names underneath, which is where it
                 means something. */}
             <span className="flex items-center gap-1.5 text-[rgb(var(--skin-ring)/0.55)]">
-              <Skull className="size-3.5" />
+              <X className="size-3.5" strokeWidth={3} />
               Виліт 0-2 {zeroTwo.length}/{PORTO_GROUP_SIZES.zeroTwo}
             </span>
           </div>
@@ -270,10 +270,14 @@ function GroupBlock({
                   aria-pressed={isUp || isOut}
                   className={cn(
                     "flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-semibold transition-colors",
+                    // The plate carries the event's colour, the name stays
+                    // white. Colouring both made a scarlet word on a scarlet
+                    // field — one hue, low contrast, and eight of them in a
+                    // grid read as a single red block rather than as choices.
                     isUp
-                      ? "bg-[rgb(var(--skin-ring)/0.20)] text-[rgb(var(--skin-ring))] shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.55)]"
+                      ? "bg-[rgb(var(--skin-ring)/0.22)] text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)]"
                       : isOut
-                        ? "bg-black/45 text-white/40 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.09)]"
+                        ? "bg-black/45 text-white/35 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]"
                         : "bg-black/30 text-white/70 hover:bg-black/45",
                   )}
                 >
@@ -288,8 +292,18 @@ function GroupBlock({
                   >
                     {t.name}
                   </span>
-                  {isUp && <Trophy className="size-3 shrink-0" />}
-                  {isOut && <Skull className="size-3 shrink-0 opacity-70" />}
+                  {/* An arrow and a cross, not a trophy and a skull. At 12px a
+                      trophy is a blob and a skull is a smudge — both were being
+                      read as some third icon. Up means through and a cross
+                      means crossed off, which is what the strikethrough beside
+                      it already says. */}
+                  {isUp && (
+                    <ArrowUp
+                      className="size-3.5 shrink-0 text-[rgb(var(--skin-ring))]"
+                      strokeWidth={3}
+                    />
+                  )}
+                  {isOut && <X className="size-3.5 shrink-0 text-white/30" strokeWidth={3} />}
                 </button>
               );
             })}
@@ -352,8 +366,11 @@ function Filled({ advance, zeroTwo }: { advance: string[]; zeroTwo: string[] }) 
                 <span
                   key={slug}
                   className={cn(
-                    "flex items-center gap-1 rounded bg-black/35 px-1.5 py-1 text-[0.6875rem] font-semibold",
-                    r.out ? "text-white/40" : "text-white",
+                    "flex items-center gap-1 rounded px-1.5 py-1 text-[0.6875rem] font-semibold",
+                    r.out
+                      ? "bg-black/45"
+                      : "bg-[rgb(var(--skin-ring)/0.22)] shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.5)]",
+                    r.out ? "text-white/35" : "text-white",
                   )}
                 >
                   <span className={cn("shrink-0", r.out && "opacity-45 grayscale")}>
