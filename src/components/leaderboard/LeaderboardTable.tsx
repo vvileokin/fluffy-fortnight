@@ -311,17 +311,19 @@ function Podium({
                     take on, and leaving them out put the button everywhere
                     except where the motive is strongest.
 
-                    It sits bottom-left of the portrait, diagonally opposite the
-                    streak flame and clear of the rank badge below, so nothing
-                    on the frame collides and the face → name → score stack is
-                    untouched. */}
+                    Top-left of the portrait. Bottom-left put it on the same
+                    edge as the rank badge, which is centred on the bottom and
+                    grows with the number — at three digits the two touched. The
+                    top edge has only the streak flame on it, at the far corner,
+                    so the two sit opposite each other with the whole width of
+                    the frame between them. */}
                 {onChallenge && row.userId && !row.isYou && (
                   <button
                     onClick={() => onChallenge(row)}
                     aria-label={`Викликати ${row.handle}`}
                     title={`Викликати ${row.handle}`}
                     className={cn(
-                      "absolute -left-1.5 -bottom-1.5 grid place-items-center rounded-full bg-surface-2 text-ink-subtle shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_10%,transparent)] transition-colors hover:text-[rgb(var(--skin-ring))]",
+                      "absolute -left-1.5 -top-1.5 grid place-items-center rounded-full bg-surface-2 text-ink-subtle shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_10%,transparent)] transition-colors hover:text-[rgb(var(--skin-ring))]",
                       first ? "size-7" : "size-6",
                     )}
                   >
