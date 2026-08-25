@@ -85,12 +85,17 @@ export function ChallengeDialog({
 
   return (
     <Modal open={open} onClose={onClose} title={`Виклик · ${target?.handle ?? ""}`}>
+      {/* The dialog is opened from Porto's board about a Porto fixture, so it
+          wears the event. `data-skin` sits here rather than on a parent because
+          a modal renders into its own tree, outside the page that declares the
+          palette — without it every token would fall back to the World Cup. */}
+      <div data-skin="porto">
       {done ? (
         <p className="rounded-xl bg-success/10 px-3 py-4 text-center text-sm font-bold text-success">
           Виклик надіслано. {target?.handle} побачить його на матчі.
         </p>
       ) : upcoming.length === 0 ? (
-        <p className="rounded-xl surface-2 px-3 py-4 text-center text-sm text-ink-muted">
+        <p className="rounded-xl bg-black/30 px-3 py-4 text-center text-sm text-white/50">
           Немає матчів, які ще не почались.
         </p>
       ) : (
@@ -111,8 +116,8 @@ export function ChallengeDialog({
                     className={cn(
                       "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-colors",
                       on
-                        ? "bg-accent/15 text-ink shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
-                        : "surface-2 text-ink-muted hover:bg-surface-3",
+                        ? "bg-[rgb(var(--skin-ring)/0.22)] text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)]"
+                        : "bg-black/30 text-white/70 hover:bg-black/45",
                     )}
                   >
                     <TeamLogo team={a} size="xs" />
@@ -120,7 +125,7 @@ export function ChallengeDialog({
                     <span className="min-w-0 flex-1 truncate">
                       {a.tag} — {b.tag}
                     </span>
-                    <span className="shrink-0 text-[0.6875rem] font-normal text-ink-subtle">
+                    <span className="shrink-0 text-[0.6875rem] font-normal text-white/40">
                       {matchTimeLabel(m)}
                     </span>
                   </button>
@@ -142,8 +147,8 @@ export function ChallengeDialog({
                       className={cn(
                         "flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-colors",
                         side === s
-                          ? "bg-accent/15 text-ink shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--accent)_45%,transparent)]"
-                          : "surface-2 text-ink-muted hover:bg-surface-3",
+                          ? "bg-[rgb(var(--skin-ring)/0.22)] text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)]"
+                          : "bg-black/30 text-white/70 hover:bg-black/45",
                       )}
                     >
                       <TeamLogo team={t} size="xs" />
@@ -164,7 +169,7 @@ export function ChallengeDialog({
               // Forced off, like every other numeric field on the site: the
               // site-wide focus ring is an offset outline meant for controls on
               // flat ground, and on a bordered input it doubles the frame.
-              className="tnum h-11 w-full rounded-xl border border-border bg-surface-2 px-3 font-mono text-sm font-bold text-ink outline-none focus:border-accent focus-visible:rounded-xl! focus-visible:outline-none!"
+              className="tnum h-11 w-full rounded-xl bg-black/30 px-3 font-mono text-sm font-bold text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.2)] outline-none focus:shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)] focus-visible:rounded-xl! focus-visible:outline-none!"
             />
           </Field>
 
@@ -179,8 +184,8 @@ export function ChallengeDialog({
             disabled={!ready || busy}
             className={cn(
               "flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors",
-              "bg-accent text-accent-ink hover:bg-accent-hover",
-              "disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-ink-faint",
+              "bg-[rgb(var(--skin-ring))] text-black hover:brightness-110",
+              "disabled:cursor-not-allowed disabled:bg-white/[0.08] disabled:text-white/35",
             )}
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
@@ -188,6 +193,7 @@ export function ChallengeDialog({
           </button>
         </div>
       )}
+      </div>
     </Modal>
   );
 }
@@ -195,7 +201,7 @@ export function ChallengeDialog({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <span className="mb-1.5 block text-xs font-semibold text-ink-muted">{label}</span>
+      <span className="mb-1.5 block text-xs font-semibold text-white/55">{label}</span>
       {children}
     </div>
   );

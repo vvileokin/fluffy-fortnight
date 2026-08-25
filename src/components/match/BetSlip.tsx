@@ -5,7 +5,6 @@ import { ArrowRight, ChevronLeft, Loader2, Plus, X } from "lucide-react";
 import { BrandIcon, type BrandIconName } from "@/components/ui/BrandIcon";
 import { eventPointsLabel } from "@/lib/data";
 import { refreshProfile } from "@/lib/supabase/use-profile";
-import { useConvertLimit, invalidateConvertLimit } from "@/lib/convert-limit";
 import { cn, formatInt } from "@/lib/utils";
 
 /**
@@ -64,12 +63,7 @@ export function BetSlip({
   const [custom, setCustom] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [swapping, setSwapping] = React.useState(false);
 
-  // Only asked once the stake is out of reach, and shared across every slip on
-  // the page — a match carries several and they would each ask separately.
-  const short = stake > balance;
-  const allowance = useConvertLimit(short);
 
   async function cancel() {
     setBusy(true);
@@ -190,30 +184,6 @@ export function BetSlip({
     onPlaced();
   }
 
-  /** Exactly the gold that covers the shortfall — only offered when it does. */
-  function swapCost(a: { limit: number; rate: number }) {
-    return Math.max(stake - balance, 0) * a.rate;
-  }
-
-  async function swap() {
-    if (!allowance) return;
-    setSwapping(true);
-    setError(null);
-    const res = await fetch("/api/convert", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gold: swapCost(allowance) }),
-    });
-    const out = await res.json().catch(() => ({}));
-    setSwapping(false);
-    if (!out.ok) {
-      setError("Не вдалося обміняти");
-      return;
-    }
-    invalidateConvertLimit();
-    refreshProfile();
-  }
-
   return (
     <div className="mt-2 space-y-1.5">
       {/* Stake row. Presets while the row is closed; the whole row becomes the
@@ -315,26 +285,14 @@ export function BetSlip({
           button that leaves them short anyway, and a way out dangled in front
           of a player who has none is worse than saying nothing. It converts
           exactly what is missing, so the next tap is the bet itself. */}
-      {short && allowance && allowance.limit >= (stake - balance) * allowance.rate && (
-        <button
-          onClick={swap}
-          disabled={swapping}
-          className="tnum flex h-10 w-full items-center justify-center gap-1 rounded-lg bg-white/[0.08] font-mono text-xs font-bold text-white/80 transition-colors hover:bg-white/[0.14] disabled:opacity-50"
-        >
-          {swapping ? (
-            <Loader2 className="size-3.5 shrink-0 animate-spin" />
-          ) : (
-            <>
-              <BrandIcon name="points" className="size-4" />
-              {formatInt(swapCost(allowance))}
-              <span className="mx-1.5 font-normal text-white/40">÷ {allowance.rate}</span>
-              <ArrowRight className="mr-1.5 size-3 shrink-0 text-white/35" strokeWidth={3} />
-              <BrandIcon name={gem} className="size-4" />
-              {formatInt(swapCost(allowance) / allowance.rate)}
-            </>
-          )}
-        </button>
-      )}
+      {/* The top-up offer is gone.
+
+          It converted season gold into `ewc_points` at 5:1, which funded a bet
+          when bets were paid out of that wallet. They are not any more — the
+          event has its own balance — so the button would have taken a player's
+          gold and left them exactly as unable to bet as before, with the
+          shortfall unchanged and the gold spent. A control that cannot do what
+          it says is worse than a refusal a player can act on. */}
 
       <button
         onClick={place}

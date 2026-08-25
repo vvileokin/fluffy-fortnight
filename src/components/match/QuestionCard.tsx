@@ -505,7 +505,12 @@ export function QuestionCard({
               questionId={question.id}
               optionId={bet?.option_id ?? picked}
               odds={question.options.find((o) => o.id === picked)?.odds}
-              balance={profile?.ewc_points ?? 0}
+              // The running event's balance, not what is left of the World
+              // Cup. The slip refuses any stake above this, so reading the
+              // wrong column meant a player holding 350 could not stake 200 —
+              // it was checking a wallet of 100 that has nothing to do with
+              // this tournament.
+              balance={profile?.event_points ?? 0}
               locked={locked || upcoming}
               bet={bet}
               multiplier={multiplier}
