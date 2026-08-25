@@ -7,6 +7,7 @@ import { primaryNav } from "@/lib/nav";
 import { promoBanner, promoHref, type PromoBanner } from "@/lib/data";
 import { Brand } from "./Brand";
 import { Partners } from "./Partners";
+import { OnlineCount } from "./OnlineCount";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, href: string) {
@@ -24,8 +25,9 @@ export function Sidebar({ promo = promoBanner }: { promo?: PromoBanner }) {
        different panel bolted on; one step is enough to say "docked" while the
        two planes still belong to the same room. */
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col bg-surface lg:flex">
-      <div className="flex h-16 items-center px-5">
+      <div className="flex h-16 items-center justify-between gap-3 px-5">
         <Brand />
+        <OnlineCount />
       </div>
 
       {promo.enabled && promo.image && (

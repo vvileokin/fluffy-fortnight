@@ -791,6 +791,19 @@ body {
   animation: livePulse 1.5s var(--ease-out) infinite;
 }
 
+/* Presence, not urgency. The live dot beats at 1.5s and scales as it goes,
+   which is right for a match in progress and wrong for "people are here" —
+   a header that twitches every second and a half stops being a header. This
+   breathes at four seconds and only in opacity: scaling a 6px dot in a fixed
+   row is jitter, not motion. */
+@keyframes onlineBreath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.online-dot {
+  animation: onlineBreath 4s var(--ease-out) infinite;
+}
+
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
