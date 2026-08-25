@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/i18n/navigation";
-import { Check, Loader2, LogIn, Swords, X } from "lucide-react";
+import { Check, ChevronLeft, Loader2, LogIn, Plus, Swords, X } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Avatar } from "@/components/ui/Avatar";
 import { BrandIcon } from "@/components/ui/BrandIcon";
@@ -41,7 +41,8 @@ export function DuelBoard({ match }: { match: Match }) {
   const [duels, setDuels] = React.useState<Duel[] | null>(null);
   const [me, setMe] = React.useState<string | null>(null);
   const [side, setSide] = React.useState<"a" | "b" | null>(null);
-  const [stake, setStake] = React.useState(TIERS[0]);
+  const [stake, setStake] = React.useState<number>(TIERS[0]);
+  const [custom, setCustom] = React.useState(false);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [nonce, setNonce] = React.useState(0);
@@ -96,7 +97,6 @@ export function DuelBoard({ match }: { match: Match }) {
     too_many_open: "Забагато відкритих викликів — максимум три",
     started: "Матч уже почався",
     taken: "Виклик уже взяли",
-    bad_tier: "Обери одну з сум",
     self: "Це твій власний виклик",
     not_open: "Виклик уже закрито",
     not_yours: "Це не твій виклик",
@@ -181,25 +181,76 @@ export function DuelBoard({ match }: { match: Match }) {
               })}
             </div>
 
-            <div className="grid grid-cols-4 gap-1.5">
-              {TIERS.map((c) => (
+            {/* Four quick amounts and a way past them, built like the bet
+                slip's — same chips, same swap to a field, same way back. The
+                four were once the only legal figures, on the theory that a
+                challenge has to find a pair; but nothing here pairs anybody
+                automatically, so a row saying 137 is as pressable as one
+                saying 100. */}
+            {custom ? (
+              <div className="flex items-center gap-1.5">
                 <button
-                  key={c}
                   onClick={() => {
-                    setStake(c);
+                    setCustom(false);
+                    setStake(TIERS[0]);
+                    setConfirming(false);
+                  }}
+                  aria-label="Назад до сум"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-white/[0.06] text-white/60 transition-colors hover:bg-white/[0.12]"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+                <input
+                  autoFocus
+                  type="text"
+                  inputMode="numeric"
+                  value={stake || ""}
+                  placeholder="Своя сума"
+                  aria-label="Своя сума"
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
+                    setStake(digits ? Number(digits) : 0);
                     setConfirming(false);
                   }}
                   className={cn(
-                    "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
-                    stake === c
-                      ? "bg-[rgb(var(--skin-ring))] text-black"
-                      : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
+                    "tnum h-9 min-w-0 flex-1 rounded-lg bg-white/[0.06] text-center font-mono text-sm font-bold leading-none text-white transition-colors",
+                    "placeholder:font-sans placeholder:text-sm placeholder:font-semibold placeholder:leading-none placeholder:text-white/40",
+                    "outline-none focus:bg-white/[0.12] focus-visible:outline-none! focus-visible:rounded-lg!",
                   )}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-5 gap-1.5">
+                {TIERS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => {
+                      setStake(c);
+                      setConfirming(false);
+                    }}
+                    className={cn(
+                      "tnum h-9 rounded-lg font-mono text-xs font-bold transition-colors",
+                      stake === c
+                        ? "bg-[rgb(var(--skin-ring))] text-black"
+                        : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setCustom(true);
+                    setStake(0);
+                    setConfirming(false);
+                  }}
+                  aria-label="Своя сума"
+                  className="grid h-9 place-items-center rounded-lg bg-white/[0.06] text-white/60 transition-colors hover:bg-white/[0.12] hover:text-white"
                 >
-                  {c}
+                  <Plus className="size-4" strokeWidth={2.5} />
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
 
             <button
               onClick={() =>
@@ -207,7 +258,7 @@ export function DuelBoard({ match }: { match: Match }) {
                   ? send("POST", { match: match.id, side, stake }, "create")
                   : setConfirming(true)
               }
-              disabled={!side || busy !== null}
+              disabled={!side || stake < 1 || busy !== null}
               className={cn(
                 "flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-opacity",
                 "bg-[rgb(var(--skin-ring))] text-black hover:brightness-110",
@@ -215,7 +266,13 @@ export function DuelBoard({ match }: { match: Match }) {
               )}
             >
               {busy === "create" && <Loader2 className="size-4 animate-spin" />}
-              {!side ? "Обери бік" : confirming ? "Так, виставляю" : `Кинути виклик · ${stake}`}
+              {!side
+                ? "Обери бік"
+                : stake < 1
+                  ? "Впиши суму"
+                  : confirming
+                    ? "Так, виставляю"
+                    : `Кинути виклик · ${formatInt(stake)}`}
             </button>
 
             {/* A caption under the control it qualifies, not a panel above it.
@@ -224,7 +281,7 @@ export function DuelBoard({ match }: { match: Match }) {
                 look like the thing being confirmed. */}
             {confirming && side && (
               <p className="px-1 text-center text-[0.6875rem] leading-snug text-white/45">
-                {stake} поінтів зарезервуються одразу, доки виклик хтось не візьме.
+                {formatInt(stake)} поінтів зарезервуються одразу, доки виклик хтось не візьме.
               </p>
             )}
           </>

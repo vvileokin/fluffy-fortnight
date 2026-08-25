@@ -101,13 +101,11 @@ function usePlayoffByStage(matches: Match[]) {
 function GroupPanel({
   group,
   resolve,
-  defaultOpen,
 }: {
   group: BracketGroup;
   resolve: (n: EwcMatchNode) => Resolved;
-  defaultOpen: boolean;
 }) {
-  const [open, setOpen] = React.useState(defaultOpen);
+  const [open, setOpen] = React.useState(false);
   return (
     <div className="skin-aura-card overflow-hidden rounded-xl">
       <button
@@ -202,7 +200,7 @@ function PlayoffSlot({ slot, match }: { slot: PortoPlayoffSlot; match?: Match })
 }
 
 function PlayoffsPanel({ byStage }: { byStage: Map<string, Match[]> }) {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
   // Which fixture of its stage each slot takes, counted as the rounds are read.
   const used = new Map<string, number>();
   return (
@@ -250,8 +248,8 @@ export function PortoBracket({ matches }: { matches: Match[] }) {
   const byStage = usePlayoffByStage(matches);
   return (
     <div className="space-y-3">
-      {PORTO_GROUPS.map((g, i) => (
-        <GroupPanel key={g.id} group={g} resolve={resolve} defaultOpen={i === 0} />
+      {PORTO_GROUPS.map((g) => (
+        <GroupPanel key={g.id} group={g} resolve={resolve} />
       ))}
       <PlayoffsPanel byStage={byStage} />
     </div>

@@ -1,3 +1,7 @@
+/** Where the partner's name points, everywhere it appears. */
+export const BETKING_URL =
+  "https://betking.com.ua/sports-book/?refcode=LAGpC3ROEguNo&register=true#/overview";
+
 /**
  * BETKING lockup — the peaks mark plus the wordmark, as supplied.
  *
@@ -48,15 +52,32 @@ export function BetkingMark({ className }: { className?: string }) {
  */
 export function SponsorStrip({ className }: { className?: string }) {
   return (
-    <div
+    /* The plate is the link. It carries the partner's name on a card about
+       staking, which is the one place on the site where a reader is already
+       thinking about odds — so leaving it inert was leaving the most relevant
+       impression on the page unclickable.
+
+       `sponsored` on the rel is not decoration: it is the declaration search
+       engines expect on a paid or affiliate destination, and it travels with
+       `noopener noreferrer`, which stop the opened tab from reaching back into
+       this one. The strip sits inside cards that are themselves links, so the
+       click is stopped from bubbling — otherwise pressing the sponsor would
+       navigate to the match instead. */
+    <a
+      href={BETKING_URL}
+      target="_blank"
+      rel="noopener noreferrer sponsored"
+      onClick={(e) => e.stopPropagation()}
+      aria-label="BetKing"
       className={
-        "flex items-center justify-center gap-1.5 bg-white py-1.5 " + (className ?? "")
+        "flex items-center justify-center gap-1.5 bg-white py-1.5 transition-[filter] hover:brightness-95 " +
+        (className ?? "")
       }
     >
       <span className="text-[0.5625rem] font-bold uppercase tracking-[0.08em] text-black/55">
         Fueled by
       </span>
       <BetkingMark className="h-2.5 w-auto text-[#FF0043]" />
-    </div>
+    </a>
   );
 }

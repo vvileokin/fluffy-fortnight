@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const SLUG = "blast-porto-2026";
-/** The open board speaks in tiers so challenges can find a pair. */
+/** Quick amounts. Not a restriction — any figure the balance covers is legal. */
 export const DUEL_TIERS = [50, 100, 250, 500];
 
 type DuelRow = {
@@ -119,11 +119,6 @@ export async function POST(request: Request) {
 
   if (!matchId || (side !== "a" && side !== "b") || !Number.isFinite(stake) || stake < 1) {
     return NextResponse.json({ ok: false, error: "invalid" }, { status: 400 });
-  }
-  // Checked here as well as in the function: a refusal that arrives as a
-  // readable error beats one that arrives as a database code.
-  if (!opponent && !DUEL_TIERS.includes(stake)) {
-    return NextResponse.json({ ok: false, error: "bad_tier" }, { status: 400 });
   }
 
   const { data, error } = await createAdminClient().rpc("duel_create", {

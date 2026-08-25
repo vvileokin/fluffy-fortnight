@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, Loader2, Plus } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { refreshProfile } from "@/lib/supabase/use-profile";
 import { TeamLogo } from "@/components/ui/TeamLogo";
@@ -21,6 +21,9 @@ import { cn, formatInt } from "@/lib/utils";
  * 140 — and that problem does not exist when you are asking one person who
  * either accepts or does not.
  */
+/** Quick amounts, shared with the match board. Any figure is legal. */
+const TIERS = [50, 100, 250, 500];
+
 export function ChallengeDialog({
   open,
   onClose,
@@ -40,7 +43,8 @@ export function ChallengeDialog({
 
   const [matchId, setMatchId] = React.useState<string | null>(null);
   const [side, setSide] = React.useState<"a" | "b" | null>(null);
-  const [stake, setStake] = React.useState("100");
+  const [stake, setStake] = React.useState<number>(TIERS[1]);
+  const [custom, setCustom] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [done, setDone] = React.useState(false);
@@ -56,14 +60,15 @@ export function ChallengeDialog({
     if (!open) return;
     setMatchId(null);
     setSide(null);
-    setStake("100");
+    setStake(TIERS[1]);
+    setCustom(false);
     setError(null);
     setDone(false);
     setConfirming(false);
   }, [open, target?.id]);
 
   const match = upcoming.find((m) => m.id === matchId) ?? null;
-  const amount = Number(stake || 0);
+  const amount = stake;
   const ready = !!match && !!side && amount >= 1;
 
   const REFUSAL: Record<string, string> = {
@@ -177,19 +182,73 @@ export function ChallengeDialog({
           )}
 
           <Field label="Ставка">
-            <input
-              type="text"
-              inputMode="numeric"
-              value={stake}
-              onChange={(e) => {
-                setStake(e.target.value.replace(/\D/g, "").slice(0, 6));
-                setConfirming(false);
-              }}
-              // Forced off, like every other numeric field on the site: the
-              // site-wide focus ring is an offset outline meant for controls on
-              // flat ground, and on a bordered input it doubles the frame.
-              className="tnum h-11 w-full rounded-xl bg-black/30 px-3 font-mono text-sm font-bold text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.2)] outline-none focus:shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)] focus-visible:rounded-xl! focus-visible:outline-none!"
-            />
+            {/* The same four-and-a-field the match board and the bet slip use.
+                A named challenge always took any figure, but it made you type
+                one even when the answer was 100 — the chips are the shortcut,
+                not a restriction. */}
+            {custom ? (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setCustom(false);
+                    setStake(TIERS[0]);
+                    setConfirming(false);
+                  }}
+                  aria-label="Назад до сум"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-black/30 text-white/60 transition-colors hover:bg-black/45"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+                <input
+                  autoFocus
+                  type="text"
+                  inputMode="numeric"
+                  value={stake || ""}
+                  placeholder="Своя сума"
+                  aria-label="Своя сума"
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
+                    setStake(digits ? Number(digits) : 0);
+                    setConfirming(false);
+                  }}
+                  // Forced off, like every other numeric field on the site: the
+                  // site-wide focus ring is an offset outline meant for controls
+                  // on flat ground, and on a bordered input it doubles the frame.
+                  className="tnum h-11 min-w-0 flex-1 rounded-xl bg-black/30 text-center font-mono text-sm font-bold leading-none text-white shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.2)] outline-none placeholder:font-sans placeholder:text-sm placeholder:font-semibold placeholder:leading-none placeholder:text-white/40 focus:shadow-[inset_0_0_0_1px_rgb(var(--skin-ring)/0.6)] focus-visible:rounded-xl! focus-visible:outline-none!"
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-5 gap-1.5">
+                {TIERS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => {
+                      setStake(c);
+                      setConfirming(false);
+                    }}
+                    className={cn(
+                      "tnum h-11 rounded-xl font-mono text-xs font-bold transition-colors",
+                      stake === c
+                        ? "bg-[rgb(var(--skin-ring))] text-black"
+                        : "bg-black/30 text-white/70 hover:bg-black/45",
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setCustom(true);
+                    setStake(0);
+                    setConfirming(false);
+                  }}
+                  aria-label="Своя сума"
+                  className="grid h-11 place-items-center rounded-xl bg-black/30 text-white/60 transition-colors hover:bg-black/45 hover:text-white"
+                >
+                  <Plus className="size-4" strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
           </Field>
 
           {error && (
@@ -208,8 +267,10 @@ export function ChallengeDialog({
             )}
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
-            {!ready
+            {!match || !side
               ? "Обери матч і бік"
+              : amount < 1
+                ? "Впиши суму"
               : confirming
                 ? "Так, кидаю"
                 : `Кинути виклик · ${formatInt(amount)}`}

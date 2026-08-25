@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { BETKING_URL } from "@/components/ui/BetkingMark";
 
 // Per-partner heights tuned so the marks read at the same visual size.
 // BetKing's lockup is much wider than it is tall (mark + wordmark, ~8:1), so
@@ -8,7 +9,7 @@ const partners = [
   {
     name: "BetKing",
     logo: "/brand/partner-betking.svg",
-    url: "https://betking.com.ua/sports-book/?refcode=LAGpC3ROEguNo&register=true#/overview",
+    url: BETKING_URL,
     row: "h-2.5",
     strip: "h-3",
     offset: "",

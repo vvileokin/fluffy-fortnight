@@ -88,13 +88,11 @@ function useResolver(matches: Match[]) {
 function GroupPanel({
   group,
   resolve,
-  defaultOpen,
 }: {
   group: EwcGroup;
   resolve: (n: EwcMatchNode) => Resolved;
-  defaultOpen: boolean;
 }) {
-  const [open, setOpen] = React.useState(defaultOpen);
+  const [open, setOpen] = React.useState(false);
   return (
     <div className="skin-aura-card overflow-hidden rounded-xl">
       <button
@@ -158,17 +156,18 @@ export function EwcBracket({ matches }: { matches: Match[] }) {
   return (
     <div className="space-y-4">
       {EWC_GROUPS.map((g) => (
-        <GroupPanel key={g.id} group={g} resolve={resolve} defaultOpen={false} />
+        <GroupPanel key={g.id} group={g} resolve={resolve} />
       ))}
-      {/* Open by default now that the draw is published — the playoff ladder is
-          the part of the event a visitor came to look at. */}
+      {/* Closed, like the groups. On a page that surveys a whole event, a
+          section that unfolds on arrival has decided for the reader which part
+          they came for. */}
       <PlayoffsPanel resolve={resolve} />
     </div>
   );
 }
 
 function PlayoffsPanel({ resolve }: { resolve: (n: EwcMatchNode) => Resolved }) {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
   return (
     <div className="skin-aura-card overflow-hidden rounded-xl">
       <button
