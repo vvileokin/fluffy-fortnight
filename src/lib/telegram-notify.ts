@@ -35,7 +35,29 @@ export type Outbox = {
   payload: Record<string, unknown>;
 };
 
-type Message = { mark: MarkName; text: string };
+/**
+ * One mark leads the message, or the text carries its own.
+ *
+ * Most templates want a single glyph in front, which is what the chat list
+ * shows before anybody reads a word. A few want a mark per line — a duel result
+ * opens with the swords and then answers the money on its own line — and those
+ * embed their marks with `E()` and leave `mark` off.
+ *
+ * `button` is a single link under the message. It exists because the messages
+ * that carry one are all invitations to come back and do the thing again, and a
+ * bare URL in the body would be the same invitation with worse manners.
+ */
+type Message = {
+  mark?: MarkName;
+  text: string;
+  button?: { text: string; url: string };
+};
+
+const SITE = "https://cs2ua.com";
+
+/** A custom emoji, inline, with the plain glyph as its fallback content. */
+const E = (name: MarkName) =>
+  `<tg-emoji emoji-id="${MARK[name].id}">${MARK[name].fallback}</tg-emoji>`;
 
 /**
  * A figure, set in monospace.
@@ -68,24 +90,21 @@ export function render(kind: string, p: Record<string, unknown>): Message | null
         text: `<b>${s(p.from)} прийняв твій виклик</b>\n${s(p.match)} · ${n(p.stake)} проти ${n(p.stake)}.`,
       };
     case "duel_won":
-      // Two figures, because they answer different questions: what landed on
-      // the balance, and what of it was actually won. One number alone gets
-      // read as the other by half the people who see it.
+      // Two figures on the money line, because they answer different
+      // questions: what landed on the balance, and what of it was won. One
+      // number alone gets read as the other by half the people who see it.
       return {
-        mark: "duel",
         text:
-          `<b>Ти виграв дуель проти ${s(p.from)}</b>\n` +
-          `${s(p.match)}\n` +
-          `Забрав ${n(p.payout)} — з них ${n(p.profit)} чистими.\n` +
-          `<i>Рахунок у дуелях</i> <code>${s(p.record)}</code>`,
+          `${E("duel")} <b>Ти виграв дуель проти ${s(p.from)}.</b>\n` +
+          `${E("won")} Забрав ${n(p.payout)} — з них ${n(p.profit)} чистими.`,
+        button: { text: "ще одна дуель?", url: SITE },
       };
     case "duel_lost":
       return {
-        mark: "duel",
         text:
-          `<b>Дуель проти ${s(p.from)} програна</b>\n` +
-          `${s(p.match)} · <s>${raw(p.stake)}</s>\n` +
-          `<i>Рахунок</i> <code>${s(p.record)}</code> — реванш?`,
+          `${E("duel")} <b>Ти програв дуель проти ${s(p.from)}.</b>\n` +
+          `${E("lost")} Втратив своїх ${n(p.stake)} поінтів`,
+        button: { text: "відіграємось?", url: SITE },
       };
     case "duel_declined":
       return {
@@ -186,21 +205,22 @@ export function render(kind: string, p: Record<string, unknown>): Message | null
 }
 
 /**
- * Send one message, marked.
+ * Send one message.
  *
  * The mark is a custom emoji entity, which Telegram only lets a bot use while
  * its owner holds Premium. That can lapse, and a bot that goes silent the day a
  * subscription expires is worse than a bot without decoration — so a refusal
- * that names the entity is retried immediately as plain text.
+ * that names the entity is retried with every custom emoji collapsed to the
+ * plain glyph it already carries as its fallback content. The retry is a string
+ * substitution rather than a second template, which is what keeps the two
+ * versions from drifting apart.
  */
 export async function send(
   token: string,
   chatId: string,
   message: Message,
 ): Promise<{ ok: boolean; error?: string }> {
-  const { id, fallback } = MARK[message.mark];
-
-  const post = (text: string, entities?: unknown[]) =>
+  const post = (text: string) =>
     fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -209,18 +229,29 @@ export async function send(
         text,
         parse_mode: "HTML",
         link_preview_options: { is_disabled: true },
-        ...(entities ? { entities } : {}),
+        ...(message.button
+          ? {
+              reply_markup: {
+                inline_keyboard: [[{ text: message.button.text, url: message.button.url }]],
+              },
+            }
+          : {}),
       }),
     }).then((r) => r.json());
 
-  // The mark leads, then a space, then the message. Written as HTML so the
-  // bold in the templates survives; the emoji itself is a tag, not an entity
-  // offset, which is what keeps the two from having to agree about lengths.
-  const marked = `<tg-emoji emoji-id="${id}">${fallback}</tg-emoji> ${message.text}`;
-  let out = await post(marked);
+  // The mark leads, then a space, then the message — unless the template has
+  // placed its own marks, in which case it knows better than this does where
+  // they belong. Written as HTML so the bold survives; the emoji is a tag
+  // rather than an entity offset, which is what keeps the two from having to
+  // agree about string lengths.
+  const text = message.mark
+    ? `<tg-emoji emoji-id="${MARK[message.mark].id}">${MARK[message.mark].fallback}</tg-emoji> ${message.text}`
+    : message.text;
+
+  let out = await post(text);
 
   if (!out.ok && /emoji/i.test(String(out.description ?? ""))) {
-    out = await post(`${fallback} ${message.text}`);
+    out = await post(text.replace(/<tg-emoji[^>]*>(.*?)<\/tg-emoji>/g, "$1"));
   }
   if (!out.ok) {
     return { ok: false, error: String(out.description ?? "unknown") };
