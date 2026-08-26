@@ -19,6 +19,8 @@ type Row = {
   options: Option[] | null;
   /** Absent until migration 0040 runs, which reads as an ordinary question. */
   betting?: boolean | null;
+  /** Absent until 0064, which reads as the fixed price it has always had. */
+  live_odds?: boolean | null;
 };
 
 function toQuestion(r: Row): Question {
@@ -33,6 +35,7 @@ function toQuestion(r: Row): Question {
     deadlineLabel: r.deadline_label ?? "",
     options: Array.isArray(r.options) ? r.options : [],
     betting: !!r.betting,
+    liveOdds: !!r.live_odds,
   };
 }
 

@@ -9,19 +9,28 @@ const SLUG = "blast-porto-2026";
  * Each group closes on its own first match, not on the event.
  *
  * Group A plays on the 26th and group B on the 27th, so one blanket lock would
- * either shut B a day early or leave A open while it is being played. The
- * question asked here is narrow on purpose — of this group's fixtures, has any
- * stopped being upcoming — so it costs one column of one query.
+ * either shut B a day early or leave A open while it is being played.
+ *
+ * Closed by the clock, not by the status column. Status is set by a person, and
+ * on the opening day nobody set it: Aurora — G2 kicked off at 09:00 and was
+ * still marked `upcoming` an hour later, during which seven players filled in a
+ * card for a group that was already being played. A lock that depends on
+ * somebody remembering is not a lock. `start_at` needs remembering by nobody,
+ * and the status check stays alongside it for a fixture brought forward or
+ * started early.
  */
 async function groupWindows(): Promise<Record<string, boolean>> {
   const { data } = await createAdminClient()
     .from("matches")
-    .select("stage, status")
+    .select("stage, status, start_at")
     .eq("tournament_slug", SLUG);
+  const now = Date.now();
   const started: Record<string, boolean> = { a: false, b: false };
   for (const m of data ?? []) {
     const g = /^group\s*a/i.test(m.stage ?? "") ? "a" : /^group\s*b/i.test(m.stage ?? "") ? "b" : null;
-    if (g && m.status !== "upcoming") started[g] = true;
+    if (!g) continue;
+    const due = m.start_at ? new Date(m.start_at as string).getTime() : Infinity;
+    if (m.status !== "upcoming" || due <= now) started[g] = true;
   }
   return { a: !started.a, b: !started.b };
 }

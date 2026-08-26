@@ -504,7 +504,14 @@ export function QuestionCard({
               gem={eventGem}
               questionId={question.id}
               optionId={bet?.option_id ?? picked}
-              odds={question.options.find((o) => o.id === picked)?.odds}
+              // The *bet's* option once one is placed, not the highlighted one.
+              // On a floating market the slip has to show what the stake is
+              // worth right now, and that is a price on the option actually
+              // backed — which is not always the one under the cursor.
+              odds={
+                question.options.find((o) => o.id === (bet?.option_id ?? picked))?.odds
+              }
+              liveOdds={question.liveOdds}
               // The running event's balance, not what is left of the World
               // Cup. The slip refuses any stake above this, so reading the
               // wrong column meant a player holding 350 could not stake 200 —
@@ -532,6 +539,20 @@ export function QuestionCard({
           )
         )}
       </div>
+
+      {/* The rule of a floating market, stated once on the card that obeys it.
+          Without it the first player to bet at 4.00 and be paid at 2.00 has
+          been cheated as far as they can tell — the coefficient moved and
+          nothing ever said it could. It sits under the controls rather than
+          above them because it explains what just happened to a number the
+          reader has already looked at. */}
+      {question.liveOdds && question.status === "open" && (
+        <p className="px-3.5 pb-2.5 text-center text-[0.6875rem] leading-snug text-ink-subtle sm:px-4">
+          Коефіцієнт плаває: що більше поставили на варіант, то менше він
+          платить. Рахується <b className="font-semibold">фінальний</b> —
+          той, що буде на старті матчу.
+        </p>
+      )}
 
       {/* Outside the padded body on purpose: full-bleed across the bottom edge,
           clipped to the card's own corners, so the card stands on the sponsor's

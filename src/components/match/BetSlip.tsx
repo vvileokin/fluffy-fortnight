@@ -40,6 +40,7 @@ export function BetSlip({
   questionId,
   optionId,
   odds,
+  liveOdds,
   balance,
   locked,
   bet,
@@ -50,6 +51,8 @@ export function BetSlip({
   questionId: string;
   optionId: string | undefined;
   odds: number | undefined;
+  /** Totalisator: the price moves, and the final one is what pays. */
+  liveOdds?: boolean;
   balance: number;
   locked: boolean;
   bet: Bet | null;
@@ -87,6 +90,11 @@ export function BetSlip({
   if (bet) {
     const settled = !!bet.settled_at;
     const won = settled && (bet.payout ?? 0) > 0;
+    // On a floating market the price on a live slip is the market's, not the
+    // one the slip was written at: that is the whole bargain, and showing the
+    // taken price would quietly promise a payout the question will not honour.
+    // Once settled, `bet.odds` is the price it was actually paid at.
+    const shown = !settled && liveOdds && odds ? odds : bet.odds;
     return (
       /* Two rows, near enough the picker's height that a placed card and an
          unplaced one sit level in a grid. One cramped line left the card half
@@ -100,10 +108,10 @@ export function BetSlip({
           <span className="tnum flex min-w-0 items-center gap-1 font-mono text-sm font-bold leading-none text-[rgb(var(--skin-ring))]">
             <BrandIcon name={gem} className="size-4" />
             {formatInt(bet.stake)}
-            <span className="mx-1.5 text-white/45">× {bet.odds}</span>
+            <span className="mx-1.5 text-white/45">× {shown}</span>
             <ArrowRight className="mr-1.5 size-3.5 shrink-0 text-white/35" strokeWidth={3} />
             <BrandIcon name={gem} className="size-4" />
-            {formatInt(Math.floor(bet.stake * bet.odds * multiplier))}
+            {formatInt(Math.floor(bet.stake * shown * multiplier))}
           </span>
           {/* Once settled the outcome replaces the projection — what a slip is
               worth stops mattering the moment it is decided. */}

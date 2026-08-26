@@ -979,6 +979,11 @@ export type Question = {
   options: Option[];
   /** Players stake EWC points at odds instead of collecting a flat reward. */
   betting?: boolean;
+  /**
+   * Totalisator pricing: the coefficient moves with the money staked, and
+   * every slip settles at the final one rather than the one it was taken at.
+   */
+  liveOdds?: boolean;
   answered?: string; // option id
   result?: "correct" | "wrong" | "pending";
 };
