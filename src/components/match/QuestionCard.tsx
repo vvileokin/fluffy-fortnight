@@ -540,20 +540,6 @@ export function QuestionCard({
         )}
       </div>
 
-      {/* The rule of a floating market, stated once on the card that obeys it.
-          Without it the first player to bet at 4.00 and be paid at 2.00 has
-          been cheated as far as they can tell — the coefficient moved and
-          nothing ever said it could. It sits under the controls rather than
-          above them because it explains what just happened to a number the
-          reader has already looked at. */}
-      {question.liveOdds && question.status === "open" && (
-        <p className="px-3.5 pb-2.5 text-center text-[0.6875rem] leading-snug text-ink-subtle sm:px-4">
-          Коефіцієнт плаває: що більше поставили на варіант, то менше він
-          платить. Рахується <b className="font-semibold">фінальний</b> —
-          той, що буде на старті матчу.
-        </p>
-      )}
-
       {/* Outside the padded body on purpose: full-bleed across the bottom edge,
           clipped to the card's own corners, so the card stands on the sponsor's
           plate instead of carrying a sticker inside it. */}

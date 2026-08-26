@@ -90,10 +90,10 @@ export function BetSlip({
   if (bet) {
     const settled = !!bet.settled_at;
     const won = settled && (bet.payout ?? 0) > 0;
-    // On a floating market the price on a live slip is the market's, not the
-    // one the slip was written at: that is the whole bargain, and showing the
-    // taken price would quietly promise a payout the question will not honour.
-    // Once settled, `bet.odds` is the price it was actually paid at.
+    // On a floating market the figure on a live slip is the market's, not the
+    // one the slip was written at — that is the whole bargain, and showing the
+    // taken price would promise a payout the question will not honour. Once
+    // settled, `bet.odds` is the price it was actually paid at.
     const shown = !settled && liveOdds && odds ? odds : bet.odds;
     return (
       /* Two rows, near enough the picker's height that a placed card and an
