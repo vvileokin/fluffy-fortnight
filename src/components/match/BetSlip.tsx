@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, ChevronLeft, Loader2, Plus, X } from "lucide-react";
+import { ArrowRight, ChevronLeft, Flame, Loader2, Plus, X } from "lucide-react";
 import { BrandIcon, type BrandIconName } from "@/components/ui/BrandIcon";
 import { eventPointsLabel } from "@/lib/data";
 import { refreshProfile } from "@/lib/supabase/use-profile";
@@ -104,11 +104,24 @@ export function BetSlip({
       <div className="mt-2 space-y-1.5">
         <div className="flex h-11 items-center justify-between gap-2 rounded-lg bg-black/30 px-3">
           {/* Both marks ember: the same currency going out and coming back,
-              with the arrow and the coefficient saying which is which. */}
+              with the arrow and the coefficient saying which is which.
+
+              Every factor is on the line. The streak was applied to the payout
+              but left out of the multiplication, so the row read `367 × 8.86 →
+              4064` — a sum that is wrong by inspection, because 367 × 8.86 is
+              3 252. The missing ×1.25 was doing the rest of the work off
+              screen. The option chips above already show the streak beside the
+              coefficient; now the slip agrees with them, and the arithmetic
+              closes. */}
           <span className="tnum flex min-w-0 items-center gap-1 font-mono text-sm font-bold leading-none text-[rgb(var(--skin-ring))]">
             <BrandIcon name={gem} className="size-4" />
             {formatInt(bet.stake)}
             <span className="mx-1.5 text-white/45">× {shown}</span>
+            {multiplier > 1 && (
+              <span className="mr-1.5 -ml-1 inline-flex items-center gap-0.5 rounded bg-current/15 px-1 py-px text-[0.625rem] font-bold leading-none">
+                <Flame className="size-2.5" />×{multiplier}
+              </span>
+            )}
             <ArrowRight className="mr-1.5 size-3.5 shrink-0 text-white/35" strokeWidth={3} />
             <BrandIcon name={gem} className="size-4" />
             {formatInt(Math.floor(bet.stake * shown * multiplier))}
