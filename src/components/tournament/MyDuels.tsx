@@ -165,6 +165,9 @@ function DuelRow({
   const other = iAmChallenger ? duel.opponent : duel.challenger;
   const settled = duel.status === "settled";
   const won = settled && duel.winner === me;
+  // Open with a name on it is a question somebody has not answered. Open with
+  // nobody named is a standing offer, and the title already says so.
+  const pending = duel.status === "open" && !!other;
   const [armed, setArmed] = React.useState(false);
 
   const body = (
@@ -175,12 +178,28 @@ function DuelRow({
         <span className="size-5 shrink-0 rounded bg-white/5" />
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-semibold text-white">
-          {other ? other.handle : "чекає на суперника"}
+        <p className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-white">
+          <span className="truncate">{other ? other.handle : "чекає на суперника"}</span>
+          {/* A challenge nobody has answered looked exactly like one that was
+              taken: same name, same stake, same row. The only difference was
+              a small × at the far end, which reads as "close this" rather than
+              "this is still open". The state belongs beside the name, in
+              words. */}
+          {pending && (
+            <span className="shrink-0 rounded bg-[rgb(var(--skin-ring)/0.16)] px-1.5 py-px text-[0.625rem] font-bold uppercase tracking-wide text-[rgb(var(--skin-ring))]">
+              чекає
+            </span>
+          )}
         </p>
         <p className="truncate text-[0.6875rem] text-white/40">
-          {backed ? `ти на ${backed.tag}` : "матч"}
-          {match ? ` · ${getTeam(match.a).tag} — ${getTeam(match.b).tag}` : ""}
+          {/* An unanswered challenge says what happens if it stays that way.
+              "Waiting" on its own reads as points already gone; the whole point
+              of the state is that they are not. */}
+          {pending
+            ? "не приймуть — поінти повернуться"
+            : `${backed ? `ти на ${backed.tag}` : "матч"}${
+                match ? ` · ${getTeam(match.a).tag} — ${getTeam(match.b).tag}` : ""
+              }`}
         </p>
       </div>
 

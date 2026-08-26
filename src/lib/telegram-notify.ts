@@ -80,9 +80,18 @@ export function render(kind: string, p: Record<string, unknown>): Message | null
   switch (kind) {
     /* ---- duels ---- */
     case "duel_challenge":
+      // Named at somebody, so it is the one message in this file that is
+      // waiting on the reader rather than telling them what already happened.
+      // The button goes to the fixture, not the front page: an invitation you
+      // then have to go and find is an invitation with a chore attached.
       return {
-        mark: "duel",
-        text: `<b>${s(p.from)} викликав тебе</b>\n${s(p.match)} · <i>${s(p.when)}</i>\nВін на <b>${s(p.side)}</b>, ставка ${n(p.stake)}.`,
+        text:
+          `${E("duel")} <b>${s(p.from)} кидає тобі дуель на ${n(p.stake)} поінтів.</b>\n` +
+          `${E("won")} <b>${s(p.match)}</b>`,
+        button: {
+          text: "прийняти",
+          url: p.matchId ? `${SITE}/matches/${s(p.matchId)}` : SITE,
+        },
       };
     case "duel_accepted":
       return {
