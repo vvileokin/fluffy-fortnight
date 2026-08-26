@@ -68,14 +68,24 @@ export function render(kind: string, p: Record<string, unknown>): Message | null
         text: `<b>${s(p.from)} прийняв твій виклик</b>\n${s(p.match)} · ${n(p.stake)} проти ${n(p.stake)}.`,
       };
     case "duel_won":
+      // Two figures, because they answer different questions: what landed on
+      // the balance, and what of it was actually won. One number alone gets
+      // read as the other by half the people who see it.
       return {
         mark: "duel",
-        text: `<b>Ти виграв дуель проти ${s(p.from)}</b>\n${s(p.match)} · +${n(p.payout)}\n<i>Рахунок у дуелях</i> <code>${s(p.record)}</code>`,
+        text:
+          `<b>Ти виграв дуель проти ${s(p.from)}</b>\n` +
+          `${s(p.match)}\n` +
+          `Забрав ${n(p.payout)} — з них ${n(p.profit)} чистими.\n` +
+          `<i>Рахунок у дуелях</i> <code>${s(p.record)}</code>`,
       };
     case "duel_lost":
       return {
         mark: "duel",
-        text: `Дуель проти ${s(p.from)} програна. ${s(p.match)}.\n<i>Рахунок</i> <code>${s(p.record)}</code> — реванш?`,
+        text:
+          `<b>Дуель проти ${s(p.from)} програна</b>\n` +
+          `${s(p.match)} · <s>${raw(p.stake)}</s>\n` +
+          `<i>Рахунок</i> <code>${s(p.record)}</code> — реванш?`,
       };
     case "duel_declined":
       return {
