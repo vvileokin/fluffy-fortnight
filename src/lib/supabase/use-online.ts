@@ -25,8 +25,26 @@ import { useUser } from "./use-user";
 export function useOnlineCount(): number | null {
   const user = useUser();
   const [count, setCount] = React.useState<number | null>(null);
+  const [wide, setWide] = React.useState(false);
+
+  /**
+   * Only where the count is actually shown.
+   *
+   * The rail is `hidden lg:flex`, which hides it in CSS — React still mounts
+   * this hook on a phone and still opens the socket. That put a live connection
+   * on every mobile visitor for a number none of them can see, and on a match
+   * day that is hundreds of sockets held for nothing.
+   */
+  React.useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   React.useEffect(() => {
+    if (!wide) return;
     if (user === undefined) return; // auth still resolving; don't join twice
     const key = user?.id ?? `guest:${crypto.randomUUID()}`;
     const supabase = createClient();
@@ -43,7 +61,7 @@ export function useOnlineCount(): number | null {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, wide]);
 
   return count;
 }
