@@ -20,7 +20,20 @@ const SLUG = "blast-porto-2026";
  * started early.
  */
 async function groupWindows(): Promise<Record<string, boolean>> {
-  const { data } = await createAdminClient()
+  const admin = createAdminClient();
+
+  // An admin may decide the picks have had long enough. The clock below is the
+  // backstop, not the only word — a group that plays tomorrow cannot otherwise
+  // be closed today without lying about a fixture's start time. The switch only
+  // ever shuts things earlier; it can never hold a group open past its match.
+  const { data: settings } = await admin
+    .from("site_settings")
+    .select("porto_club_closed")
+    .eq("id", 1)
+    .maybeSingle();
+  if (settings?.porto_club_closed) return { a: false, b: false };
+
+  const { data } = await admin
     .from("matches")
     .select("stage, status, start_at")
     .eq("tournament_slug", SLUG);

@@ -53,7 +53,54 @@ export async function GET() {
       zeroTwo,
     };
   }
-  return NextResponse.json({ ok: true, groups });
+  // Absent until 0068 runs, and absent reads as "not closed by hand" — which
+  // is what it was before the switch existed.
+  const { data: settings } = await admin
+    .from("site_settings")
+    .select("porto_club_closed")
+    .eq("id", 1)
+    .maybeSingle();
+
+  return NextResponse.json({
+    ok: true,
+    groups,
+    closed: !!settings?.porto_club_closed,
+  });
+}
+
+/**
+ * Close the club early, or re-open it.
+ *
+ * Separate from settling because they are separate decisions: closing stops
+ * cards being written, settling pays the ones that are in. An admin usually
+ * does the first well before the second, and doing the second does not imply
+ * the first.
+ *
+ * Re-opening is offered because the switch only overrides the clock — a group
+ * whose match has started stays shut whatever this says, so the worst a
+ * mistaken close can cost is the minutes until it is undone.
+ */
+export async function PATCH(request: Request) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  const body = await request.json().catch(() => null);
+  const closed = !!body?.closed;
+
+  const { error } = await createAdminClient()
+    .from("site_settings")
+    .update({ porto_club_closed: closed })
+    .eq("id", 1);
+  if (error) {
+    const missing = error.code === "42703" || error.code === "PGRST204";
+    return NextResponse.json(
+      { ok: false, error: missing ? "Спершу запусти міграцію 0068" : error.message },
+      { status: missing ? 409 : 500 },
+    );
+  }
+
+  await logAdmin("porto", closed ? "Закрив клуб 0-2 достроково" : "Відкрив клуб 0-2 назад");
+  return NextResponse.json({ ok: true, closed });
 }
 
 export async function POST(request: Request) {

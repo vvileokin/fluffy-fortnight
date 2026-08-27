@@ -38,12 +38,43 @@ export default function PortoAdmin() {
     b: { advance: [], zeroTwo: [] },
   });
   const [busy, setBusy] = React.useState<string | null>(null);
+  const [closed, setClosed] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
     const res = await fetch("/api/admin/porto-group", { cache: "no-store" });
     const j = await res.json().catch(() => ({}));
-    if (j.ok) setStats(j.groups);
+    if (j.ok) {
+      setStats(j.groups);
+      setClosed(!!j.closed);
+    }
   }, []);
+
+  /**
+   * Close the club ahead of the fixtures, or put it back.
+   *
+   * Separate from settling: closing stops cards being written, settling pays
+   * the ones that are in, and an admin normally does the first well before the
+   * second. Reversible, because the switch only ever shuts things earlier than
+   * the clock would — a group whose match has started stays shut whatever this
+   * says, so a mistaken close costs only the minutes until it is undone.
+   */
+  async function toggleClosed() {
+    setBusy("lock");
+    const res = await fetch("/api/admin/porto-group", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ closed: !closed }),
+    });
+    const j = await res.json().catch(() => ({}));
+    setBusy(null);
+    if (!j.ok) {
+      setError(String(j.error ?? "Не вдалося"));
+      window.setTimeout(() => setError(null), 4000);
+      return;
+    }
+    setClosed(!!j.closed);
+  }
 
   React.useEffect(() => {
     void load();
@@ -105,6 +136,38 @@ export default function PortoAdmin() {
       />
 
       <div className="space-y-4">
+        <Panel>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-ink">
+                {closed ? "Клуб закрито" : "Клуб приймає картки"}
+              </p>
+              <p className="text-xs text-ink-muted">
+                {closed
+                  ? "Нові картки не приймаються в жодній групі."
+                  : "Кожна група закривається сама на своєму першому матчі. Це — закрити раніше."}
+              </p>
+            </div>
+            <button
+              onClick={toggleClosed}
+              disabled={busy !== null}
+              className={cn(
+                "h-9 shrink-0 rounded-lg px-3 text-sm font-bold transition-colors disabled:opacity-50",
+                closed
+                  ? "border border-border text-ink-muted hover:bg-surface-2"
+                  : "bg-danger text-white hover:brightness-110",
+              )}
+            >
+              {busy === "lock" ? "…" : closed ? "Відкрити назад" : "Закрити клуб"}
+            </button>
+          </div>
+          {error && (
+            <p role="alert" className="px-4 pb-3 text-xs font-semibold text-danger">
+              {error}
+            </p>
+          )}
+        </Panel>
+
         {GROUPS.map((g) => {
           const s = stats?.[g.id];
           const cur = sel[g.id] ?? { advance: [], zeroTwo: [] };
