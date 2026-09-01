@@ -40,6 +40,16 @@ export const teams: Record<string, Team> = {
   tyloo: { slug: "tyloo", name: "TYLOO", tag: "TY", logo: "/teams/tyloo.svg", brand: "#D71920", ink: "white", region: "Asia", worldRank: 17 },
 
   // --- BLAST Bounty S2 field (top seeds) ---
+  /**
+   * The side of a playoff fixture that has not been decided yet.
+   *
+   * A bracket spends most of its life half-known — Spirit is in the semi-final
+   * the moment the group ends, its opponent only after a quarter-final is
+   * played. Without a team to stand in that slot the fixture cannot exist at
+   * all, and `getTeam` returns undefined for an unknown slug, which takes the
+   * page down rather than showing a gap.
+   */
+  tbd: { slug: "tbd", name: "TBD", tag: "?", logo: "", brand: "#23232B", ink: "white", region: "EU", worldRank: 0 },
   vitality: { slug: "vitality", name: "Vitality", tag: "VIT", logo: "/teams/vitality.svg", brand: "#FFFF00", ink: "black", region: "EU", worldRank: 3 },
   spirit: { slug: "spirit", name: "Spirit", tag: "SPT", logo: "/teams/spirit.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 1 },
   falcons: { slug: "falcons", name: "Falcons", tag: "FLC", logo: "/teams/falcons.svg", brand: "#01BE6E", ink: "black", region: "EU", worldRank: 2 },
