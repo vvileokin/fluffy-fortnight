@@ -35,6 +35,10 @@ type MatchLite = {
   team_b: string;
   team_a_name: string | null;
   team_b_name: string | null;
+  start_at: string | null;
+  stage: string | null;
+  status: string | null;
+  tournament_slug: string | null;
 };
 type QForm = {
   id: string;
@@ -52,6 +56,17 @@ type QRow = { id: string; match_id: string; title: string; status: string; optio
 
 function teamTag(slug: string, name: string | null): string {
   return name ? name.slice(0, 4).toUpperCase() : getTeam(slug).tag;
+}
+
+/** `28.08 17:00 · 1/4 фіналу · FLC vs G2` — enough to pick the right one. */
+function matchOption(m: MatchLite): string {
+  const when = m.start_at
+    ? new Date(m.start_at).toLocaleString("uk-UA", {
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+      })
+    : "—";
+  const teams = `${teamTag(m.team_a, m.team_a_name)} vs ${teamTag(m.team_b, m.team_b_name)}`;
+  return [when, m.stage, teams].filter(Boolean).join(" · ");
 }
 
 function blankOpt(): Opt {
@@ -82,11 +97,33 @@ export default function QuestionsAdmin() {
     [matches],
   );
 
+  /**
+   * Fixtures still to come, soonest first, and everything else behind them.
+   *
+   * `status` alone is not trustworthy — the group stage is sitting in the
+   * database marked finished with 0:0 scores for matches that have not been
+   * played — so the clock decides and the status only confirms.
+   */
+  const [upcoming, played] = React.useMemo(() => {
+    const now = Date.now();
+    const ahead: MatchLite[] = [];
+    const behind: MatchLite[] = [];
+    for (const m of matches) {
+      const due = m.start_at ? new Date(m.start_at).getTime() : 0;
+      (due > now || m.status === "live" ? ahead : behind).push(m);
+    }
+    ahead.sort((a, b) => (a.start_at ?? "").localeCompare(b.start_at ?? ""));
+    return [ahead, behind];
+  }, [matches]);
+
   const load = React.useCallback(async () => {
     const sb = createClient();
     const [{ data: qs }, { data: ms }] = await Promise.all([
       sb.from("questions").select("id, match_id, title, status, options").order("created_at", { ascending: false }),
-      sb.from("matches").select("id, team_a, team_b, team_a_name, team_b_name").order("start_at", { ascending: true, nullsFirst: false }),
+      sb
+        .from("matches")
+        .select("id, team_a, team_b, team_a_name, team_b_name, start_at, stage, status, tournament_slug")
+        .order("start_at", { ascending: false, nullsFirst: false }),
     ]);
     setRows((qs as QRow[]) ?? []);
     setMatches((ms as MatchLite[]) ?? []);
@@ -275,11 +312,29 @@ export default function QuestionsAdmin() {
                 value={editing.match_id}
                 onChange={(e) => up({ match_id: e.target.value })}
               >
-                {matches.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {teamTag(m.team_a, m.team_a_name)} vs {teamTag(m.team_b, m.team_b_name)}
-                  </option>
-                ))}
+                {/* Split, not sorted. A hundred and fifteen fixtures in one
+                    flat list is a place to make mistakes: "FUT vs VIT" and
+                    "FUR vs VIT" are three days apart, one a group game and one
+                    a quarter-final, and they differ by a letter. A question is
+                    almost always being written about a match that has not been
+                    played, so those come first and alone at the top; everything
+                    else is still reachable, just not in the way. */}
+                {upcoming.length > 0 && (
+                  <optgroup label={`Ще не зіграні · ${upcoming.length}`}>
+                    {upcoming.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {matchOption(m)}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label={`Зіграні · ${played.length}`}>
+                  {played.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {matchOption(m)}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </Field>
             <Field label="Формулювання">
