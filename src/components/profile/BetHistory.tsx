@@ -15,6 +15,27 @@ type Row = {
   created_at: string;
   title: string;
   option?: string;
+  /** Tournament slug, so a slip is counted in the wallet it was placed from. */
+  event?: string | null;
+};
+
+/**
+ * Which gem an event's stakes are held in.
+ *
+ * These are separate currencies, not one balance under two skins: the World Cup
+ * was played in `ewc_points` and Porto in `event_points`, and neither converts
+ * into the other. Adding them and printing one mark told a player they had
+ * staked 998 of something that does not exist.
+ */
+const GEM: Record<string, "points-ewc" | "points-porto"> = {
+  "blast-porto-2026": "points-porto",
+};
+const gemFor = (slug: string | null | undefined) => GEM[slug ?? ""] ?? "points-ewc";
+
+/** Human name for the block heading, when there is more than one block. */
+const EVENT_NAME: Record<string, string> = {
+  "blast-porto-2026": "BLAST Open Porto",
+  "ewc-2026": "Esports World Cup",
 };
 
 /**
@@ -31,7 +52,6 @@ type Row = {
  */
 export function BetHistory() {
   const [bets, setBets] = React.useState<Row[] | null>(null);
-  const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -48,6 +68,43 @@ export function BetHistory() {
 
   if (!bets || bets.length === 0) return null;
 
+  // Newest event first, which is the one being played.
+  const groups = new Map<string, Row[]>();
+  for (const b of bets) {
+    const key = b.event ?? "";
+    groups.set(key, [...(groups.get(key) ?? []), b]);
+  }
+  const events = [...groups.entries()].sort(
+    (x, y) => (y[1][0]?.created_at ?? "").localeCompare(x[1][0]?.created_at ?? ""),
+  );
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">Ставки</h2>
+      {events.map(([slug, rows]) => (
+        <EventLedger
+          key={slug || "other"}
+          rows={rows}
+          gem={gemFor(slug)}
+          name={events.length > 1 ? (EVENT_NAME[slug] ?? null) : null}
+        />
+      ))}
+    </section>
+  );
+}
+
+/** One event's ledger, in that event's own currency. */
+function EventLedger({
+  rows: bets,
+  gem,
+  name,
+}: {
+  rows: Row[];
+  gem: "points-ewc" | "points-porto";
+  name: string | null;
+}) {
+  const [open, setOpen] = React.useState(false);
+
   const settled = bets.filter((b) => b.settled_at);
   const staked = bets.reduce((s, b) => s + b.stake, 0);
   const returned = settled.reduce((s, b) => s + (b.payout ?? 0), 0);
@@ -56,16 +113,19 @@ export function BetHistory() {
   const net = returned - settled.reduce((s, b) => s + b.stake, 0);
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-ink-muted">Ставки</h2>
-
+    <>
+      {name && (
+        <p className="px-1 text-[0.6875rem] font-bold uppercase tracking-wide text-ink-subtle">
+          {name}
+        </p>
+      )}
       <div className="overflow-hidden rounded-xl surface-1">
         {/* Staked and returned are the whole story; the record underneath says
             how it was arrived at. Pending stakes are counted as spent, because
             they are — they have left the balance. */}
         <div className="grid grid-cols-3 divide-x divide-[color-mix(in_oklch,var(--ink)_7%,transparent)]">
-          <Figure label="Поставлено" value={staked} />
-          <Figure label="Повернулось" value={returned} tone={net >= 0 ? "up" : "down"} />
+          <Figure label="Поставлено" value={staked} gem={gem} />
+          <Figure label="Повернулось" value={returned} tone={net >= 0 ? "up" : "down"} gem={gem} />
           <div className="px-3 py-2.5">
             <p className="text-[0.6875rem] leading-none text-ink-subtle">Зіграло</p>
             <p className="tnum mt-1.5 font-mono text-sm font-extrabold leading-none text-ink">
@@ -126,7 +186,7 @@ export function BetHistory() {
                       <>
                         {done ? "+" : ""}
                         {formatInt(done ? (b.payout ?? 0) : Math.floor(b.stake * b.odds))}
-                        <BrandIcon name="points-ewc" className="size-3.5" />
+                        <BrandIcon name={gem} className="size-3.5" />
                       </>
                     )}
                   </span>
@@ -136,7 +196,7 @@ export function BetHistory() {
           </div>
         )}
       </div>
-    </section>
+    </>
   );
 }
 
@@ -144,10 +204,12 @@ function Figure({
   label,
   value,
   tone,
+  gem,
 }: {
   label: string;
   value: number;
   tone?: "up" | "down";
+  gem: "points-ewc" | "points-porto";
 }) {
   return (
     <div className="px-3 py-2.5">
@@ -159,7 +221,7 @@ function Figure({
         )}
       >
         {formatInt(value)}
-        <BrandIcon name="points-ewc" className="size-3.5" />
+        <BrandIcon name={gem} className="size-3.5" />
       </p>
     </div>
   );

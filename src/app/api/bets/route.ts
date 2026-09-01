@@ -32,24 +32,36 @@ export async function GET(request: Request) {
 
     // Titles and option labels live on the question, and a slip outlives the
     // card it was placed from — without this the history reads as bare ids.
+    const admin = createAdminClient();
     const ids = [...new Set(rows.map((b) => b.question_id))];
     const { data: qs } = ids.length
-      ? await createAdminClient().from("questions").select("id, title, options").in("id", ids)
+      ? await admin.from("questions").select("id, title, options, match_id").in("id", ids)
       : { data: [] };
     const byId = new Map((qs ?? []).map((q) => [q.id, q]));
+
+    // Which event each slip belongs to. Stakes are not interchangeable — the
+    // World Cup was played in one wallet and Porto in another — so a history
+    // that adds them together and prints one currency mark is telling the
+    // player something that is not true about either.
+    const matchIds = [...new Set((qs ?? []).map((q) => q.match_id as string).filter(Boolean))];
+    const { data: ms } = matchIds.length
+      ? await admin.from("matches").select("id, tournament_slug").in("id", matchIds)
+      : { data: [] };
+    const eventOf = new Map((ms ?? []).map((m) => [m.id as string, m.tournament_slug as string]));
 
     return NextResponse.json({
       ok: true,
       signedIn: true,
       bets: rows.map((b) => {
         const q = byId.get(b.question_id) as
-          | { title: string; options: { id: string; label: string }[] }
+          | { title: string; options: { id: string; label: string }[]; match_id: string }
           | undefined;
         return {
           ...b,
           title: q?.title ?? b.question_id,
           option: (Array.isArray(q?.options) ? q.options : []).find((o) => o.id === b.option_id)
             ?.label,
+          event: q?.match_id ? (eventOf.get(q.match_id) ?? null) : null,
         };
       }),
     });
