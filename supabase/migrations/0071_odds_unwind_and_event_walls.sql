@@ -1,7 +1,8 @@
--- CS2 UA — скасована ставка повертає коефіцієнт, і подія не тече в сезон.
+-- CS2 UA — скасована ставка повертає коефіцієнт, подія не тече в сезон,
+-- і бали за групи більше не губляться.
 -- Run in Supabase → SQL Editor. Requires 0064, 0069, 0070.
 --
--- Two things, both of them the same mistake in different places: a rule that
+-- Three things, all of them the same mistake in different places: a rule that
 -- was written once and then not applied everywhere it had to be.
 --
 -- ---------------------------------------------------------------------------
@@ -141,6 +142,87 @@ $$;
 revoke execute on function public.award_predictions(uuid[], integer, text)
   from public, anon, authenticated;
 grant execute on function public.award_predictions(uuid[], integer, text) to service_role;
+
+-- ---------------------------------------------------------------------------
+-- 3. Winning a group is turning up
+-- ---------------------------------------------------------------------------
+-- `score_porto_group` pays `event_points` and never stamps `event_joined_at`.
+-- That stamp is what puts a player on the event board, and — worse — what
+-- `settle_event_to_season` uses to decide who gets paid at the close. A player
+-- whose only Porto action was calling a group therefore could not see their own
+-- points on the table, and when the tournament ended the "never played" branch
+-- would have wiped the wallet and paid them nothing.
+--
+-- Three accounts are in exactly that position, holding 1 250 between them:
+-- points they earned, could not see, and were going to lose. Scoring a group is
+-- as much an action as placing a bet, so it stamps like one.
+
+create or replace function public.score_porto_group(
+  p_group text, p_advance text[], p_zero_two text[]
+)
+returns integer
+language plpgsql security definer set search_path = public
+as $$
+declare
+  rec    record;
+  hit_a  integer;
+  hit_z  integer;
+  gained integer;
+  paid   integer := 0;
+begin
+  if auth.uid() is not null then
+    return 0;
+  end if;
+  if p_advance is null or p_zero_two is null then
+    return 0;
+  end if;
+
+  for rec in
+    select pg.user_id, pg.advance, pg.zero_two
+      from public.porto_groups pg
+     where pg.group_id = p_group and pg.scored_at is null
+  loop
+    select count(*) into hit_a
+      from unnest(rec.advance) t where t = any (p_advance);
+    select count(*) into hit_z
+      from unnest(rec.zero_two) t where t = any (p_zero_two);
+
+    -- 50 a qualifier, 100 a collapse, and 200 more for calling the whole group.
+    gained := hit_a * 50 + hit_z * 100;
+    if hit_a = 3 and hit_z = 2 then
+      gained := gained + 200;
+    end if;
+
+    update public.porto_groups
+       set points = gained, scored_at = now(), updated_at = now()
+     where user_id = rec.user_id and group_id = p_group;
+
+    if gained > 0 then
+      update public.profiles
+         set event_points    = event_points + gained,
+             event_joined_at = coalesce(event_joined_at, now())
+       where id = rec.user_id;
+    end if;
+
+    paid := paid + 1;
+  end loop;
+
+  return paid;
+end;
+$$;
+
+revoke execute on function public.score_porto_group(text, text[], text[])
+  from public, anon, authenticated;
+grant execute on function public.score_porto_group(text, text[], text[]) to service_role;
+
+-- Backfill: anyone already paid for a group counts as having turned up.
+update public.profiles p
+   set event_joined_at = coalesce(p.event_joined_at, now())
+ where p.event_joined_at is null
+   and exists (
+     select 1 from public.porto_groups g
+      where g.user_id = p.id and coalesce(g.points, 0) > 0
+   );
 
 -- ---------------------------------------------------------------------------
 -- Left alone: score_bracket_round
