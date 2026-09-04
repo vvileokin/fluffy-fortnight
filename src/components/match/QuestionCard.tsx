@@ -461,19 +461,18 @@ export function QuestionCard({
                       // On a betting question the coefficient *is* the payout
                       // line — there is no flat figure to show, because what
                       // this option pays depends on what the player stakes.
-                      // The streak rides on what the odds win, not on the stake
-                      // coming back — so a 2.10 at ×2 is an effective 3.20, not
-                      // 4.20. Multiplying the whole coefficient made a 1.05
-                      // certainty read as 2.10, which is not a price anyone
-                      // should be offered: the safer the pick, the larger the
-                      // edge. Mirrors migration 0072, which is what pays.
+                      // The streak rides on top of the coefficient exactly as
+                      // it does on a flat reward, so the effective number is
+                      // shown with the raw one struck through behind it: a
+                      // player on a run is not choosing against 2.10, they're
+                      // choosing against 4.20.
                       <>
                         {multiplier > 1 && (
                           <span className="font-normal text-current/45 line-through">
                             ×{(opt.odds ?? 1).toFixed(2)}
                           </span>
                         )}
-                        ×{(1 + (Math.max(opt.odds ?? 1, 1) - 1) * multiplier).toFixed(2)}
+                        ×{((opt.odds ?? 1) * multiplier).toFixed(2)}
                         {multiplier > 1 && <StreakChip multiplier={multiplier} />}
                       </>
                     ) : (
