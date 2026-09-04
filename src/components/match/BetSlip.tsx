@@ -124,7 +124,13 @@ export function BetSlip({
             )}
             <ArrowRight className="mr-1.5 size-3.5 shrink-0 text-white/35" strokeWidth={3} />
             <BrandIcon name={gem} className="size-4" />
-            {formatInt(Math.floor(bet.stake * shown * multiplier))}
+            {/* The streak multiplies what the odds won, not the stake coming
+                back. Multiplying the whole return made a 1.05 favourite pay
+                2.10 on a ×2 streak — the safer the pick the bigger the edge,
+                which is backwards, and it put 107 342 points into circulation
+                that the odds never earned. Mirrors migration 0072, which is
+                what actually pays. */}
+            {formatInt(bet.stake + Math.floor(bet.stake * (Math.max(shown, 1) - 1) * multiplier))}
           </span>
           {/* Once settled the outcome replaces the projection — what a slip is
               worth stops mattering the moment it is decided. */}
