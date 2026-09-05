@@ -49,6 +49,11 @@ create table if not exists public.migration_marks (
   id         text primary key,
   applied_at timestamptz not null default now()
 );
+
+-- Nobody but the service role has any business here, and the service role
+-- bypasses RLS — so row-level security with no policies at all is exactly the
+-- right shape: closed to every client key, open to the migrations that write it.
+alter table public.migration_marks enable row level security;
 revoke all on public.migration_marks from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
