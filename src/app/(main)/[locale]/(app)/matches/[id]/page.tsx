@@ -9,6 +9,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { QuestionCard } from "@/components/match/QuestionCard";
 import { DuelBoard } from "@/components/match/DuelBoard";
+import { StickyMatchHeader } from "@/components/match/StickyMatchHeader";
 import { Tooltip } from "@/components/ui/Tooltip";
 import {
   getTeam,
@@ -113,6 +114,13 @@ export default async function MatchPage({
       {/* Impeccable: Crafted Match Arena — no outline and no marks: the header
           is lit from both bottom corners by the two teams' real brand colours,
           so every match page wears the colours of the match itself. */}
+      {/* On a phone the banner is also the only thing naming the two sides, and
+          the questions below it are where a reader spends the scroll. So it
+          hands over to a compact line of itself on the way out rather than
+          leaving a page of bare coefficients. */}
+      <StickyMatchHeader
+        bar={<CompactMatchBar a={a} b={b} match={match} showScore={showScore} skin={skin} />}
+      >
       <div
         style={
           { "--team-a": a.brand, "--team-b": b.brand } as CSSProperties
@@ -284,6 +292,7 @@ export default async function MatchPage({
 
         </div>
       </div>
+      </StickyMatchHeader>
       </div>
 
       {/* PRIMARY: predictions */}
@@ -625,6 +634,80 @@ function MapScoreStrip({
   );
 }
 
+
+/**
+ * The banner, reduced to the one line that still has to be true after it has
+ * scrolled away: who is playing and what the score is.
+ *
+ * Same materials as the header it replaces, so it reads as that banner shrunk
+ * rather than a second object: at an event it wears the event's own plate — the
+ * two brand pools over the ember floor, the ember ring — and away from one it
+ * falls back to the arena wash on a plain surface.
+ */
+function CompactMatchBar({
+  a,
+  b,
+  match,
+  showScore,
+  skin,
+}: {
+  a: ReturnType<typeof getTeam>;
+  b: ReturnType<typeof getTeam>;
+  match: Match;
+  showScore: boolean;
+  skin: ReturnType<typeof matchSkin>;
+}) {
+  const aura = isAuraSkin(skin);
+  /* Full names, which on a 375px screen is most of the width: two crests, a
+     score and the gutters leave about 110px a side. Long ones truncate — the
+     crest and the brand pool underneath it carry the identity when they do. */
+  const name = cn(
+    "relative min-w-0 flex-1 truncate text-sm font-bold",
+    aura ? "text-white" : "text-ink",
+  );
+  const lead = aura ? "text-[rgb(var(--skin-ring))]" : "text-accent";
+  const rest = aura ? "text-white" : "text-ink";
+
+  return (
+    <div
+      style={{ "--team-a": a.brand, "--team-b": b.brand } as CSSProperties}
+      className={cn(
+        "relative flex items-center gap-2.5 overflow-hidden rounded-xl px-3 py-2",
+        aura
+          ? "skin-match"
+          : skin === "blast"
+            ? "event-aura"
+            : "bg-surface/90 backdrop-blur-md shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_10%,transparent),0_14px_30px_-18px_rgba(0,0,0,0.95)]",
+      )}
+    >
+      {!skin && <div className="team-arena pointer-events-none absolute inset-0 opacity-80" />}
+      <TeamLogo team={a} size="sm" />
+      <span className={name}>{a.name}</span>
+      {showScore ? (
+        <span className="relative shrink-0 font-mono text-lg font-bold leading-none">
+          <span className={cn("tnum", match.scoreA > match.scoreB ? lead : rest)}>
+            {match.scoreA}
+          </span>
+          <span className={cn("mx-1.5", aura ? "text-white/40" : "text-ink-faint")}>:</span>
+          <span className={cn("tnum", match.scoreB > match.scoreA ? lead : rest)}>
+            {match.scoreB}
+          </span>
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "relative shrink-0 font-mono text-xs font-bold tracking-[0.14em]",
+            aura ? "text-white/50" : "text-ink-subtle",
+          )}
+        >
+          VS
+        </span>
+      )}
+      <span className={cn(name, "text-right")}>{b.name}</span>
+      <TeamLogo team={b} size="sm" />
+    </div>
+  );
+}
 
 function MobileTeamRow({
   team,
