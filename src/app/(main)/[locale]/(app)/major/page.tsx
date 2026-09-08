@@ -55,12 +55,8 @@ export default async function MajorPage() {
   const ours = ourTeams(data);
 
   return (
-    <div className="space-y-6 sm:space-y-10">
+    <div className="space-y-5 sm:space-y-6">
       <MajorMode />
-
-      <h1 className="text-xl font-extrabold tracking-tight text-ink sm:hidden">
-        {meta.event}
-      </h1>
 
       {/* The three sides, and no plate around them.
           The banner underneath was a second object saying the same thing the
@@ -80,17 +76,20 @@ export default async function MajorPage() {
           dOWNUNDER" came out as "Thund…". Europe has twice the rows of either
           other region, so it takes a column of its own and the other two stack
           beside it, which lands the two sides at about the same height. */}
-      {/* items-start, and the right column stretches.
-          Europe has thirty-two rows against the other two regions' thirty, so
-          the two sides never match exactly — the column that runs short used to
-          leave its panel floating with a band of empty page under it. Letting
-          the shorter side grow and pinning both to the top puts the two panels
-          on the same line at the top and the same line at the bottom. */}
-      <section className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      {/* The two columns end on the same line.
+          Europe carries thirty-two rows and the other two regions thirty
+          between them, so the sides never come out equal on their own — one
+          panel stopped short and left a band of page under it, which reads as
+          something missing rather than as a shorter list. The grid stretches
+          both to the taller, and Asia takes up whatever slack is left, so its
+          floor lands exactly where Europe's does. */}
+      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <RegionTable data={data} region="europe" />
-        <div className="flex flex-col gap-6">
+        <div className="flex min-h-0 flex-col gap-6">
           <RegionTable data={data} region="americas" />
-          <RegionTable data={data} region="asia" />
+          <div className="flex-1">
+            <RegionTable data={data} region="asia" fill />
+          </div>
         </div>
       </section>
 
@@ -205,10 +204,13 @@ function StageChip({ stage, place }: { stage: 3 | 2 | 1 | 0; place: number }) {
  * unreadable — the workbook says "Stage 3" and so does this.
  */
 function RegionTable({
-  data, region,
+  data, region, fill = false,
 }: {
   data: NonNullable<Awaited<ReturnType<typeof getMajorProjection>>>;
   region: MajorRegion;
+  /** Grow to whatever height the column gives it, so the two columns share a
+   *  bottom edge. The rows stay at the top; the panel simply continues. */
+  fill?: boolean;
 }) {
   const slots = data.meta.slots[region];
   const rows = regionTeams(data, region).slice(0, DEPTH[region]);
@@ -219,7 +221,7 @@ function RegionTable({
        was three hundred lines of text on a dark ground, which is what "too
        dark" actually means — not the colour, the absence of anything to look
        at. */
-    <div className="overflow-hidden rounded-2xl major-card">
+    <div className={cn("overflow-hidden rounded-2xl major-card", fill && "h-full")}>
       <h2 className="px-3 pb-2 pt-3 text-base font-bold text-ink">{REGION_NAME[region]}</h2>
       <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
         {rows.map((t) => {

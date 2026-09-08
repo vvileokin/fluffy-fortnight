@@ -26,7 +26,23 @@ export function ImageField({
   thumbH?: number;
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [url, setUrl] = React.useState<string | undefined>(value);
+  // What this field has uploaded during its own lifetime, and nothing else.
+  //
+  // It used to be seeded with `value` — `useState(value)` — which reads the
+  // prop exactly once, on mount. The admin drawer stays mounted while you move
+  // from one match to the next, so the second match arrived as a new `value`
+  // that this state never saw: the field kept showing the first match's picture
+  // or, far more often, the empty-slot icon, and a tournament whose logo was
+  // sitting in the database looked like a tournament with no logo at all.
+  //
+  // `value` is now read every render and only overridden by an upload that has
+  // happened since the field was last given a different one.
+  const [uploaded, setUploaded] = React.useState<string | undefined>(undefined);
+  const [seen, setSeen] = React.useState(value);
+  if (value !== seen) {
+    setSeen(value);
+    setUploaded(undefined);
+  }
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -42,14 +58,14 @@ export function ImageField({
     const j = await res.json().catch(() => ({}));
     setBusy(false);
     if (res.ok && j.url) {
-      setUrl(j.url);
+      setUploaded(j.url);
       onChange?.(j.url);
     } else {
       setError(j.error || "Помилка завантаження");
     }
   }
 
-  const shown = url;
+  const shown = uploaded ?? value;
 
   return (
     <label className="block">
