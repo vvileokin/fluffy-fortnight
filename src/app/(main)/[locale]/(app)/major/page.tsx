@@ -110,16 +110,18 @@ function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSl
      number split by where a team enters. So they are one bar, not a bar and a
      caption: the length is the chance of going at all and the segments are what
      that seat would be worth. */
-  /* Three steps of lightness, not three steps of transparency.
-     The segments used to be one red at 100 / 62 / 34 percent alpha, sitting on
-     a plate that is itself red — so the third one dissolved into the ground and
-     the bar looked like it stopped early. Solid colours on one hue keep the
-     family and stay legible: the brightest is the core of the flame, which is
-     also the seat worth most. */
+  /* One red, three depths.
+     Transparency was the first mistake — a red at 34% alpha over a red plate is
+     the plate, so the last segment vanished and the bar looked like it stopped
+     early. Mixing toward white was the second: warm red plus white in oklch
+     lands on beige, which belongs to no part of this page.
+     So the ramp only ever goes down, and never leaves the hue. The brightest
+     segment is the seat worth most, and the deepest is still four times lighter
+     than the plate it sits on. */
   const seg = [
-    { key: 3, p: t.p3, color: "color-mix(in oklch, var(--major-hot) 58%, white)" },
-    { key: 2, p: t.p2, color: "var(--major-hot)" },
-    { key: 1, p: t.p1, color: "color-mix(in oklch, var(--major) 82%, black)" },
+    { key: 3, p: t.p3, color: "var(--major-hot)" },
+    { key: 2, p: t.p2, color: "color-mix(in oklch, var(--major) 86%, black)" },
+    { key: 1, p: t.p1, color: "color-mix(in oklch, var(--major) 58%, black)" },
   ];
 
   return (
