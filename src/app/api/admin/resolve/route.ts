@@ -259,10 +259,10 @@ export async function POST(request: Request) {
     const won = (b.payout ?? 0) > 0;
     // The currency is the one the slip was actually paid in. "EWC" was written
     // here as a constant back when the only wallet a bet could come out of was
-    // the World Cup's; since 0079 an ordinary match is played in CS2 UA Points,
+    // the World Cup's; since 0079 an ordinary match is played in CS2UA Points,
     // and the message was telling those players their balance had moved in a
     // currency they have never held.
-    const unit = b.wallet === "season" ? "CS2 UA Points" : "EWC";
+    const unit = b.wallet === "season" ? "CS2UA Points" : "EWC";
     notifs.push({
       user_id: b.user_id,
       kind: "reward",

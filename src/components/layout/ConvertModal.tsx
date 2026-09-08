@@ -96,7 +96,7 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
             but is the kind of thing a player only needs if they go looking;
             the figure below already tells them what they can spend. */}
         <p className="text-sm leading-relaxed text-ink-muted">
-          {rate} CS2UA Season Points — 1 EWC Point. Міняється лише те, що зароблене{" "}
+          {rate} CS2UA Points — 1 EWC Point. Міняється лише те, що зароблене{" "}
           <span className="font-semibold text-ink">поза івентом</span>.
         </p>
 
@@ -121,8 +121,8 @@ export function ConvertModal({ open, onClose }: { open: boolean; onClose: () => 
                 type="text"
                 inputMode="numeric"
                 value={gold}
-                placeholder="Season Points"
-                aria-label="Скільки CS2UA Season Points обміняти"
+                placeholder="CS2UA Points"
+                aria-label="Скільки CS2UA Points обміняти"
                 onChange={(e) => setGold(e.target.value.replace(/\D/g, "").slice(0, 7))}
                 // Forced off, like the stake field. The site-wide focus ring is
                 // a 2px offset outline meant for controls on flat ground; on a

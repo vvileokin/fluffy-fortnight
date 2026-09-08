@@ -241,7 +241,7 @@ export function BetSlip({
             // Name the wallet actually being spent. Off an event the stake
             // comes out of season gold, and calling it "BLAST Porto Points"
             // there told the player the wrong thing about their own money.
-            placeholder={dressed ? eventPointsLabel() : "CS2 UA Points"}
+            placeholder={dressed ? eventPointsLabel() : "CS2UA Points"}
             aria-label="Своя сума"
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
