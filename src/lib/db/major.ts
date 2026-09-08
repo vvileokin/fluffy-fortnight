@@ -169,9 +169,12 @@ export function ourTeams(data: NonNullable<MajorData>) {
   for (const region of ["europe", "americas", "asia"] as MajorRegion[])
     regionTeams(data, region).forEach((t, i) => placeOf.set(t.region + t.team, i + 1));
 
+  // Strongest chance first, like every other list on the page. `UA_TEAMS` is
+  // the guest list, not the running order — reading it as one put fnatic at
+  // 12.5% under G2 at 95.9% purely because of where it sits in that array.
   return data.teams
     .filter((t) => want.has(t.team))
-    .sort((a, b) => (want.get(a.team) ?? 0) - (want.get(b.team) ?? 0))
+    .sort((a, b) => b.pQual - a.pQual)
     .map((t) => ({ ...t, place: placeOf.get(t.region + t.team) ?? t.projected }));
 }
 
