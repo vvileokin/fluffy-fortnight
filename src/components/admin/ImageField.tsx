@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import { Upload, ImageIcon, Loader2 } from "lucide-react";
 
 /**
@@ -76,7 +75,12 @@ export function ImageField({
           style={{ width: thumbW, height: thumbH }}
         >
           {shown ? (
-            <Image src={shown} alt="" fill sizes="96px" className="object-contain" />
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={shown}
+              alt=""
+              className="absolute inset-0 size-full object-contain"
+            />
           ) : (
             <ImageIcon className="size-5 text-ink-faint" />
           )}

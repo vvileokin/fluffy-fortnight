@@ -1,6 +1,5 @@
 import { type ReactNode, type CSSProperties } from "react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { ChevronLeft, Ban, CircleCheck, History } from "lucide-react";
@@ -182,11 +181,13 @@ export default async function MatchPage({
             ) : (
               <span className="flex min-w-0 items-center gap-1.5 truncate font-semibold">
                 {match.tournamentIcon && (
-                  <Image
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
                     src={match.tournamentIcon}
                     alt=""
                     width={16}
                     height={16}
+                    decoding="async"
                     className="size-4 shrink-0 object-contain"
                   />
                 )}

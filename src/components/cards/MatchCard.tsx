@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { ChevronRight } from "lucide-react";
 import { TargetGlyph } from "@/components/layout/NavGlyphs";
@@ -126,11 +125,14 @@ export function MatchCard({ match }: { match: Match }) {
       <div className="relative flex items-center justify-between gap-2 px-3.5 pt-2.5 sm:px-4 sm:pt-3">
         <span className="flex min-w-0 items-center gap-2 text-xs text-ink-subtle">
           {match.tournamentIcon ? (
-            <Image
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
               src={match.tournamentIcon}
               alt=""
               width={14}
               height={14}
+              loading="lazy"
+              decoding="async"
               className="size-3.5 shrink-0 object-contain"
             />
           ) : skin === "porto" ? (
