@@ -517,7 +517,11 @@ export function QuestionCard({
               // wrong column meant a player holding 350 could not stake 200 —
               // it was checking a wallet of 100 that has nothing to do with
               // this tournament.
-              balance={profile?.event_points ?? 0}
+              // The wallet the server will actually charge. 
+              // picks by whether the question belongs to an event, so the
+              // slip has to show the same column or it offers a balance the
+              // bet will be refused for.
+              balance={(skin ? profile?.event_points : profile?.points) ?? 0}
               locked={locked || upcoming}
               bet={bet}
               multiplier={multiplier}

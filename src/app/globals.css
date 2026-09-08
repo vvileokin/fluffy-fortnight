@@ -54,6 +54,20 @@
   --warning: oklch(0.8 0.155 62);        /* pending, caution (not brand yellow) */
   --tier1: oklch(0.82 0.13 88);          /* gold */
 
+  /* PGL Major Singapore. Sampled from the event's own key art: the scarlet the
+     lion crest is drawn in, and the near-black it sits on. It is a section
+     colour, not a status one — the Major is an event with an identity of its
+     own, and the one place on this site that does not wear the product yellow.
+     Lifted a little off the poster's #E8312C so small text on the dark floor
+     clears 4.5:1. */
+  --major: oklch(0.605 0.245 27.5);
+  --major-hot: oklch(0.665 0.262 29);    /* the core of a light source */
+  --major-ink: oklch(0.99 0 0);
+  /* Near-neutral, not tinted. A floor carrying real chroma turns every red laid
+     over it brown — the poster's punch comes from black plus a small, very
+     saturated source, not from a warm ground with red spread across it. */
+  --major-floor: oklch(0.085 0.012 25);
+
   /* --- Focus --- */
   --ring: oklch(0.902 0.183 103.5);
 
@@ -173,6 +187,80 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* The whole product changes colour on the Major page, so the change is worth
+     seeing happen. Transitioning the property, not the variable — a custom
+     property cannot be animated, but the computed colour it feeds can. */
+  transition: background-color 460ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------------------------------------------------------------------------
+   Major mode
+   ---------------------------------------------------------------------------
+   Set on the document root while the invitations page is open, and removed on
+   the way out. It re-points the product's own tokens at the event's palette,
+   which is why one rule is enough to take the sidebar, the top bar, the arena
+   light and every button with it: nothing on this site hard-codes yellow, it
+   asks for `--accent`.
+
+   The floor goes with it. Leaving the near-black navy underneath a scarlet
+   accent would read as a red skin bolted onto a blue product; moving both means
+   the page is somewhere else rather than repainted. */
+:root[data-major] {
+  --accent: var(--major);
+  --accent-hover: color-mix(in oklch, var(--major) 86%, white 14%);
+  --accent-ink: var(--major-ink);
+  --ring: var(--major);
+
+  --bg: var(--major-floor);
+  /* Barely tinted, for the same reason the floor is not: cards carrying real
+     chroma turn the whole page brown. The red is a light in this room, not the
+     paint on its walls. */
+  --surface: oklch(0.135 0.014 25);
+  --surface-2: oklch(0.168 0.016 25);
+  --surface-3: oklch(0.208 0.018 25);
+  --border: oklch(0.27 0.03 25);
+  --border-strong: oklch(0.36 0.045 25);
+
+  /* Links and secondary marks still need to be legible against a red room, and
+     azure on scarlet is the one pair that is not. */
+  --info: oklch(0.72 0.1 40);
+}
+
+:root[data-major] body {
+  background: var(--bg);
+}
+
+/* The room the plate sits in.
+   The product's own arena is four coloured pools built from `--accent` and
+   `--info`; re-pointing both at red turned it into a wash that fought the
+   plate's own light and made the page read as smeared. So in Major mode the
+   arena stops being pools and becomes a single source — one wide ember low and
+   left, well behind everything, and a darkening toward the top so the content
+   has a floor to lift off. One light in the room, and the plate is the object
+   standing in it. */
+/* The chrome goes with the room.
+   Re-pointing the tokens took the buttons and the rail, but the top bar asks
+   for `--bg` and the bottom bar for `--surface`, and both of those are the
+   floor — so the two edges of the screen stayed the flattest, darkest thing on
+   a page that had otherwise changed colour. They get their own step up and a
+   hairline in the event's red, which is what makes the whole window read as
+   one place rather than a red page in a black frame. */
+:root[data-major] header.sticky {
+  background-color: oklch(0.125 0.032 24);
+  box-shadow: 0 1px 0 0 oklch(0.5 0.17 27 / 0.22);
+}
+:root[data-major] nav.fixed.bottom-0 {
+  background-color: oklch(0.135 0.034 24 / 0.9);
+  box-shadow: 0 -1px 0 0 oklch(0.5 0.17 27 / 0.22);
+}
+:root[data-major] aside {
+  background-color: oklch(0.128 0.03 24);
+}
+
+:root[data-major] .arena {
+  background-image:
+    radial-gradient(70rem 46rem at -6% 108%, color-mix(in oklch, var(--major) 16%, transparent), transparent 62%),
+    linear-gradient(180deg, oklch(0 0 0 / 0.5) 0%, transparent 34%);
 }
 
 ::selection {
@@ -739,6 +827,73 @@ body {
     0 12px 34px -16px oklch(0 0 0 / 0.8);
 }
 
+/* PGL Major plate.
+   The event's own floor, lit from the lower left the way its key art is: a hot
+   scarlet core off-canvas, a cooler wash across the top, and a hairline in the
+   same red so the object has an edge without a grey border cutting across it.
+   Deliberately not `.skin-aura` — that one belongs to whichever tournament the
+   site is running an event on, and this plate has to keep working underneath
+   whatever that happens to be. */
+.major-plate {
+  position: relative;
+  /* Lifted well off black. The floor was 0.085 and the plate read as a hole in
+     the page rather than a lit object — dark is not the same as rich, and a
+     panel with nowhere to fall to has no depth to give. */
+  background-color: oklch(0.145 0.055 24);
+  background-image:
+    /* Written as oklch with alpha instead of `color-mix(… transparent)`.
+       color-mix interpolates toward a fully transparent *colour*, which on a
+       dark ground steps through a narrow band of values and shows as the
+       contour lines that were visible across the plate. A straight alpha ramp
+       over a much larger radius has nothing to band on. */
+    radial-gradient(135% 165% at -8% 118%, oklch(0.52 0.21 28 / 0.85), oklch(0.3 0.15 26 / 0.25) 42%, transparent 78%),
+    radial-gradient(105% 130% at 112% -22%, oklch(0.42 0.17 22 / 0.5), transparent 68%),
+    /* A sheen across the top third, so the panel has a lit edge and a shaded
+       belly rather than one flat tone. */
+    linear-gradient(178deg, oklch(0.6 0.14 26 / 0.16) 0%, transparent 38%);
+  box-shadow:
+    0 0 0 1px oklch(0.55 0.2 27 / 0.42),
+    0 1px 0 0 oklch(0.95 0.06 40 / 0.16) inset,
+    0 -1px 0 0 oklch(0 0 0 / 0.4) inset,
+    0 24px 60px -28px oklch(0.2 0.12 25 / 0.75);
+}
+
+/* The tables under the plate.
+   Same room, quieter voice: the floor lifts a step off the page so the panel
+   has an edge, the rim is the event's red at low weight rather than a grey
+   hairline, and there is a wash from the top so a column of thirty rows is not
+   one flat rectangle. */
+.major-card {
+  background-color: oklch(0.158 0.024 24);
+  background-image: linear-gradient(180deg, oklch(0.45 0.13 26 / 0.09) 0%, transparent 22%);
+  box-shadow:
+    0 0 0 1px oklch(0.5 0.16 26 / 0.2),
+    0 1px 0 0 oklch(0.9 0.05 40 / 0.07) inset,
+    0 14px 34px -24px oklch(0 0 0 / 0.8);
+}
+
+/* Grain.
+   Every large gradient on a dark ground bands, and no amount of easing fixes
+   it — the display simply does not have the steps. A little noise dithers
+   across the boundary and the ramp reads as continuous. It is also what stops
+   the panel looking like flat vector fill. */
+.major-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}
+
+/* Rows inside the plate: the divider has to be the event's red at low weight,
+   because a neutral hairline on this floor reads as a scratch. */
+.major-divide > * + * {
+  border-top: 1px solid color-mix(in oklch, var(--major) 20%, transparent);
+}
+
+
 /* Roster tile — the team's own colour still rakes in, over the event floor. */
 .skin-tile {
   background-color: var(--skin-base);
@@ -832,4 +987,44 @@ body {
 }
 .fade-up {
   animation: fadeUp var(--dur-slow) var(--ease-out) both;
+}
+
+/* The Major's cell in the sidebar.
+   Lit, but only just. The first pass put a hot core and a heavy rim on it and
+   the rail ended up with a glowing button shouting at five quiet rows — a
+   one-off event should read as different, not as an advertisement. The light
+   is now a low ember behind the crown and the ring is thin; selecting it lifts
+   the same treatment rather than switching on a second one. */
+.major-cell {
+  background-color: oklch(0.145 0.035 24);
+  background-image: radial-gradient(90% 180% at 2% 130%, oklch(0.45 0.17 27 / 0.4), transparent 62%);
+  box-shadow:
+    0 0 0 1px oklch(0.5 0.17 27 / 0.2),
+    0 1px 0 0 oklch(0.9 0.05 40 / 0.06) inset;
+  transition: background-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
+}
+.major-cell:hover {
+  background-color: oklch(0.175 0.045 24);
+  box-shadow:
+    0 0 0 1px oklch(0.55 0.19 27 / 0.32),
+    0 1px 0 0 oklch(0.9 0.05 40 / 0.1) inset;
+}
+.major-cell-live {
+  background-color: oklch(0.185 0.05 24);
+  box-shadow:
+    0 0 0 1px oklch(0.6 0.21 28 / 0.45),
+    0 1px 0 0 oklch(0.95 0.05 40 / 0.14) inset;
+}
+
+
+/* Currencies keep their own colour, everywhere.
+   Major mode re-points `--accent` at the event's scarlet, which is right for
+   buttons and selected tabs and wrong for the season balance: a number that
+   means "your gold" cannot change colour because of which page you opened. So
+   the two currency capsules opt back out. The bell is not a currency and keeps
+   following the room. */
+:root[data-major] .keep-brand {
+  --accent: oklch(0.902 0.183 103.5);
+  --accent-hover: oklch(0.85 0.176 100);
+  --accent-ink: oklch(0.14 0.03 246);
 }

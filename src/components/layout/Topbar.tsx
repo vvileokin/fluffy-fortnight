@@ -197,7 +197,10 @@ export function Topbar() {
       {user === null && (
         <Link
           href="/login"
-          className="flex h-11 items-center gap-2 rounded-full bg-accent px-4 text-sm font-bold text-accent-ink transition-colors hover:bg-accent-hover"
+          /* 44px is the touch target, not the button. On a phone the bar is
+             56px tall and an h-11 pill filled it edge to edge; the padding
+             carries the target instead so the button looks like a button. */
+          className="flex h-9 items-center gap-2 rounded-full bg-accent px-3.5 text-[0.8125rem] font-bold text-accent-ink transition-colors hover:bg-accent-hover sm:h-11 sm:px-4 sm:text-sm"
         >
           <LogIn className="size-4" strokeWidth={2.5} />
           {t("signIn")}
@@ -228,7 +231,7 @@ export function Topbar() {
         <Link
           href="/profile"
           aria-label={`${formatInt(points)} ${t("points")}`}
-          className="flex h-8 items-center gap-1 rounded-full bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_28%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_18%,transparent)] sm:h-10 sm:gap-1.5 sm:pl-2 sm:pr-3.5"
+          className="keep-brand flex h-8 items-center gap-1 rounded-full bg-[color-mix(in_oklch,var(--accent)_12%,transparent)] pl-1.5 pr-2.5 shadow-[0_0_0_1px_color-mix(in_oklch,var(--accent)_28%,transparent)] transition-colors hover:bg-[color-mix(in_oklch,var(--accent)_18%,transparent)] sm:h-10 sm:gap-1.5 sm:pl-2 sm:pr-3.5"
         >
           <BrandIcon name="points" className="size-4 sm:size-5" priority />
           <span className="tnum font-mono text-xs font-extrabold leading-none text-accent sm:text-sm">
@@ -259,7 +262,7 @@ export function Topbar() {
         <Link
           href="/profile"
           aria-label={`${t("streak")}: ${streak}`}
-          className="flex h-8 items-center gap-1 rounded-full bg-fill-2 pl-1 pr-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] transition-colors hover:bg-fill-3 sm:h-9 sm:pl-1.5 sm:pr-2.5"
+          className="keep-brand flex h-8 items-center gap-1 rounded-full bg-fill-2 pl-1 pr-2 shadow-[0_0_0_1px_color-mix(in_oklch,var(--ink)_8%,transparent)] transition-colors hover:bg-fill-3 sm:h-9 sm:pl-1.5 sm:pr-2.5"
         >
           <BrandIcon name="streak" className="size-4 sm:size-[1.125rem]" priority />
           <span className="tnum font-mono text-xs font-bold leading-none text-accent/85 sm:text-[0.8125rem]">
@@ -295,7 +298,11 @@ export function Topbar() {
           >
             <Bell className="size-4" />
             {unread > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid min-w-[1.125rem] place-items-center rounded-full border-2 border-bg bg-live px-1 text-[0.625rem] font-bold leading-tight text-white">
+              /* The product's own yellow. It was on the live red — the colour
+                 this site paints a match in progress — and an unread count is
+                 not that. On the invitations page the accent is the Major's
+                 scarlet, so the badge follows the room without a second rule. */
+              <span className="absolute -right-1.5 -top-1.5 grid min-w-[1.125rem] place-items-center rounded-full border-2 border-bg bg-accent px-1 text-[0.625rem] font-bold leading-tight text-accent-ink">
                 {unread}
               </span>
             )}

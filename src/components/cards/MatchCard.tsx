@@ -174,7 +174,12 @@ export function MatchCard({ match }: { match: Match }) {
                 ? "text-ink-subtle"
                 : isAuraSkin(skin)
                   ? "text-[rgb(var(--skin-ring))]"
-                  : "text-info",
+                  // The product's own yellow on an unskinned card. Azure is the
+                  // link colour and read as one — a kickoff time is not
+                  // somewhere to go, it is the fact the card is about, and it
+                  // should wear the brand rather than borrow from navigation.
+                  // Skinned cards keep their event's ring, as before.
+                  : "text-accent",
             )}
           >
             {matchTimeLabel(match)}
@@ -206,7 +211,10 @@ export function MatchCard({ match }: { match: Match }) {
           <span
             className={cn(
               "shrink-0 font-semibold",
-              isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-info",
+              // Same rule as the kickoff time above it: an event card wears the
+              // event's ring, an ordinary one wears the product's yellow. Azure
+              // is this site's link colour and reads as somewhere to go.
+              isAuraSkin(skin) ? "text-[rgb(var(--skin-ring))]" : "text-accent",
             )}
           >
             {t("predictionsOpen")}

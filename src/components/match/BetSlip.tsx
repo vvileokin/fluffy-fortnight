@@ -46,10 +46,14 @@ export function BetSlip({
   bet,
   multiplier,
   gem = "points",
+  dressed = false,
   onPlaced,
 }: {
   questionId: string;
   optionId: string | undefined;
+  /** Whether the card wears a tournament's dress. Decides whether the chips
+   *  take the event ring or the product's own accent. */
+  dressed?: boolean;
   odds: number | undefined;
   /** Totalisator: the price moves, and the final one is what pays. */
   liveOdds?: boolean;
@@ -231,7 +235,10 @@ export function BetSlip({
             type="text"
             inputMode="numeric"
             value={stake || ""}
-            placeholder={eventPointsLabel()}
+            // Name the wallet actually being spent. Off an event the stake
+            // comes out of season gold, and calling it "BLAST Porto Points"
+            // there told the player the wrong thing about their own money.
+            placeholder={dressed ? eventPointsLabel() : "сезонні поінти"}
             aria-label="Своя сума"
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, "").slice(0, 7);
@@ -274,7 +281,14 @@ export function BetSlip({
                 // solid colour would stop being readable; four chips with
                 // exactly one on is the opposite problem.
                 stake === c
-                  ? "bg-[rgb(var(--skin-ring))] text-black"
+                  // The event's ring only where there is an event. `--skin-ring`
+                  // carries a root default — the World Cup's orange — so an
+                  // undressed card was painting its chips in another
+                  // tournament's colour on every ordinary match. Off an event,
+                  // the product's own yellow.
+                  ? dressed
+                    ? "bg-[rgb(var(--skin-ring))] text-black"
+                    : "bg-accent text-accent-ink"
                   : "bg-white/[0.06] text-white/70 hover:bg-white/[0.12]",
                 c > balance && "cursor-not-allowed opacity-35 hover:bg-white/[0.06]",
               )}
