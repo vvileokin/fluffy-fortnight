@@ -199,6 +199,19 @@ export function QuestionCard({
       (t) => t.name.toLowerCase() === key || t.tag.toLowerCase() === key,
     );
     if (t) return t;
+    /* Then the same two sides, loosely.
+       An option is written by hand and a side is named from the fixture, so the
+       two spell the same team differently more often than not: the option said
+       "BET-M" where the match side is "BET-M 33", and the crest — which the
+       admin had already uploaded — went missing on a technicality. The sides
+       are searched before the catalogue because an option on a match is about
+       one of its two teams far more often than about anyone else. */
+    if (key.length >= 2) {
+      t = sides.find(
+        (t) => t.name.toLowerCase().includes(key) || key.includes(t.name.toLowerCase()),
+      );
+      if (t) return t;
+    }
     // Then try catalog by exact match
     t = teamByLabel(label);
     if (t) return t;
