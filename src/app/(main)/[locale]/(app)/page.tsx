@@ -89,10 +89,15 @@ export default async function HomePage() {
           back to that event's own banner when the CMS has none set. Both were
           pinned to EWC: after it finished, the front door of the site was still
           advertising a tournament that had ended, and there was no way to
-          change the destination from the admin at all. */}
+          change the destination from the admin at all.
+
+          With nothing running, the front door advertises the Major invitations
+          — the one thing on the site that is live between events — rather than
+          a tournaments index nobody arrived wanting. A banner set in the admin
+          still wins on artwork, which is what that field is for. */}
       <Hero
-        image={heroImage || currentEvent?.heroImage}
-        href={currentEvent ? `/tournaments/${currentEvent.slug}` : "/tournaments"}
+        image={heroImage || currentEvent?.heroImage || "/brand/hero-major.webp"}
+        href={currentEvent ? `/tournaments/${currentEvent.slug}` : "/major"}
       />
 
       {/* Tournaments and giveaways share the top row. With one event running,

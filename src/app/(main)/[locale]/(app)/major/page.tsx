@@ -93,21 +93,6 @@ export default async function MajorPage() {
         </div>
       </section>
 
-      {/* The method, for anyone who wants it, and nobody else.
-          A percentage invites the question of where it came from, and the
-          honest answer is a page long — which is a page this one should not
-          spend. It sits at the foot as a sentence, so a reader who is happy
-          with the table never has to step over it. */}
-      <p className="pb-1 text-center text-xs text-ink-subtle">
-        <a
-          href="https://claude.ai/code/artifact/830ebeb2-f452-42a4-ac7e-3a0dcb0816aa"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline decoration-[color-mix(in_oklch,var(--major)_45%,transparent)] underline-offset-4 transition-colors hover:text-[var(--major-hot)]"
-        >
-          Хочеш подивитись, як усе рахується?
-        </a>
-      </p>
     </div>
   );
 }
