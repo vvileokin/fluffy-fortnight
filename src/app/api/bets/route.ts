@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   if (!questionId) {
     const { data } = await createAdminClient()
       .from("bets")
-      .select("question_id, option_id, stake, odds, payout, settled_at, created_at")
+      .select("question_id, option_id, stake, odds, payout, settled_at, created_at, wallet")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(100);

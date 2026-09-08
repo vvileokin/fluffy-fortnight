@@ -248,15 +248,26 @@ export async function POST(request: Request) {
   // moved by an amount no other message accounts for.
   const { data: settled } = await admin
     .from("bets")
-    .select("user_id, stake, payout")
+    .select("user_id, stake, payout, wallet")
     .eq("question_id", question_id);
-  for (const b of (settled ?? []) as { user_id: string; stake: number; payout: number | null }[]) {
+  for (const b of (settled ?? []) as {
+    user_id: string;
+    stake: number;
+    payout: number | null;
+    wallet?: string | null;
+  }[]) {
     const won = (b.payout ?? 0) > 0;
+    // The currency is the one the slip was actually paid in. "EWC" was written
+    // here as a constant back when the only wallet a bet could come out of was
+    // the World Cup's; since 0079 an ordinary match is played in CS2 UA Points,
+    // and the message was telling those players their balance had moved in a
+    // currency they have never held.
+    const unit = b.wallet === "season" ? "CS2 UA Points" : "EWC";
     notifs.push({
       user_id: b.user_id,
       kind: "reward",
       title: won
-        ? `${prefix}ставка ${b.stake} на «${title}» зіграла — +${b.payout} EWC`
+        ? `${prefix}ставка ${b.stake} на «${title}» зіграла — +${b.payout} ${unit}`
         : `${prefix}ставка ${b.stake} на «${title}» не зіграла`,
     });
   }
