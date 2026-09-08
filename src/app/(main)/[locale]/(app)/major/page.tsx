@@ -110,10 +110,16 @@ function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSl
      number split by where a team enters. So they are one bar, not a bar and a
      caption: the length is the chance of going at all and the segments are what
      that seat would be worth. */
+  /* Three steps of lightness, not three steps of transparency.
+     The segments used to be one red at 100 / 62 / 34 percent alpha, sitting on
+     a plate that is itself red — so the third one dissolved into the ground and
+     the bar looked like it stopped early. Solid colours on one hue keep the
+     family and stay legible: the brightest is the core of the flame, which is
+     also the seat worth most. */
   const seg = [
-    { key: 3, p: t.p3, mix: 100 },
-    { key: 2, p: t.p2, mix: 62 },
-    { key: 1, p: t.p1, mix: 34 },
+    { key: 3, p: t.p3, color: "color-mix(in oklch, var(--major-hot) 58%, white)" },
+    { key: 2, p: t.p2, color: "var(--major-hot)" },
+    { key: 1, p: t.p1, color: "color-mix(in oklch, var(--major) 82%, black)" },
   ];
 
   return (
@@ -139,15 +145,15 @@ function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSl
         </span>
       </div>
 
-      <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-white/[0.08]">
+      {/* The empty remainder is a recessed slot, not a pale wash. A white film
+          over a red plate reads as a fourth segment; a dark well reads as the
+          part that isn't filled. */}
+      <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-black/35 shadow-[0_1px_0_0_rgb(255_255_255/0.06)_inset]">
         {seg.map((s) => (
           <span
             key={s.key}
             title={`Stage ${s.key} — ${pct(s.p)}`}
-            style={{
-              width: `${s.p * 100}%`,
-              background: `color-mix(in oklch, var(--major-hot) ${s.mix}%, transparent)`,
-            }}
+            style={{ width: `${s.p * 100}%`, background: s.color }}
           />
         ))}
       </div>
@@ -160,7 +166,7 @@ function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSl
           <span key={s.key} className="flex items-center gap-1.5 text-xs text-white/50">
             <span
               className="size-1.5 shrink-0 rounded-full"
-              style={{ background: `color-mix(in oklch, var(--major-hot) ${s.mix}%, transparent)` }}
+              style={{ background: s.color }}
             />
             Stage {s.key}
             <span className="tnum font-mono text-white/85">{pct(s.p)}</span>
