@@ -176,11 +176,6 @@ export function Topbar() {
   const handle = profile?.handle || (user ? displayName(user) : "");
   const points = profile?.points ?? 0;
   const streak = profile?.streak ?? 0;
-  // The running event's balance, not the last one's. `ewc_points` is what is
-  // left of the World Cup — a giveaway wallet now — and reading it here would
-  // greet a player at a new event holding points they won at the old one.
-  const eventPoints = profile?.event_points ?? 0;
-
   return (
     /* Impeccable: Crafted Top Bar — opaque, in the canvas's own colour, with no
        seam under it. It used to be 78% surface over a blur, so scrolled content
@@ -239,25 +234,14 @@ export function Topbar() {
           </span>
         </Link>
 
-        {/* The event balance, back for Porto and wearing Porto's gem.
+        {/* The event balance is gone with the event.
 
-            It came off the bar when EWC ended, and for the right reason: a
-            permanent capsule reading 0 for most of the site is the chrome
-            telling people they have nothing. What makes it worth carrying now
-            is that the event starts everyone level, so the number is a stake
-            rather than a scoreboard — and it links into the tournament it is
-            spent at. */}
-        <Link
-          href="/tournaments/blast-porto-2026"
-          aria-label={`${formatInt(eventPoints)} — BLAST Open Porto`}
-          data-skin="porto"
-          className="flex h-8 items-center gap-1 rounded-full bg-[rgb(var(--skin-glow)/0.16)] pl-1 pr-2 shadow-[0_0_0_1px_rgb(var(--skin-ring)/0.32)] transition-colors hover:bg-[rgb(var(--skin-glow)/0.24)] sm:h-9 sm:pl-1.5 sm:pr-2.5"
-        >
-          <BrandIcon name="points-porto" className="size-4 sm:size-[1.125rem]" priority />
-          <span className="tnum font-mono text-xs font-bold leading-none text-[rgb(var(--skin-ring))] sm:text-[0.8125rem]">
-            {formatInt(eventPoints)}
-          </span>
-        </Link>
+            It is carried only while a tournament is actually being played,
+            because then the number is a stake someone is about to spend. Porto
+            is finished, so the capsule would be a permanent reminder of a
+            balance with nowhere to go — which is what took it off the bar when
+            the World Cup ended, for the same reason. The points are not lost:
+            they are still on the profile and still exchangeable. */}
 
         <Link
           href="/profile"

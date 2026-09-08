@@ -6,7 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Check, Flame } from "lucide-react";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { BrandIcon } from "@/components/ui/BrandIcon";
-import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match, isAuraSkin, matchSkin } from "@/lib/data";
+import { getMatch, matchTeam, teamByLabel, teams, type Question, type Match, isAuraSkin, matchSkin, matchWallet } from "@/lib/data";
 import { useUser } from "@/lib/supabase/use-user";
 import { useProfile } from "@/lib/supabase/use-profile";
 import { createClient } from "@/lib/supabase/client";
@@ -66,10 +66,16 @@ export function QuestionCard({
   // checking one slug, so a Porto bet sat on the generic grey plate with the
   // season yellow on it while the match card above it was scarlet.
   const skin = match ? matchSkin(match) : null;
-  const dressed = isAuraSkin(skin);
-  /** The currency mark this event pays in. */
+  /* What the slip charges, which is not what the card wears. A finished event
+     keeps its dress; it does not keep its balance, and `place_bet` stops
+     charging that balance the moment the tournament stops being a running
+     event. Taking the currency off the dress meant the slip could spend CS2UA
+     Points and quote the payout in the event's. */
+  const wallet = match ? matchWallet(match) : null;
+  const dressed = isAuraSkin(wallet);
+  /** The currency mark this question is staked and paid in. */
   const eventGem =
-    skin === "ewc" ? "points-ewc" : skin === "porto" ? "points-porto" : "points";
+    wallet === "ewc" ? "points-ewc" : wallet === "porto" ? "points-porto" : "points";
 
   // Load this user's saved answer.
   React.useEffect(() => {
@@ -521,7 +527,7 @@ export function QuestionCard({
               // picks by whether the question belongs to an event, so the
               // slip has to show the same column or it offers a balance the
               // bet will be refused for.
-              balance={(skin ? profile?.event_points : profile?.points) ?? 0}
+              balance={(wallet ? profile?.event_points : profile?.points) ?? 0}
               locked={locked || upcoming}
               bet={bet}
               multiplier={multiplier}

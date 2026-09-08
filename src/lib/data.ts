@@ -351,7 +351,7 @@ export const allTournaments: Tournament[] = [
     name: "BLAST Open Porto 2026",
     shortName: "BLAST Porto",
     tier: 1,
-    status: "upcoming",
+    status: "finished",
     startISO: "2026-08-26",
     endISO: "2026-09-06",
     dateLabel: "26 сер – 6 вер",
@@ -1364,6 +1364,24 @@ export function getTournament(slug: string): Tournament | undefined {
  * `isEvent` without an explicit skin, so imported DB matches (which only carry
  * `is_event`) keep the look they have today.
  */
+/**
+ * The balance a match is actually staked from, or null for ordinary play.
+ *
+ * Deliberately not `matchSkin`. The skin is a dress and it stays on after the
+ * trophy is handed out — a finished event's cards should still look like that
+ * event. The wallet is a fact about the server: `place_bet` charges the event
+ * balance only while the tournament is listed as a running event, and the
+ * moment it stops being one, stakes come out of CS2UA Points.
+ *
+ * Reading the dress for this is what let the slip take yellow points and
+ * promise a payout in red ones.
+ */
+export function matchWallet(match: Match, tour?: Tournament): EventSkin | null {
+  const t = tour ?? getTournament(match.tournamentSlug);
+  if (t && t.status === "finished") return null;
+  return matchSkin(match, t);
+}
+
 export function matchSkin(match: Match, tour?: Tournament): EventSkin | null {
   const t = tour ?? getTournament(match.tournamentSlug);
   if (t?.skin) return t.skin;

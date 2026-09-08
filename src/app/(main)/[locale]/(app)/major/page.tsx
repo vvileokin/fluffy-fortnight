@@ -103,9 +103,9 @@ export default async function MajorPage() {
  * The crest is 44px rather than 28: at the smaller size it sat inside its row
  * like a bullet point, and these three rows are the reason anybody opens this.
  */
-function OurRow({ t, slots }: { t: MajorTeam; slots: MajorSlots }) {
+function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSlots }) {
   const team = findTeam(t.slug);
-  const stage = stageOf(t.projected, slots);
+  const stage = stageOf(t.place, slots);
   /* The three stage chances sum to the qualification chance — they are the same
      number split by where a team enters. So they are one bar, not a bar and a
      caption: the length is the chance of going at all and the segments are what
@@ -130,7 +130,7 @@ function OurRow({ t, slots }: { t: MajorTeam; slots: MajorSlots }) {
           <span className="size-14 shrink-0 rounded-xl bg-white/10" />
         )}
         <p className="min-w-0 flex-1 truncate text-xl font-bold text-white">{t.team}</p>
-        <StageChip stage={stage} place={t.projected} />
+        <StageChip stage={stage} place={t.place} />
         <span
           className="tnum shrink-0 font-mono text-2xl font-bold leading-none"
           style={{ color: tone(t.pQual) }}
@@ -224,8 +224,11 @@ function RegionTable({
     <div className={cn("overflow-hidden rounded-2xl major-card", fill && "h-full")}>
       <h2 className="px-3 pb-2 pt-3 text-base font-bold text-ink">{REGION_NAME[region]}</h2>
       <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
-        {rows.map((t) => {
-          const stage = stageOf(t.projected, slots);
+        {rows.map((t, i) => {
+          // The place is this list's own, so the number on the left, the stage
+          // badge and the cut below all agree with the order the rows are in.
+          const place = i + 1;
+          const stage = stageOf(place, slots);
           const team = findTeam(t.slug);
           return (
             <div key={t.vrs + t.team + t.projected}>
@@ -235,12 +238,12 @@ function RegionTable({
                   // Zebra, very quiet. Thirty rows of text on one flat ground
                   // is what reads as emptiness; a half-percent step every other
                   // row gives the column a surface without drawing rules on it.
-                  t.projected % 2 === 0 && "bg-white/[0.018]",
+                  place % 2 === 0 && "bg-white/[0.018]",
                   stage === 0 ? "opacity-55 hover:opacity-80" : "hover:bg-[color-mix(in_oklch,var(--major)_10%,transparent)]",
                 )}
               >
                 <span className="tnum w-4 shrink-0 text-right font-mono text-[0.6875rem] text-ink-faint">
-                  {t.projected}
+                  {place}
                 </span>
                 {team ? (
                   <TeamLogo team={team} size="xs" />
@@ -256,7 +259,7 @@ function RegionTable({
                   {pct(t.pQual)}
                 </span>
               </div>
-              {t.projected === slots.total && (
+              {place === slots.total && (
                 /* The cut, lit rather than ruled. It is the one line on the
                    page where something actually happens, so it gets the
                    event's own light behind it instead of a hairline. */

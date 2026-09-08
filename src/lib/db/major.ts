@@ -116,9 +116,24 @@ export const getMajorProjection = cache(async (): Promise<MajorData> => {
   }
 });
 
-/** Teams of one region, already in projected order. */
+/**
+ * Teams of one region, strongest chance first.
+ *
+ * The rows used to come back in the model's projected finishing order, which is
+ * ranked on expected VRS points, while the column the reader actually compares
+ * is the probability of getting an invitation. Those two disagree whenever a
+ * side is more volatile than the one above it, and the table then printed
+ * Vitality at 98.2% above Falcons at 98.9% — which reads as a sorting bug
+ * whatever the arithmetic behind it.
+ *
+ * The page is about who gets in, so it is ordered on that, and the place and
+ * stage each row is given follow from this order rather than from the separate
+ * projected standing. One ranking, stated once.
+ */
 export function regionTeams(data: NonNullable<MajorData>, region: MajorRegion) {
-  return data.teams.filter((t) => t.region === region);
+  return data.teams
+    .filter((t) => t.region === region)
+    .sort((a, b) => b.pQual - a.pQual || a.projected - b.projected);
 }
 
 /**
@@ -128,7 +143,7 @@ export function regionTeams(data: NonNullable<MajorData>, region: MajorRegion) {
  * and it is stable — the site's own catalogue only covers teams we run matches
  * on, and half of these are not in it.
  */
-export const UA_TEAMS = ["B8", "Natus Vincere", "Inner Circle"];
+export const UA_TEAMS = ["B8", "Natus Vincere", "Inner Circle", "G2", "fnatic"];
 
 /**
  * Which stage a projected place lands in.
@@ -148,9 +163,16 @@ export function stageOf(projected: number, slots: MajorSlots): 3 | 2 | 1 | 0 {
 
 export function ourTeams(data: NonNullable<MajorData>) {
   const want = new Map(UA_TEAMS.map((n, i) => [n, i]));
+  // The place comes from the same ordering the region table uses, so the banner
+  // and the row for the same side can never disagree about where it stands.
+  const placeOf = new Map<string, number>();
+  for (const region of ["europe", "americas", "asia"] as MajorRegion[])
+    regionTeams(data, region).forEach((t, i) => placeOf.set(t.region + t.team, i + 1));
+
   return data.teams
     .filter((t) => want.has(t.team))
-    .sort((a, b) => (want.get(a.team) ?? 0) - (want.get(b.team) ?? 0));
+    .sort((a, b) => (want.get(a.team) ?? 0) - (want.get(b.team) ?? 0))
+    .map((t) => ({ ...t, place: placeOf.get(t.region + t.team) ?? t.projected }));
 }
 
 /** Days from today to the invitation date, floored at zero. */
