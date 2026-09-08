@@ -117,7 +117,10 @@ export function BetSlip({
               screen. The option chips above already show the streak beside the
               coefficient; now the slip agrees with them, and the arithmetic
               closes. */}
-          <span className="tnum flex min-w-0 items-center gap-1 font-mono text-sm font-bold leading-none text-[rgb(var(--skin-ring))]">
+          <span className={cn(
+            "tnum flex min-w-0 items-center gap-1 font-mono text-sm font-bold leading-none",
+            dressed ? "text-[rgb(var(--skin-ring))]" : "text-accent",
+          )}>
             <BrandIcon name={gem} className="size-4" />
             {formatInt(bet.stake)}
             <span className="mx-1.5 text-white/45">× {shown}</span>
@@ -339,7 +342,12 @@ export function BetSlip({
         aria-label="Зробити ставку"
         className={cn(
           "flex h-11 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-bold transition-colors",
-          "bg-[rgb(var(--skin-ring))] text-black hover:brightness-110",
+          // Same rule as the stake chips above: `--skin-ring` has a root
+          // default — the World Cup's orange — so off an event this painted the
+          // one button on the card in another tournament's colour.
+          dressed
+            ? "bg-[rgb(var(--skin-ring))] text-black hover:brightness-110"
+            : "bg-accent text-accent-ink hover:brightness-110",
           "disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-white/35",
         )}
       >

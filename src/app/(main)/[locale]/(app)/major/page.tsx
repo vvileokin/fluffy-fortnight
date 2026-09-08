@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { MajorMode } from "@/components/major/MajorMode";
-import { getTeam } from "@/lib/data";
+import { findTeam } from "@/lib/data";
 import {
   getMajorProjection, regionTeams, ourTeams, stageOf,
   type MajorTeam, type MajorRegion, type MajorSlots,
@@ -104,7 +104,7 @@ export default async function MajorPage() {
  * like a bullet point, and these three rows are the reason anybody opens this.
  */
 function OurRow({ t, slots }: { t: MajorTeam; slots: MajorSlots }) {
-  const team = t.slug ? getTeam(t.slug) : null;
+  const team = findTeam(t.slug);
   const stage = stageOf(t.projected, slots);
   /* The three stage chances sum to the qualification chance — they are the same
      number split by where a team enters. So they are one bar, not a bar and a
@@ -226,6 +226,7 @@ function RegionTable({
       <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
         {rows.map((t) => {
           const stage = stageOf(t.projected, slots);
+          const team = findTeam(t.slug);
           return (
             <div key={t.vrs + t.team + t.projected}>
               <div
@@ -241,8 +242,8 @@ function RegionTable({
                 <span className="tnum w-4 shrink-0 text-right font-mono text-[0.6875rem] text-ink-faint">
                   {t.projected}
                 </span>
-                {t.slug ? (
-                  <TeamLogo team={getTeam(t.slug)} size="xs" />
+                {team ? (
+                  <TeamLogo team={team} size="xs" />
                 ) : (
                   <span className="size-5 shrink-0 rounded bg-fill-1" />
                 )}

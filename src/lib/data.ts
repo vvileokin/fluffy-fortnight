@@ -26,16 +26,16 @@ export const teams: Record<string, Team> = {
   betboom: { slug: "betboom", name: "BetBoom Team", tag: "BB", logo: "/teams/betboom.svg", brand: "#FF4655", ink: "white", region: "EU", worldRank: 12 },
   flyquest: { slug: "flyquest", name: "FlyQuest", tag: "FLY", logo: "/teams/flyquest.svg", brand: "#0A8A3F", ink: "white", region: "Oceania", worldRank: 19 },
   gaimin: { slug: "gaimin", name: "Gaimin Gladiators", tag: "GG", logo: "/teams/gaimin-gladiators.png", brand: "#5A2D91", ink: "white", region: "EU", worldRank: 27 },
-  gamerlegion: { slug: "gamerlegion", name: "GamerLegion", tag: "GL", logo: "/teams/gamerlegion.svg", brand: "#D81E27", ink: "white", region: "EU", worldRank: 21 },
+  gamerlegion: { slug: "gamerlegion", name: "GamerLegion", tag: "GL", logo: "/teams/gamerlegion.svg", brand: "#141418", ink: "white", region: "EU", worldRank: 21 },
   heroic: { slug: "heroic", name: "HEROIC", tag: "HER", logo: "/teams/heroic.svg", brand: "#E4002B", ink: "white", region: "EU", worldRank: 34 },
   lynn: { slug: "lynn", name: "Lynn Vision", tag: "LV", logo: "/teams/lynn.svg", brand: "#B27F1D", ink: "white", region: "Asia", worldRank: 24 },
   m80: { slug: "m80", name: "M80", tag: "M80", logo: "/teams/m80.svg", brand: "#DAFE00", ink: "black", region: "NA", worldRank: 28 },
-  mibr: { slug: "mibr", name: "MIBR", tag: "MIBR", logo: "/teams/mibr.svg", brand: "#14213D", ink: "white", region: "SA", worldRank: 18 },
+  mibr: { slug: "mibr", name: "MIBR", tag: "MIBR", logo: "/teams/mibr.svg", brand: "#101820", ink: "white", region: "SA", worldRank: 18 },
   nrg: { slug: "nrg", name: "NRG", tag: "NRG", logo: "/teams/nrg.png", brand: "#1A1A1A", ink: "white", region: "NA", worldRank: 25 },
   sinners: { slug: "sinners", name: "SINNERS", tag: "SIN", logo: "/teams/sinners.svg", brand: "#C8102E", ink: "white", region: "EU", worldRank: 51 },
   // DENDELE — rebrand of the former Sharks (slug kept so existing data still resolves).
   sharks: { slug: "sharks", name: "DENDELE", tag: "DEN", logo: "/teams/dendele.svg", brand: "#1A65BA", ink: "white", region: "SA", worldRank: 32 },
-  thunder: { slug: "thunder", name: "THUNDERTDU", tag: "TDU", logo: "/teams/thunderdownunder.png", brand: "#49008F", ink: "white", region: "Oceania", worldRank: 41 },
+  thunder: { slug: "thunder", name: "THUNDERTDU", tag: "TDU", logo: "/teams/thunderdownunder.svg", brand: "#49008F", ink: "white", region: "Oceania", worldRank: 41 },
   liquid: { slug: "liquid", name: "Liquid", tag: "TL", logo: "/teams/liquid.svg", brand: "#0A1F44", ink: "white", region: "NA", worldRank: 41 },
   tyloo: { slug: "tyloo", name: "TYLOO", tag: "TY", logo: "/teams/tyloo.svg", brand: "#D71920", ink: "white", region: "Asia", worldRank: 17 },
 
@@ -58,17 +58,17 @@ export const teams: Record<string, Team> = {
   aurora: { slug: "aurora", name: "Aurora", tag: "AUR", logo: "/teams/aurora.svg", brand: "#0FC6BB", ink: "black", region: "EU", worldRank: 9 },
   astralis: { slug: "astralis", name: "Astralis", tag: "AST", logo: "/teams/astralis.svg", brand: "#F6323C", ink: "white", region: "EU", worldRank: 18 },
   furia: { slug: "furia", name: "FURIA", tag: "FUR", logo: "/teams/furia.svg", brand: "#17181C", ink: "white", region: "SA", worldRank: 5 },
-  fut: { slug: "fut", name: "FUT", tag: "FUT", logo: "/teams/fut.svg", brand: "#0AA0C8", ink: "white", region: "EU", worldRank: 12 },
+  fut: { slug: "fut", name: "FUT", tag: "FUT", logo: "/teams/fut.svg", brand: "#ED1A3A", ink: "white", region: "EU", worldRank: 12 },
   g2: { slug: "g2", name: "G2", tag: "G2", logo: "/teams/g2.svg", brand: "#17181C", ink: "white", region: "EU", worldRank: 11 },
   nemiga: { slug: "nemiga", name: "Nemiga", tag: "NMG", logo: "/teams/nemiga.svg", brand: "#D81E27", ink: "white", region: "EU", worldRank: 52 },
-  magic: { slug: "magic", name: "magic", tag: "MAG", logo: "/teams/magic.svg", brand: "#7A2BD9", ink: "white", region: "NA", worldRank: 24 },
+  magic: { slug: "magic", name: "magic", tag: "MAG", logo: "/teams/magic.svg", brand: "#9632B7", ink: "white", region: "NA", worldRank: 24 },
   pain: { slug: "pain", name: "paiN", tag: "paiN", logo: "/teams/pain.svg", brand: "#E11B22", ink: "white", region: "SA", worldRank: 27 },
   faze: { slug: "faze", name: "FaZe", tag: "FaZe", logo: "/teams/faze.svg", brand: "#E4002B", ink: "white", region: "EU", worldRank: 16 },
-  nip: { slug: "nip", name: "Ninjas in Pyjamas", tag: "NIP", logo: "/teams/nip.svg", brand: "#101319", ink: "white", region: "EU", worldRank: 29 },
+  nip: { slug: "nip", name: "Ninjas in Pyjamas", tag: "NIP", logo: "/teams/nip.svg", brand: "#CEF000", ink: "black", region: "EU", worldRank: 29 },
 
   // --- BLAST Bounty S2 field (lower seeds) ---
   wildcard: { slug: "wildcard", name: "Wildcard", tag: "WC", logo: "/teams/wildcard.svg", brand: "#FE273C", ink: "white", region: "NA", worldRank: 33 },
-  threedmax: { slug: "threedmax", name: "3DMAX", tag: "3DM", logo: "/teams/threedmax.svg", brand: "#D81E27", ink: "white", region: "EU", worldRank: 35 },
+  threedmax: { slug: "threedmax", name: "3DMAX", tag: "3DM", logo: "/teams/threedmax.svg", brand: "#E41013", ink: "white", region: "EU", worldRank: 35 },
   alliance: { slug: "alliance", name: "Alliance", tag: "ALL", logo: "/teams/alliance.svg", brand: "#44D62C", ink: "black", region: "EU", worldRank: 17 },
   gentlemates: { slug: "gentlemates", name: "Gentle Mates", tag: "M8", logo: "/teams/gentlemates.svg", brand: "#E63980", ink: "white", region: "EU", worldRank: 37 },
   hotu: { slug: "hotu", name: "HOTU", tag: "HOTU", logo: "/teams/hotu.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 42 },
@@ -77,16 +77,50 @@ export const teams: Record<string, Team> = {
   nucleartigers: { slug: "nucleartigers", name: "Nuclear TigeRES", tag: "NT", logo: "/teams/nucleartigers.svg", brand: "#E7442E", ink: "white", region: "Asia", worldRank: 36 },
   eyeballers: { slug: "eyeballers", name: "EYEBALLERS", tag: "EYE", logo: "/teams/eyeballers.svg", brand: "#E31720", ink: "white", region: "EU", worldRank: 31 },
   hundredthieves: { slug: "hundredthieves", name: "100 Thieves", tag: "100T", logo: "/teams/hundredthieves.svg", brand: "#E4002B", ink: "white", region: "NA", worldRank: 46 },
-  og: { slug: "og", name: "OG", tag: "OG", logo: "/teams/og.svg", brand: "#1D1D20", ink: "white", region: "EU", worldRank: 70 },
+  og: { slug: "og", name: "OG", tag: "OG", logo: "/teams/og.svg", brand: "#046C60", ink: "white", region: "EU", worldRank: 70 },
 
   // --- EWC 2026 field: the six that weren't in the catalog yet ---
   ninez: { slug: "ninez", name: "9z", tag: "9z", logo: "/teams/9z.svg", brand: "#1B1B1F", ink: "white", region: "SA", worldRank: 31 },
-  jijiehao: { slug: "jijiehao", name: "JiJieHao", tag: "JJH", logo: "/teams/jijiehao.svg", brand: "#8A1B1B", ink: "white", region: "Asia", worldRank: 58 },
+  jijiehao: { slug: "jijiehao", name: "JiJieHao", tag: "JJH", logo: "/teams/jijiehao.svg", brand: "#F8D71B", ink: "black", region: "Asia", worldRank: 58 },
   k27: { slug: "k27", name: "K27", tag: "K27", logo: "/teams/k27.webp", brand: "#CC0F28", ink: "white", region: "EU", worldRank: 62 },
   legacy: { slug: "legacy", name: "Legacy", tag: "LEG", logo: "/teams/legacy.webp", brand: "#FCC800", ink: "black", region: "SA", worldRank: 39 },
   luminosity: { slug: "luminosity", name: "LUMINOSITY", tag: "LG", logo: "/teams/luminosity.svg", brand: "#3BBBDB", ink: "black", region: "NA", worldRank: 44 },
   parivision: { slug: "parivision", name: "PARIVISION", tag: "PARI", logo: "/teams/parivision.webp", brand: "#00C7B1", ink: "black", region: "EU", worldRank: 20 },
   innercircle: { slug: "innercircle", name: "Inner Circle", tag: "ICE", logo: "/teams/innercircle.svg", brand: "#FF3555", ink: "white", region: "EU", worldRank: 48 },
+
+  /* Sides that appear on the Major invitations table but not on our fixtures.
+     Every tile colour below was read off the org's own logo rather than
+     guessed: monochrome marks (Fluxo, BESTIA, ShindeN, Voca, DEPO, 1win) get
+     the ground their artwork is drawn for, and the rest keep the colour the
+     artwork actually is — which is how Imperial ends up neon green and
+     THUNDER dOWNUNDER purple, neither of which is the black an eye would
+     assume. `worldRank` is 0 because HLTV's world ranking is a different list
+     from the VRS standing these teams are here for, and the match header hides
+     the line at zero rather than printing a number from the wrong table. */
+  onewin: { slug: "onewin", name: "1win", tag: "1WIN", logo: "/teams/onewin.svg", brand: "#FFFFFF", ink: "black", region: "EU", worldRank: 0 },
+  virtuspro: { slug: "virtuspro", name: "Virtus.pro", tag: "VP", logo: "/teams/virtuspro.svg", brand: "#0F1720", ink: "white", region: "EU", worldRank: 0 },
+  betclic: { slug: "betclic", name: "Betclic", tag: "BTC", logo: "/teams/betclic.svg", brand: "#E40014", ink: "white", region: "EU", worldRank: 0 },
+  infinite: { slug: "infinite", name: "INFINITE", tag: "INF", logo: "/teams/infinite.svg", brand: "#FD0908", ink: "white", region: "EU", worldRank: 0 },
+  fnatic: { slug: "fnatic", name: "fnatic", tag: "FNC", logo: "/teams/fnatic.svg", brand: "#FF5A00", ink: "white", region: "EU", worldRank: 0 },
+  bcgame: { slug: "bcgame", name: "BC.Game", tag: "BCG", logo: "/teams/bcgame.svg", brand: "#25EE87", ink: "black", region: "EU", worldRank: 0 },
+  sportsbetexpert: { slug: "sportsbetexpert", name: "SportsBetExpert", tag: "SBE", logo: "/teams/sportsbetexpert.svg", brand: "#46BD3B", ink: "white", region: "SA", worldRank: 0 },
+  imperial: { slug: "imperial", name: "Imperial", tag: "IMP", logo: "/teams/imperial.svg", brand: "#00E86F", ink: "black", region: "SA", worldRank: 0 },
+  fluxo: { slug: "fluxo", name: "Fluxo", tag: "FLX", logo: "/teams/fluxo.svg", brand: "#101014", ink: "white", region: "SA", worldRank: 0 },
+  bestia: { slug: "bestia", name: "BESTIA", tag: "BST", logo: "/teams/bestia.svg", brand: "#121216", ink: "white", region: "SA", worldRank: 0 },
+  shinden: { slug: "shinden", name: "ShindeN", tag: "SHN", logo: "/teams/shinden.svg", brand: "#14141A", ink: "white", region: "SA", worldRank: 0 },
+  voca: { slug: "voca", name: "Voca", tag: "VOCA", logo: "/teams/voca.svg", brand: "#16161B", ink: "white", region: "SA", worldRank: 0 },
+  depo: { slug: "depo", name: "DEPO", tag: "DEPO", logo: "/teams/depo.svg", brand: "#141419", ink: "white", region: "Asia", worldRank: 0 },
+  fivestar: { slug: "fivestar", name: "5star", tag: "5ST", logo: "/teams/5star.svg", brand: "#151515", ink: "white", region: "Asia", worldRank: 0 },
+  groundzero: { slug: "groundzero", name: "Ground Zero", tag: "GZ", logo: "/teams/groundzero.svg", brand: "#8BE034", ink: "black", region: "Oceania", worldRank: 0 },
+  alterego: { slug: "alterego", name: "Alter Ego", tag: "AE", logo: "/teams/alterego.png", brand: "#E4222B", ink: "white", region: "Asia", worldRank: 0 },
+  nexvoid: { slug: "nexvoid", name: "NEXVOID", tag: "NXV", logo: "/teams/nexvoid.svg", brand: "#13C7C7", ink: "black", region: "Asia", worldRank: 0 },
+  rareatom: { slug: "rareatom", name: "Rare Atom", tag: "RA", logo: "/teams/rareatom.svg", brand: "#B04EC4", ink: "white", region: "Asia", worldRank: 0 },
+  chinggis: { slug: "chinggis", name: "Chinggis Warriors", tag: "CW", logo: "/teams/chinggis.svg", brand: "#F62535", ink: "white", region: "Asia", worldRank: 0 },
+  thehuns: { slug: "thehuns", name: "The Huns", tag: "HUNS", logo: "/teams/thehuns.svg", brand: "#BB0000", ink: "white", region: "Asia", worldRank: 0 },
+  /* No mark exists for this one that we can use, so the tile carries the tag —
+     which `TeamLogo` already draws when `logo` is empty. A single letter on the
+     team's own ground is a better placeholder than a borrowed silhouette. */
+  theunit: { slug: "theunit", name: "THE UNIT", tag: "T", logo: "", brand: "#8E7BC3", ink: "white", region: "Asia", worldRank: 0 },
 };
 
 export type Tier = 1 | 2;
@@ -1276,6 +1310,24 @@ export const socials = [
 
 export function getTeam(slug: string): Team {
   return teams[slug];
+}
+
+/**
+ * A team by slug, admitting that it might not be here.
+ *
+ * `getTeam` promises a Team and delivers `undefined` for a slug the catalogue
+ * has never heard of, which is safe for the forty-odd callers that pass a
+ * literal written in this repository — those slugs cannot go missing without
+ * the build noticing. It is not safe for the Major table, whose slugs arrive
+ * from a database that is written by a separate program on a separate
+ * schedule: publish a crest there before the catalogue entry ships and every
+ * render of the page throws on `undefined.logo`. It has, once.
+ *
+ * Callers reading slugs out of storage use this and draw a blank tile when it
+ * misses.
+ */
+export function findTeam(slug: string | null | undefined): Team | null {
+  return (slug && teams[slug]) || null;
 }
 
 /**
