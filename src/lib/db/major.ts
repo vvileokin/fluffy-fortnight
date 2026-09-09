@@ -58,6 +58,9 @@ export type MajorTeam = {
   tier1: string[];
   tier2: { name: string; p: number; confirmed: boolean }[];
   qualBy: { name: string; p: number }[];
+  /** Percentage points moved since yesterday, signed. Null when there is
+   *  nothing to compare against, or when the team has not actually moved. */
+  move: number | null;
 };
 
 export type MajorData = { meta: MajorMeta; teams: MajorTeam[] } | null;
@@ -92,7 +95,7 @@ export const getMajorProjection = cache(async (): Promise<MajorData> => {
         events: (meta.events ?? []) as MajorEvent[],
         source: meta.source as string,
       },
-      teams: rows.map((r) => ({
+      teams: withMove(rows.map((r) => ({
         region: r.region as MajorRegion,
         team: r.team as string,
         slug: (r.slug as string | null) ?? null,
@@ -109,12 +112,51 @@ export const getMajorProjection = cache(async (): Promise<MajorData> => {
         tier1: (r.tier1 ?? []) as string[],
         tier2: (r.tier2 ?? []) as MajorTeam["tier2"],
         qualBy: (r.qual_by ?? []) as MajorTeam["qualBy"],
-      })),
+        move: null,
+      })), (meta.prev ?? null) as PrevRow[] | null),
     };
   } catch {
     return null;
   }
 });
+
+type PrevRow = { region: string; team: string; p_qual: number };
+
+/**
+ * How much each team moved since yesterday, up or down.
+ *
+ * A standing team gets nothing. That is the whole discipline of the badge: on
+ * any given day most of the table has not really moved, and printing "0.0" on
+ * thirty rows to say so buries the four that did. Below a twentieth of a point
+ * the change is arithmetic noise from the simulation, not news.
+ *
+ * Matched on region and name, and among namesakes on position: Asia carries two
+ * sides called The Huns and two called Rare Atom, hundreds of points apart, so
+ * a plain name lookup would hand one of them the other's movement. Both lists
+ * arrive in projected order, so the nth of a name here is the nth there.
+ */
+function withMove(teams: MajorTeam[], prev: PrevRow[] | null): MajorTeam[] {
+  if (!prev?.length) return teams;
+  const queue = new Map<string, number[]>();
+  for (const p of prev) {
+    const k = p.region + "|" + p.team;
+    const list = queue.get(k);
+    if (list) list.push(p.p_qual);
+    else queue.set(k, [p.p_qual]);
+  }
+  const used = new Map<string, number>();
+  return teams.map((t) => {
+    const k = t.region + "|" + t.team;
+    const list = queue.get(k);
+    if (!list) return t;
+    const i = used.get(k) ?? 0;
+    used.set(k, i + 1);
+    const was = list[i];
+    if (typeof was !== "number") return t;
+    const d = (t.pQual - was) * 100;
+    return { ...t, move: Math.abs(d) >= 0.05 ? d : null };
+  });
+}
 
 /**
  * Teams of one region, strongest chance first.

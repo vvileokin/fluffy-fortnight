@@ -139,11 +139,14 @@ function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSl
         )}
         <p className="min-w-0 flex-1 truncate text-xl font-bold text-white">{t.team}</p>
         <StageChip stage={stage} place={t.place} />
-        <span
-          className="tnum shrink-0 font-mono text-2xl font-bold leading-none"
-          style={{ color: tone(t.pQual) }}
-        >
-          {pct(t.pQual)}
+        <span className="flex shrink-0 items-baseline gap-1.5">
+          <Move move={t.move} />
+          <span
+            className="tnum font-mono text-2xl font-bold leading-none"
+            style={{ color: tone(t.pQual) }}
+          >
+            {pct(t.pQual)}
+          </span>
         </span>
       </div>
 
@@ -260,11 +263,14 @@ function RegionTable({
                 )}
                 <span className="min-w-0 flex-1 truncate font-semibold text-ink">{t.team}</span>
                 <StageMark stage={stage} />
-                <span
-                  className="tnum w-[3.25rem] shrink-0 text-right font-mono font-bold"
-                  style={{ color: tone(t.pQual) }}
-                >
-                  {pct(t.pQual)}
+                <span className="flex w-[4.75rem] shrink-0 items-baseline justify-end gap-1">
+                  <Move move={t.move} />
+                  <span
+                    className="tnum font-mono font-bold"
+                    style={{ color: tone(t.pQual) }}
+                  >
+                    {pct(t.pQual)}
+                  </span>
                 </span>
               </div>
               {place === slots.total && (
@@ -282,6 +288,35 @@ function RegionTable({
         })}
       </div>
     </div>
+  );
+}
+
+/**
+ * What the last day did to this team, or nothing.
+ *
+ * Deliberately quiet: a triangle and a number at the smallest legible size,
+ * sharing the percentage's own baseline. It is the second most important thing
+ * in the row and has to stay behind the first — a badge that competed with the
+ * figure it annotates would make every row look urgent.
+ *
+ * Green for up, and for down the page's own muted ink rather than a red: this
+ * table is already red from edge to edge, and one more red on a falling row
+ * would read as an alert rather than as a fact.
+ */
+function Move({ move }: { move: number | null }) {
+  if (move === null) return null;
+  const up = move > 0;
+  return (
+    <span
+      title={`За добу ${up ? "+" : "−"}${Math.abs(move).toFixed(1)} п.п.`}
+      className={cn(
+        "tnum flex shrink-0 items-center gap-px font-mono text-[0.625rem] font-bold leading-none",
+        up ? "text-success" : "text-ink-faint",
+      )}
+    >
+      {up ? "▲" : "▼"}
+      {Math.abs(move).toFixed(1)}
+    </span>
   );
 }
 
