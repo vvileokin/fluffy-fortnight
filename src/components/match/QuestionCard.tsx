@@ -267,6 +267,26 @@ export function QuestionCard({
       // home feed alongside cards from other tournaments, and `--skin-*`
       // inherits, so each one has to paint itself.
       data-skin={skin ?? undefined}
+      /* Lit by the same two brands as the match card above it.
+         A prediction card and the match card it belongs to sat side by side in
+         the same feed wearing different chassis: the match card carries
+         `match-plate`, which throws each team's colour into the top corners and
+         the tournament's into the bottom, and this one carried a flat surface.
+         Same component family, same lighting — the card was the only thing on
+         the page saying otherwise. */
+      style={
+        match
+          ? ({
+              "--team-a": matchTeam(match, "a").brand,
+              "--team-b": matchTeam(match, "b").brand,
+              ...(skin === "blast"
+                ? { "--tour-a": "rgb(255 12 60)", "--tour-b": "rgb(46 86 255)" }
+                : isAuraSkin(skin)
+                  ? { "--tour-a": "rgb(var(--skin-glow))", "--tour-b": "rgb(var(--skin-deep))" }
+                  : {}),
+            } as CSSProperties)
+          : undefined
+      }
       className={cn(
         // Full height again, with the body taking the slack, so the sponsor
         // plates across a row sit on one line. Letting each card find its own
@@ -276,6 +296,7 @@ export function QuestionCard({
         // slip is now close in height to the picker it replaces.
         "flex h-full flex-col overflow-hidden rounded-2xl",
         dressed ? "skin-match" : "surface-1",
+        !dressed && match && "match-plate",
       )}
     >
       {/* The "which match is this" row belongs to feeds that mix matches
