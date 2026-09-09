@@ -53,6 +53,13 @@ export default async function MajorPage() {
 
   const { meta } = data;
   const ours = ourTeams(data);
+  /* The badge is a comparison, so it has to name what it compares against. The
+     window is whatever the last stored set happens to be — a day usually, more
+     when nothing has been published since — and saying "за добу" regardless
+     would be wrong on exactly the days a reader is most likely to check. */
+  const since = meta.prevAt
+    ? `Від ${new Date(meta.prevAt).toLocaleDateString("uk-UA", { day: "numeric", month: "long", timeZone: "UTC" })}`
+    : "Рух";
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -66,7 +73,7 @@ export default async function MajorPage() {
       {ours.length > 0 && (
         <section className="major-plate major-divide hidden overflow-hidden rounded-2xl sm:block">
           {ours.map((t) => (
-            <OurRow key={t.region + t.team} t={t} slots={meta.slots[t.region]} />
+            <OurRow key={t.region + t.team} t={t} slots={meta.slots[t.region]} since={since} />
           ))}
         </section>
       )}
@@ -84,11 +91,11 @@ export default async function MajorPage() {
           both to the taller, and Asia takes up whatever slack is left, so its
           floor lands exactly where Europe's does. */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RegionTable data={data} region="europe" />
+        <RegionTable data={data} region="europe" since={since} />
         <div className="flex min-h-0 flex-col gap-6">
-          <RegionTable data={data} region="americas" />
+          <RegionTable data={data} region="americas" since={since} />
           <div className="flex-1">
-            <RegionTable data={data} region="asia" fill />
+            <RegionTable data={data} region="asia" fill since={since} />
           </div>
         </div>
       </section>
@@ -103,7 +110,7 @@ export default async function MajorPage() {
  * The crest is 44px rather than 28: at the smaller size it sat inside its row
  * like a bullet point, and these three rows are the reason anybody opens this.
  */
-function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSlots }) {
+function OurRow({ t, slots, since }: { t: MajorTeam & { place: number }; slots: MajorSlots; since: string }) {
   const team = findTeam(t.slug);
   const stage = stageOf(t.place, slots);
   /* The three stage chances sum to the qualification chance — they are the same
@@ -139,8 +146,8 @@ function OurRow({ t, slots }: { t: MajorTeam & { place: number }; slots: MajorSl
         )}
         <p className="min-w-0 flex-1 truncate text-xl font-bold text-white">{t.team}</p>
         <StageChip stage={stage} place={t.place} />
-        <span className="flex shrink-0 items-baseline gap-1.5">
-          <Move move={t.move} />
+        <span className="flex shrink-0 items-center gap-3">
+          <Move move={t.move} since={since} />
           <span
             className="tnum font-mono text-2xl font-bold leading-none"
             style={{ color: tone(t.pQual) }}
@@ -215,10 +222,12 @@ function StageChip({ stage, place }: { stage: 3 | 2 | 1 | 0; place: number }) {
  * unreadable — the workbook says "Stage 3" and so does this.
  */
 function RegionTable({
-  data, region, fill = false,
+  data, region, fill = false, since,
 }: {
   data: NonNullable<Awaited<ReturnType<typeof getMajorProjection>>>;
   region: MajorRegion;
+  /** Human label for the window the movement badge measures. */
+  since: string;
   /** Grow to whatever height the column gives it, so the two columns share a
    *  bottom edge. The rows stay at the top; the panel simply continues. */
   fill?: boolean;
@@ -245,7 +254,7 @@ function RegionTable({
             <div key={t.vrs + t.team + t.projected}>
               <div
                 className={cn(
-                  "flex items-center gap-2 px-2.5 py-2 text-[0.8125rem] transition-colors duration-150",
+                  "flex items-center gap-2.5 px-3 py-2 text-[0.8125rem] transition-colors duration-150",
                   // Zebra, very quiet. Thirty rows of text on one flat ground
                   // is what reads as emptiness; a half-percent step every other
                   // row gives the column a surface without drawing rules on it.
@@ -263,8 +272,8 @@ function RegionTable({
                 )}
                 <span className="min-w-0 flex-1 truncate font-semibold text-ink">{t.team}</span>
                 <StageMark stage={stage} />
-                <span className="flex w-[4.75rem] shrink-0 items-baseline justify-end gap-1">
-                  <Move move={t.move} />
+                <span className="flex w-[5.75rem] shrink-0 items-center justify-end gap-2.5">
+                  <Move move={t.move} since={since} />
                   <span
                     className="tnum font-mono font-bold"
                     style={{ color: tone(t.pQual) }}
@@ -303,18 +312,21 @@ function RegionTable({
  * table is already red from edge to edge, and one more red on a falling row
  * would read as an alert rather than as a fact.
  */
-function Move({ move }: { move: number | null }) {
+function Move({ move, since }: { move: number | null; since: string }) {
   if (move === null) return null;
   const up = move > 0;
   return (
     <span
-      title={`За добу ${up ? "+" : "−"}${Math.abs(move).toFixed(1)} п.п.`}
+      title={`${since}: ${up ? "+" : "−"}${Math.abs(move).toFixed(1)} п.п.`}
       className={cn(
-        "tnum flex shrink-0 items-center gap-px font-mono text-[0.625rem] font-bold leading-none",
+        "tnum flex shrink-0 items-center gap-1 font-mono text-[0.6875rem] font-bold leading-none",
         up ? "text-success" : "text-ink-faint",
       )}
     >
-      {up ? "▲" : "▼"}
+      {/* The glyph is set smaller than the figure and nudged off the baseline:
+          at the same size the triangle is visually heavier than the digits and
+          the pair reads as an arrow with a footnote rather than one mark. */}
+      <span className="text-[0.5rem] leading-none">{up ? "▲" : "▼"}</span>
       {Math.abs(move).toFixed(1)}
     </span>
   );

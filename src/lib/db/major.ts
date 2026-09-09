@@ -39,6 +39,9 @@ export type MajorMeta = {
   slots: Record<MajorRegion, MajorSlots>;
   events: MajorEvent[];
   source: string;
+  /** When the set the movement is measured against was taken. Null before the
+   *  first comparison has been stored. */
+  prevAt: string | null;
 };
 
 export type MajorTeam = {
@@ -94,6 +97,7 @@ export const getMajorProjection = cache(async (): Promise<MajorData> => {
         slots: meta.slots as Record<MajorRegion, MajorSlots>,
         events: (meta.events ?? []) as MajorEvent[],
         source: meta.source as string,
+        prevAt: (meta.prev_at as string | null) ?? null,
       },
       teams: withMove(rows.map((r) => ({
         region: r.region as MajorRegion,
