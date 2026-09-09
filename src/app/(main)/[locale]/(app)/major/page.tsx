@@ -319,14 +319,19 @@ function Move({ move, since }: { move: number | null; since: string }) {
     <span
       title={`${since}: ${up ? "+" : "−"}${Math.abs(move).toFixed(1)} п.п.`}
       className={cn(
-        "tnum flex shrink-0 items-center gap-1 font-mono text-[0.6875rem] font-bold leading-none",
+        "tnum inline-flex shrink-0 items-center gap-1 font-mono text-[0.6875rem] font-bold leading-none",
         up ? "text-success" : "text-ink-faint",
       )}
     >
-      {/* The glyph is set smaller than the figure and nudged off the baseline:
-          at the same size the triangle is visually heavier than the digits and
-          the pair reads as an arrow with a footnote rather than one mark. */}
-      <span className="text-[0.5rem] leading-none">{up ? "▲" : "▼"}</span>
+      {/* Drawn, not typed. ▲ and ▼ are text glyphs with their own vertical
+          metrics — they sit wherever the typeface decided, which is not on the
+          digits' baseline, and no amount of flex alignment fixes that because
+          the box being aligned is the line box and not the mark inside it. A
+          six-pixel triangle sits exactly where it is put, centred on its own
+          digits. */}
+      <svg viewBox="0 0 8 6" aria-hidden="true" className="h-[6px] w-2 shrink-0">
+        <path d={up ? "M4 0 8 6 0 6Z" : "M4 6 0 0 8 0Z"} fill="currentColor" />
+      </svg>
       {Math.abs(move).toFixed(1)}
     </span>
   );
