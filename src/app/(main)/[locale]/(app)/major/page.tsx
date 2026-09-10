@@ -103,7 +103,7 @@ export default async function MajorPage() {
           there rather than inside a card. */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <RegionTable data={data} region="europe" since={since} />
-        <div className="flex min-h-0 flex-col justify-between gap-6">
+        <div className="flex min-h-0 flex-col justify-between gap-5">
           <RegionTable data={data} region="americas" since={since} />
           <RegionTable data={data} region="asia" since={since} />
         </div>
@@ -248,12 +248,17 @@ function RegionTable({
        dark" actually means — not the colour, the absence of anything to look
        at. */
     <div className="overflow-hidden rounded-2xl major-card">
-      {/* Двадцять вісім пікселів, і це число має причину. Заголовок стоїть один
-          раз над Європою і двічі над правою колонкою, тож кожен зрізаний з
-          нього піксель зменшує праву колонку вдвічі швидше — саме цим вона й
-          доганяє ліву. Висота задана прямо, а не сумою відступів, щоб її можна
-          було прочитати і щоб текст стояв по центру смуги. */}
-      <h2 className="flex h-7 items-center px-3 text-sm font-bold text-ink">{REGION_NAME[region]}</h2>
+      {/* Тридцять два пікселі, і це число має причину. Заголовок стоїть один раз
+          над Європою і двічі над правою колонкою, тож кожен його піксель
+          подовжує праву колонку вдвічі швидше за ліву. Разом із проміжком під
+          Америкою вони й тримають обидві колонки на одній нижній лінії:
+          висота заголовка плюс проміжок дають рівно ті 52 пікселі, якими
+          тридцять два європейські рядки перекривають тридцять рядків справа.
+          Більший заголовок означає менший проміжок, і навпаки.
+
+          Висота задана прямо, а не сумою відступів, щоб її можна було
+          прочитати і щоб текст стояв по центру смуги. */}
+      <h2 className="flex h-8 items-center px-3 text-[0.9375rem] font-bold text-ink">{REGION_NAME[region]}</h2>
       <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
         {rows.map((t, i) => {
           // The place is this list's own, so the number on the left, the stage
