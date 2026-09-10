@@ -82,21 +82,30 @@ export default async function MajorPage() {
           enough for a rank, a crest, a name, a stage and a number — "THUNDER
           dOWNUNDER" came out as "Thund…". Europe has twice the rows of either
           other region, so it takes a column of its own and the other two stack
-          beside it, which lands the two sides at about the same height. */}
-      {/* The two columns end on the same line.
-          Europe carries thirty-two rows and the other two regions thirty
-          between them, so the sides never come out equal on their own — one
-          panel stopped short and left a band of page under it, which reads as
-          something missing rather than as a shorter list. The grid stretches
-          both to the taller, and Asia takes up whatever slack is left, so its
-          floor lands exactly where Europe's does. */}
+          beside it, which lands the two sides at about the same height.
+
+          Each panel then ends where its rows end. Making the floors line up
+          exactly used to mean stretching the shorter panel to the taller one,
+          and that left the Europe card with a band of empty surface below its
+          last row: inside the border, under the last divider, plainly a table
+          with nothing in it. A card taller than its contents reads worse than
+          two cards of honest, slightly different heights.
+
+          So the slack goes between the cards, never inside one. What makes the
+          two columns come out level is the region heading: it appears once on
+          the left and twice on the right, so trimming it to 28px takes twice
+          as much off this column as off Europe's, and thirty-two European rows
+          then match sixteen American plus fourteen Asian with an ordinary gap
+          between them. Nothing is dropped from any of the three lists.
+
+          `justify-between` keeps it true if the counts ever change: the gap
+          below is a minimum, and whatever height this column has spare goes
+          there rather than inside a card. */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <RegionTable data={data} region="europe" since={since} />
-        <div className="flex min-h-0 flex-col gap-6">
+        <div className="flex min-h-0 flex-col justify-between gap-6">
           <RegionTable data={data} region="americas" since={since} />
-          <div className="flex-1">
-            <RegionTable data={data} region="asia" fill since={since} />
-          </div>
+          <RegionTable data={data} region="asia" since={since} />
         </div>
       </section>
 
@@ -222,15 +231,12 @@ function StageChip({ stage, place }: { stage: 3 | 2 | 1 | 0; place: number }) {
  * unreadable — the workbook says "Stage 3" and so does this.
  */
 function RegionTable({
-  data, region, fill = false, since,
+  data, region, since,
 }: {
   data: NonNullable<Awaited<ReturnType<typeof getMajorProjection>>>;
   region: MajorRegion;
   /** Human label for the window the movement badge measures. */
   since: string;
-  /** Grow to whatever height the column gives it, so the two columns share a
-   *  bottom edge. The rows stay at the top; the panel simply continues. */
-  fill?: boolean;
 }) {
   const slots = data.meta.slots[region];
   const rows = regionTeams(data, region).slice(0, DEPTH[region]);
@@ -241,8 +247,13 @@ function RegionTable({
        was three hundred lines of text on a dark ground, which is what "too
        dark" actually means — not the colour, the absence of anything to look
        at. */
-    <div className={cn("overflow-hidden rounded-2xl major-card", fill && "h-full")}>
-      <h2 className="px-3 pb-2 pt-3 text-base font-bold text-ink">{REGION_NAME[region]}</h2>
+    <div className="overflow-hidden rounded-2xl major-card">
+      {/* Двадцять вісім пікселів, і це число має причину. Заголовок стоїть один
+          раз над Європою і двічі над правою колонкою, тож кожен зрізаний з
+          нього піксель зменшує праву колонку вдвічі швидше — саме цим вона й
+          доганяє ліву. Висота задана прямо, а не сумою відступів, щоб її можна
+          було прочитати і щоб текст стояв по центру смуги. */}
+      <h2 className="flex h-7 items-center px-3 text-sm font-bold text-ink">{REGION_NAME[region]}</h2>
       <div className="divide-y divide-[color-mix(in_oklch,var(--ink)_6%,transparent)]">
         {rows.map((t, i) => {
           // The place is this list's own, so the number on the left, the stage
@@ -332,7 +343,19 @@ function Move({ move, since }: { move: number | null; since: string }) {
       <svg viewBox="0 0 8 6" aria-hidden="true" className="h-[6px] w-2 shrink-0">
         <path d={up ? "M4 0 8 6 0 6Z" : "M4 6 0 0 8 0Z"} fill="currentColor" />
       </svg>
-      {Math.abs(move).toFixed(1)}
+      {/* The number gets a column of its own, and the triangle therefore gets
+          one too. Tabular figures keep each digit the same width, but they do
+          not make "0.2" as wide as "22.2" — that is a digit more, six pixels,
+          and since the badge is pinned to the percentage on its right, those
+          six pixels moved the arrow instead. Down a column of thirty rows the
+          arrows came out ragged. Twenty-four pixels holds "99.9", which is as
+          large as a day's move can get. */}
+      {/* Піднято на піксель. Трикутник намальований і стоїть рівно там, де
+          його поставили, а цифри поруч сідають на пікселя нижче: висота
+          коробки рядка і висота самих цифр — різні речі, і центрувати можна
+          лише коробку. Виміряно на сторінці: центр цифр бейджа був на 1.25px
+          нижче за центр цифр відсотка, а трикутник з ним збігався. */}
+      <span className="relative -top-px w-6 text-right">{Math.abs(move).toFixed(1)}</span>
     </span>
   );
 }

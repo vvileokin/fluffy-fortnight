@@ -122,6 +122,7 @@ export const teams: Record<string, Team> = {
      team's own ground is a better placeholder than a borrowed silhouette. */
   theunit: { slug: "theunit", name: "THE UNIT", tag: "T", logo: "", brand: "#8E7BC3", ink: "white", region: "Asia", worldRank: 0 },
   kaleido: { slug: "kaleido", name: "Kaleido", tag: "KAL", logo: "/teams/kaleido.svg", brand: "#1A78B8", ink: "white", region: "Asia", worldRank: 0 },
+  galorys: { slug: "galorys", name: "Galorys", tag: "GAL", logo: "/teams/galorys.svg", brand: "#6A4A9E", ink: "white", region: "SA", worldRank: 0 },
 };
 
 export type Tier = 1 | 2;
