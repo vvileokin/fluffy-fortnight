@@ -20,7 +20,13 @@ export function BottomNav() {
        10px under five glyphs was noise; the icons already say it. The live tab
        is a solid yellow lozenge, the way a physical selector reads. Labels
        stay in the accessible name for screen readers and long-press. */
-    <nav className="fixed inset-x-0 bottom-0 z-30 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-[color-mix(in_oklch,var(--surface)_86%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+    /* The bar bleeds below itself. Browsers whose bottom toolbar folds away on
+       scroll (Safari, Samsung Internet, Firefox, in-app browsers) move a
+       fixed bar down a beat after the viewport grows, or not at all, and
+       for that moment the page shows through underneath as an empty band.
+       A tail in the bar's own colour hangs off-screen and fills that band,
+       so the gap reads as a slightly taller bar instead of a hole. */
+    <nav className="fixed inset-x-0 bottom-0 z-30 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-[color-mix(in_oklch,var(--surface)_86%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-[40vh] after:bg-inherit lg:hidden">
       <PartnerTicker />
       {/* Columns follow the list, not a number typed once: adding a sixth
           section to nav.ts used to leave the bar drawing five and stacking the
