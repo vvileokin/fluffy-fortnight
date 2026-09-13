@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { bottomNav } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { PartnerTicker } from "@/components/layout/Partners";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -20,6 +21,7 @@ export function BottomNav() {
        is a solid yellow lozenge, the way a physical selector reads. Labels
        stay in the accessible name for screen readers and long-press. */
     <nav className="fixed inset-x-0 bottom-0 z-30 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] bg-[color-mix(in_oklch,var(--surface)_86%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      <PartnerTicker />
       {/* Columns follow the list, not a number typed once: adding a sixth
           section to nav.ts used to leave the bar drawing five and stacking the
           last one underneath. */}

@@ -23,7 +23,10 @@ export default async function AppLayout({
             desktop with room to spare, which is what made the tournament and
             giveaway cards read as small. Widening the column lifts every grid
             on the site by the same ~12% instead of special-casing one page. */}
-        <main className="mx-auto w-full max-w-[1320px] px-3 pb-28 pt-3 sm:px-6 sm:pt-6 lg:pb-12">
+        {/* The bottom padding clears the phone bar, which now carries the
+            partner ticker on top of its icons and grows by the home indicator
+            on iPhones — so it counts the safe area instead of guessing it. */}
+        <main className="mx-auto w-full max-w-[1320px] px-3 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:pb-12">
           {children}
         </main>
       </div>

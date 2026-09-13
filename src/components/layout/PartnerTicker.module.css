@@ -1,0 +1,26 @@
+/* Partner ticker on the mobile bottom bar. The track is two identical halves,
+   so a slide of exactly half loops without a seam. Linear, because a marquee
+   that eases looks like it is stalling every lap. The edges fade so logos
+   arrive and leave instead of being guillotined by the screen. A finger on it
+   holds it still long enough to tap; reduced motion stops it outright. */
+@keyframes slide {
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+.mask {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.track {
+  animation: slide 36s linear infinite;
+  will-change: transform;
+}
+
+.ticker:hover .track,
+.ticker:active .track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track { animation: none; }
+}
