@@ -33,8 +33,8 @@ export function Footer() {
     /* Phones clear the fixed bottom bar here rather than on <main>: the footer
        is now the last thing on the page, so it is the thing that must not sit
        underneath the bar. */
-    <footer className="mx-auto w-full max-w-[1320px] px-3 pb-28 pt-10 sm:px-6 lg:pb-10">
-      <div className="flex flex-col gap-8 pt-6 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] lg:flex-row lg:items-start lg:justify-between">
+    <footer className="mx-auto w-full max-w-[1320px] px-3 pb-28 pt-6 sm:px-6 lg:pb-10 lg:pt-10">
+      <div className="flex flex-col gap-5 pt-5 shadow-[0_-1px_0_0_color-mix(in_oklch,var(--ink)_7%,transparent)] lg:flex-row lg:items-start lg:justify-between lg:gap-8 lg:pt-6">
         <div className="flex flex-col gap-2">
           <Brand compact />
           <p className="text-sm font-semibold text-ink-muted">© {years} CS2 UA</p>
@@ -43,7 +43,10 @@ export function Footer() {
           </p>
         </div>
 
-        <nav aria-label={f("sections")} className="grid grid-cols-2 gap-x-12 gap-y-3 sm:grid-cols-3">
+        {/* Desktop only. On a phone the bottom bar already carries every one of
+            these sections, one tap away at all times, and repeating them here
+            doubled the footer's height for nothing. */}
+        <nav aria-label={f("sections")} className="hidden grid-cols-3 gap-x-12 gap-y-3 lg:grid">
           {[...primaryNav, majorNav].map((item) => (
             <Link
               key={item.href}
