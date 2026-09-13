@@ -109,6 +109,23 @@ export default async function MajorPage() {
         </div>
       </section>
 
+      {/* Credit where the numbers came from. The registered-teams lists behind
+          every tier-two field in this projection come out of DENTEN's calendar,
+          so the credit sits directly under the tables it made possible rather
+          than in a footer nobody reaches. Quiet on purpose: it is a source line,
+          not a banner. */}
+      <p className="text-center text-[0.8125rem] leading-relaxed text-ink-subtle">
+        Партнери, які надали дані для симуляцій:{" "}
+        <a
+          href="https://t.me/cs2ua"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-ink underline decoration-[color-mix(in_oklch,var(--ink)_30%,transparent)] underline-offset-4 transition-colors duration-150 hover:text-[var(--major-hot)] hover:decoration-current focus-visible:text-[var(--major-hot)]"
+        >
+          DENTEN
+        </a>
+      </p>
+
     </div>
   );
 }
